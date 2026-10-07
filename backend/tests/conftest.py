@@ -6,10 +6,11 @@ from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine
+from sqlalchemy.orm import Session
 
 from alembic import command
 from app.core.config import Settings, get_settings
-from app.db.session import make_engine
+from app.db.session import make_engine, make_session_factory
 from app.main import create_app
 
 
@@ -45,3 +46,11 @@ def migrated_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator
 
 def alembic_config() -> Config:
     return Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+
+
+@pytest.fixture
+def db_session(migrated_engine: Engine) -> Iterator[Session]:
+    session = make_session_factory(migrated_engine)()
+    yield session
+    session.rollback()
+    session.close()
