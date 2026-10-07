@@ -4,16 +4,19 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
 
+import app.models  # noqa: F401  (registers every model on Base.metadata)
 from alembic import context
 from app.core.config import get_settings
 from app.db.base import Base
+from app.db.migration_filters import include_object
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Single source of truth for the URL: Settings, never alembic.ini.
-config.set_main_option("sqlalchemy.url", get_settings().database_url)
+# ConfigParser interpolation treats % specially, so literal percents must be doubled.
+config.set_main_option("sqlalchemy.url", get_settings().database_url.replace("%", "%%"))
 target_metadata = Base.metadata
 
 
@@ -23,6 +26,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         render_as_batch=True,  # SQLite cannot ALTER most things in place
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -40,6 +44,7 @@ def run_migrations_online() -> None:
             target_metadata=target_metadata,
             render_as_batch=True,
             compare_type=True,
+            include_object=include_object,
         )
         with context.begin_transaction():
             context.run_migrations()

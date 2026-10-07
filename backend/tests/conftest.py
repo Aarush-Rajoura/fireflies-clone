@@ -2,10 +2,14 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import Engine
 
-from app.core.config import Settings
+from alembic import command
+from app.core.config import Settings, get_settings
+from app.db.session import make_engine
 from app.main import create_app
 
 
@@ -24,3 +28,20 @@ def app(settings: Settings) -> FastAPI:
 def client(app: FastAPI) -> Iterator[TestClient]:
     with TestClient(app, raise_server_exceptions=False) as c:
         yield c
+
+
+@pytest.fixture
+def migrated_engine(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Engine]:
+    """A fresh SQLite file built only by `alembic upgrade head`, with app pragmas on."""
+    url = f"sqlite:///{tmp_path / 'migrated.db'}"
+    monkeypatch.setenv("DATABASE_URL", url)
+    get_settings.cache_clear()
+    command.upgrade(alembic_config(), "head")
+    engine = make_engine(url)
+    yield engine
+    engine.dispose()
+    get_settings.cache_clear()
+
+
+def alembic_config() -> Config:
+    return Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))

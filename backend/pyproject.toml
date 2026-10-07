@@ -33,3 +33,6 @@ select = ["E", "F", "I", "UP", "B"]
 python_version = "3.12"
 strict = true
 files = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/versions/*" = ["E501"]
