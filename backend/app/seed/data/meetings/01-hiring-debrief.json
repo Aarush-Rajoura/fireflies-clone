@@ -16,7 +16,7 @@
   "has_media": false,
   "transcript": [
     {
-      "speaker": "imani",
+      "speaker": "me",
       "text": "Okay, let's get started. Thanks everyone for making time, I know it's a packed morning."
     },
     {
@@ -217,7 +217,7 @@
       "text": "I'll also send Omar a quick thank-you email today so he knows we're moving."
     },
     {
-      "speaker": "imani",
+      "speaker": "me",
       "text": "Perfect. Anything else? No? Thanks, everybody."
     }
   ],
@@ -341,13 +341,6 @@
       "due_offset_days": 2,
       "status": "open",
       "at_line": 47
-    },
-    {
-      "text": "Get the offer out to Omar by Friday",
-      "assignee": null,
-      "due_offset_days": 2,
-      "status": "open",
-      "at_line": 48
     },
     {
       "text": "Send Omar a thank-you email today",

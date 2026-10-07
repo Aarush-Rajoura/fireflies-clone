@@ -2,7 +2,7 @@
   "key": "ingestion-postmortem",
   "title": "Postmortem — Analytics Ingestion Outage (Oct 1)",
   "description": "Blameless postmortem of the October 1st ingestion outage, covering timeline, root cause, and remediation owners.",
-  "day_offset": -4,
+  "day_offset": -5,
   "time": "10:00",
   "host": "arjun",
   "participants": [
@@ -303,42 +303,42 @@
     {
       "text": "Ship per-tenant rate limits at the edge to production by October 14th",
       "assignee": "arjun",
-      "due_offset_days": 11,
+      "due_offset_days": 12,
       "status": "open",
       "at_line": 26
     },
     {
       "text": "Build the first version of the dead-letter queue replay tool by October 16th",
       "assignee": "imani",
-      "due_offset_days": 13,
+      "due_offset_days": 14,
       "status": "open",
       "at_line": 29
     },
     {
       "text": "Write the repartitioning migration plan, with a rollback path, and share it with Tobias by next Friday",
       "assignee": "kenji",
-      "due_offset_days": 6,
+      "due_offset_days": 7,
       "status": "open",
       "at_line": 32
     },
     {
       "text": "Lower the lag alert threshold from 15 to 3 minutes and fix the on-call schedule today",
       "assignee": "arjun",
-      "due_offset_days": 0,
+      "due_offset_days": 1,
       "status": "completed",
       "at_line": 33
     },
     {
       "text": "Write the status page template, support runbook, and customer email template by Wednesday",
       "assignee": "diego",
-      "due_offset_days": 4,
+      "due_offset_days": 5,
       "status": "completed",
       "at_line": 37
     },
     {
       "text": "Publish the written postmortem to the company wiki by Monday",
       "assignee": "arjun",
-      "due_offset_days": 2,
+      "due_offset_days": 3,
       "status": "completed",
       "at_line": 45
     }

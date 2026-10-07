@@ -1,7 +1,7 @@
 {
   "key": "launch-go-no-go",
   "title": "Lumora Insights 2.0 — Launch Go/No-Go",
-  "description": "Leads review launch readiness for Insights 2.0 and make a conditional go for October 21st.",
+  "description": "Leads review launch readiness for Insights 2.0 and reach a conditional go for October 21st.",
   "day_offset": 0,
   "time": "14:00",
   "host": "me",
@@ -239,7 +239,7 @@
     }
   ],
   "summary": {
-    "overview": "The team reviewed readiness for the Insights 2.0 launch targeted for October 21st. Engineering reported 198 of 212 release tests passing, one P1 (duplicate anomaly alerts) and a CSV export bug as blockers, and a p95 query time of 1.8s against a 1.5s target. The October 1st ingestion outage made per-tenant rate limits a hard launch condition. Customer success and marketing reported being on track, and the group made a conditional go with a final checkpoint on October 16th and a fallback launch date of October 28th.",
+    "overview": "The team reviewed readiness for the Insights 2.0 launch targeted for October 21st. Engineering reported 198 of 212 release tests passing, one P1 (duplicate anomaly alerts) and a CSV export bug as blockers, and a p95 query time of 1.8s against a 1.5s target. The October 1st ingestion outage made per-tenant rate limits a hard launch condition. Customer success and marketing reported being largely on track, with Team-plan pricing sign-off still outstanding, and the group made a conditional go with a final checkpoint on October 16th and a fallback launch date of October 28th.",
     "outline": [
       {
         "title": "Readiness status and open bugs",
