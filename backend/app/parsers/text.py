@@ -9,13 +9,13 @@ from app.parsers.normalise import (
     estimate_duration_ms,
     extract_speaker,
     finalise,
+    prefixes_allowed,
     unrecognised,
 )
 
 _CLOCK = r"\d{1,2}:\d{2}(?::\d{2})?(?:[.,]\d{1,3})?"
 _BRACKETED = re.compile(rf"^\[({_CLOCK})\]\s*(.*)$")
 _BARE = re.compile(rf"^({_CLOCK})\s+(.*)$")
-_SPEAKER_LINE = re.compile(r"^[A-Z0-9][\w.'\u2019-]*(?:\s+[A-Z0-9][\w.'\u2019-]*){0,3}\s*:\s+\S")
 
 
 def looks_binary(content: str) -> bool:
@@ -30,12 +30,13 @@ def _timed_cues(lines: list[str]) -> list[RawCue] | None:
     """Cues for lines with leading timestamps; None when no line has one."""
     cues: list[RawCue] = []
     saw_time = False
-    for line in lines:
-        match = _BRACKETED.match(line) or _BARE.match(line)
+    matches = [_BRACKETED.match(line) or _BARE.match(line) for line in lines]
+    allow = prefixes_allowed([m.group(2) for m in matches if m])
+    for line, match in zip(lines, matches, strict=True):
         start = clock_to_ms(match.group(1)) if match else None
         if match and start is not None:
             saw_time = True
-            speaker, text = extract_speaker(match.group(2))
+            speaker, text = extract_speaker(match.group(2), allow_prefix=allow)
             cues.append(RawCue(speaker, start, None, text))
         elif cues:
             last = cues[-1]
@@ -54,7 +55,7 @@ def _timed_cues(lines: list[str]) -> list[RawCue] | None:
 
 def _untimed_cues(lines: list[str]) -> list[RawCue]:
     """Speaker lines (continuations join the previous one), else one cue per line."""
-    named = any(_SPEAKER_LINE.match(line) for line in lines)
+    named = prefixes_allowed(lines)
     pieces: list[tuple[str | None, str]] = []
     for line in lines:
         speaker, text = extract_speaker(line) if named else (None, line)
@@ -80,7 +81,11 @@ class TextParser:
     def parse(self, content: str) -> ParsedTranscript:
         if looks_binary(content):
             raise unrecognised(self.format, "The content looks binary, not text.")
-        lines = [ln.strip() for ln in content.lstrip("\ufeff").splitlines() if ln.strip()]
+        lines = [
+            ln.strip()
+            for ln in content.lstrip("\ufeff").replace("\r", "\n").splitlines()
+            if ln.strip()
+        ]
         timed = _timed_cues(lines)
         if timed is not None:
             return finalise(timed, self.format)

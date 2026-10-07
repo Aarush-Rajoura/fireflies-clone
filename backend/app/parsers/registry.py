@@ -17,17 +17,24 @@ class ParserRegistry:
         self._parsers = list(parsers)
 
     def parse(self, content: str, filename: str | None = None) -> ParsedTranscript:
-        body = content.lstrip("\ufeff")
+        body = content.lstrip("\ufeff").replace("\r\n", "\n").replace("\r", "\n")
         if not body.strip():
-            raise TranscriptEmptyError("The transcript is empty.")
+            raise TranscriptEmptyError(
+                "The transcript is empty.",
+                details={"filename": filename, "format_tried": []},
+            )
 
         preferred = _FORMAT_BY_EXTENSION.get(extension_of(filename))
         if preferred == "text":
             preferred = None  # .txt is generic: let sniffing find a stricter format first
         # The extension is only a hint: a mislabelled file must still parse.
         ordered = sorted(self._parsers, key=lambda p: p.format != preferred)
+        # A structured extension that fails to parse must not degrade to plain text.
+        structured = preferred is not None
         tried: list[str] = []
         for parser in ordered:
+            if structured and parser.format == "text":
+                continue
             if not parser.can_parse(filename, body):
                 continue
             tried.append(parser.format)

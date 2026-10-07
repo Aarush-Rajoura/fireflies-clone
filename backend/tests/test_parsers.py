@@ -33,7 +33,7 @@ Alice: Welcome.
 
 2
 00:01:05,250 --> 00:01:07,000
-Second line
+Bob: Second line
 wraps here
 """
 
@@ -157,3 +157,58 @@ def test_registry_sniffs_txt_that_is_vtt() -> None:
     assert reg.parse(SRT, None).format == "srt"
     body = '{"segments":[{"start_ms":0,"end_ms":5,"text":"x"}]}'
     assert reg.parse(body).format == "json"
+
+
+@pytest.mark.parametrize(
+    "body",
+    ['[{"start": NaN, "text": "x"}]', '[{"start": 1e999, "text": "x"}]', "[" * 100_000],
+    ids=["nan", "overflow", "deep"],
+)
+def test_json_hostile_numbers_and_nesting(body: str) -> None:
+    with pytest.raises(ValidationFailedError) as exc:
+        default_registry().parse(body, "a.json")
+    assert exc.value.code == "TRANSCRIPT_UNRECOGNISED"
+
+
+def test_json_nested_speaker_object() -> None:
+    data = [
+        {"speaker": {"name": "Ann"}, "start": 0, "end": 1, "text": "a"},
+        {"speaker": {"id": 3}, "start": 1, "end": 2, "text": "b"},
+    ]
+    result = JsonParser().parse(json.dumps(data))
+    assert [s.speaker for s in result.segments] == ["Ann", "Speaker 1"]
+    assert result.warnings
+
+
+def test_label_prefix_is_not_a_speaker() -> None:
+    result = TextParser().parse("Note: remember the milk\nAction: call Bob")
+    assert {s.speaker for s in result.segments} == {"Speaker 1"}
+    assert result.segments[0].text.startswith("Note:")
+
+
+def test_single_prefix_is_not_a_speaker() -> None:
+    result = TextParser().parse("Alice: only one line\nsecond")
+    assert result.segments[0].speaker == "Speaker 1"
+    two = TextParser().parse("Alice: hi\nBob: yo\nNote: x")
+    assert [s.speaker for s in two.segments] == ["Alice", "Bob"]
+    assert two.segments[1].text == "yo Note: x"
+
+
+def test_vtt_edge_cases() -> None:
+    vtt = "WEBVTT\n00:00:01.000 --> 00:00:02.000\n<00:00:01.500><c>Hi</c> there\n\n"
+    vtt += "NOTEBOOK\n00:00:03.000 --> 00:00:04.000\nkept\n"
+    result = VttParser().parse(vtt)
+    assert [s.text for s in result.segments] == ["Hi there", "kept"]
+
+
+def test_srt_dot_ms_and_lone_cr() -> None:
+    srt = "1\r00:00:01.000 --> 00:00:02.000\rhello\r\r2\r00:00:03.000 --> 00:00:04.000\rbye\r"
+    result = default_registry().parse(srt)
+    assert result.format == "srt"
+    assert len(result.segments) == 2
+
+
+def test_empty_error_has_details() -> None:
+    with pytest.raises(ValidationFailedError) as exc:
+        default_registry().parse(" ", "a.txt")
+    assert exc.value.details["filename"] == "a.txt"

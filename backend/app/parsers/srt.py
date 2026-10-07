@@ -5,7 +5,7 @@ import re
 from app.parsers.base import ParsedTranscript, extension_of
 from app.parsers.cues import parse_cue_blocks
 
-_SRT_HEAD = re.compile(r"^\s*\d+\s*\n\s*\d{1,2}:\d{2}:\d{2},\d{1,3}\s*-->", re.MULTILINE)
+_SRT_HEAD = re.compile(r"^\s*\d+\s*\n\s*\d{1,2}:\d{2}:\d{2}[,.]\d{1,3}\s*-->", re.MULTILINE)
 
 
 class SrtParser:

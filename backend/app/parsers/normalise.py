@@ -11,11 +11,15 @@ WORDS_PER_MINUTE = 150
 MIN_DURATION_MS = 1000
 
 _VOICE_TAG = re.compile(r"<v(?:\.[\w.-]+)?\s+([^>]+)>", re.IGNORECASE)
-_ANY_TAG = re.compile(r"</?[a-zA-Z][^>]*>")
+# Includes VTT timestamp tags (<00:00:01.500>) and closers (</c>).
+_ANY_TAG = re.compile(r"<(?:/[a-zA-Z][^>]*|[a-zA-Z\d][^>]*)>")
+_LABEL_STOPLIST = frozenset(
+    "note re q1 q2 q3 q4 action important todo fyi update summary agenda question answer".split()
+)
 # Bounded to a few capitalised words so "the point is: we ship" is not a speaker.
 _NAME_CHAR = r"[\w.'\u2019-]"
 _SPEAKER_PREFIX = re.compile(
-    rf"^([A-Z0-9]{_NAME_CHAR}*(?:\s+[A-Z0-9]{_NAME_CHAR}*){{0,3}})\s*:\s+(\S.*)$", re.DOTALL
+    rf"^([A-Z]{_NAME_CHAR}*(?:\s+[A-Z0-9]{_NAME_CHAR}*){{0,3}})\s*:\s+(\S.*)$", re.DOTALL
 )
 _CLOCK = re.compile(r"(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d{1,3}))?")
 
@@ -46,17 +50,39 @@ def clock_to_ms(value: str) -> int | None:
     return ((int(hours or 0) * 60 + int(minutes)) * 60 + int(seconds)) * 1000 + millis
 
 
-def extract_speaker(text: str) -> tuple[str | None, str]:
-    """Split `<v Name>` voice tags or a `Name: ` prefix from the text."""
+def clean_text(text: str) -> str:
+    return " ".join(_ANY_TAG.sub("", text).split())
+
+
+def _prefix_match(cleaned: str) -> re.Match[str] | None:
+    match = _SPEAKER_PREFIX.match(cleaned)
+    if match and match.group(1).strip().lower() not in _LABEL_STOPLIST:
+        return match
+    return None
+
+
+def has_speaker_prefix(text: str) -> bool:
+    return _VOICE_TAG.search(text) is not None or _prefix_match(clean_text(text)) is not None
+
+
+def extract_speaker(text: str, *, allow_prefix: bool = True) -> tuple[str | None, str]:
+    """Split `<v Name>` voice tags or a `Name: ` prefix from the text.
+
+    Callers pass allow_prefix=False when fewer than two lines carry a prefix:
+    one stray "Note: ..." is prose, not a speaker.
+    """
     voice = _VOICE_TAG.search(text)
-    speaker = voice.group(1).strip() if voice else None
-    cleaned = " ".join(_ANY_TAG.sub("", text).split())
-    if speaker:
-        return speaker, cleaned
-    prefix = _SPEAKER_PREFIX.match(cleaned)
+    cleaned = clean_text(text)
+    if voice:
+        return voice.group(1).strip(), cleaned
+    prefix = _prefix_match(cleaned) if allow_prefix else None
     if prefix:
         return prefix.group(1).strip(), prefix.group(2).strip()
     return None, cleaned
+
+
+def prefixes_allowed(texts: list[str]) -> bool:
+    return sum(has_speaker_prefix(t) for t in texts) >= 2
 
 
 def unrecognised(format_name: str, message: str) -> TranscriptUnrecognisedError:
