@@ -92,3 +92,15 @@ def test_page_computed_fields() -> None:
     assert last.has_next is False
     assert Page[int](items=[], page=1, page_size=10, total=0).total_pages == 0
     assert "total_pages" in p.model_dump()
+
+
+@pytest.mark.parametrize("bad", ["has space", "semi;colon", "x" * 129, "new\tline"])
+def test_invalid_inbound_request_id_is_replaced(client: TestClient, bad: str) -> None:
+    r = client.get("/api/health", headers={"X-Request-ID": bad})
+    assert r.headers["X-Request-ID"] != bad
+    assert len(r.headers["X-Request-ID"]) == 32
+
+
+def test_valid_inbound_request_id_is_kept(client: TestClient) -> None:
+    r = client.get("/api/health", headers={"X-Request-ID": "abc-1.2_X" + "y" * 119})
+    assert r.headers["X-Request-ID"] == "abc-1.2_X" + "y" * 119

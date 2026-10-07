@@ -1,6 +1,7 @@
 """Request context: X-Request-ID in/out and one access-log line per request."""
 
 import logging
+import re
 import time
 import uuid
 from collections.abc import Awaitable, Callable
@@ -13,13 +14,16 @@ from app.core.errors import internal_error_response
 
 logger = logging.getLogger("app.request")
 HEADER = "X-Request-ID"
+# Inbound ids are echoed into logs and headers, so only a safe, bounded form is trusted.
+_VALID_ID = re.compile(r"[A-Za-z0-9._-]{1,128}")
 
 
 class RequestContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        request_id = request.headers.get(HEADER) or uuid.uuid4().hex
+        inbound = request.headers.get(HEADER, "")
+        request_id = inbound if _VALID_ID.fullmatch(inbound) else uuid.uuid4().hex
         request.state.request_id = request_id
         start = time.perf_counter()
         try:
