@@ -5,6 +5,7 @@ from types import TracebackType
 from sqlalchemy.orm import Session
 
 from app.repositories.action_items import ActionItemRepository
+from app.repositories.channels import ChannelRepository
 from app.repositories.comments import CommentRepository
 from app.repositories.highlights import HighlightRepository
 from app.repositories.meetings import MeetingRepository
@@ -25,6 +26,7 @@ class UnitOfWork:
         self.participants = ParticipantRepository(session)
         self.tags = TagRepository(session)
         self.users = UserRepository(session)
+        self.channels = ChannelRepository(session)
         self.comments = CommentRepository(session)
         self.highlights = HighlightRepository(session)
 

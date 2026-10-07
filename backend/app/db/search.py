@@ -49,9 +49,13 @@ class SegmentHit:
     rank: float  # bm25: lower (more negative) is more relevant
 
 
+def query_tokens(raw: str) -> list[str]:
+    return _TOKEN.findall(raw)
+
+
 def to_fts_query(raw: str) -> str:
     """Quote each word token; prefix-match the last. Empty string means no usable input."""
-    tokens = _TOKEN.findall(raw)
+    tokens = query_tokens(raw)
     if not tokens:
         return ""
     quoted = [f'"{t}"' for t in tokens]

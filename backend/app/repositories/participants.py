@@ -34,3 +34,8 @@ class ParticipantRepository(Repository[Participant]):
         meeting = self.session.get(Meeting, meeting_id)
         if meeting is not None:
             self.session.expire(meeting, ["participants"])
+
+    def rename(self, participant: Participant, name: str) -> None:
+        participant.display_name = name
+        self.session.flush()
+        self._expire_participants(participant.meeting_id)

@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 from app.models import Speaker, TranscriptSegment
 from app.repositories.base import Repository
@@ -35,3 +35,11 @@ class TranscriptRepository(Repository[TranscriptSegment]):
     def bulk_add_segments(self, segments: Sequence[TranscriptSegment]) -> None:
         self.session.add_all(segments)
         self.session.flush()
+
+    def unlink_participant(self, participant_id: int) -> None:
+        self.session.execute(
+            update(Speaker)
+            .where(Speaker.participant_id == participant_id)
+            .values(participant_id=None)
+        )
+        self.session.expire_all()
