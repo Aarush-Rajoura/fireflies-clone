@@ -1,9 +1,12 @@
+import dataclasses
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.ai.interfaces import ProviderError
+from app.ai.types import NoteGroup, OutlineEntry
 from app.core.exceptions import ConflictError, GoneError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
 from app.models import Keyword, Meeting, Summary, SummarySection
@@ -148,3 +151,82 @@ def test_provider_label_stored(db_session: Session) -> None:
     SummaryService(uow, stub).regenerate(m.id)
     row = db_session.query(Summary).one()
     assert (row.provider, row.model) == ("mock (llm fallback)", None)
+
+
+def test_regenerate_snaps_outline_to_line_starts(db_session: Session) -> None:
+    uow, m = _meeting_with_transcript(db_session)  # lines start at 0 and 1000
+    out = SummaryService(uow, StubSummarizer(summary_result("v2"))).regenerate(m.id)
+    assert [o.start_ms for o in out.outline] == [0, 1000]
+
+
+def test_regenerate_snaps_with_unsorted_overlapping_lines(db_session: Session) -> None:
+    uow, _, m = seeded(db_session)
+    sp = f.make_speaker(db_session, m)
+    for seq, start in enumerate([5000, 1000, 3000, 3000]):
+        seg = f.make_segment(db_session, m, sp, f"line {seq}", sequence=seq)
+        seg.start_ms, seg.end_ms = start, start + 500
+    db_session.commit()
+    result = dataclasses.replace(
+        summary_result(), outline=[OutlineEntry("a", 3200), OutlineEntry("b", 900)]
+    )
+    out = SummaryService(uow, StubSummarizer(result)).regenerate(m.id)
+    assert [o.start_ms for o in out.outline] == [3000, 1000]
+
+
+def _take_over(db: Session, when: datetime) -> None:
+    db.execute(update(Summary).values(generating_since=when))
+    db.commit()
+
+
+def test_regenerate_after_claim_takeover_is_409_and_writes_nothing(db_session: Session) -> None:
+    uow, m = _meeting_with_transcript(db_session)
+    _save(uow, m, "v1")
+    theirs = datetime.now(UTC) + timedelta(seconds=5)
+    stub = StubSummarizer(summary_result("v2"), on_call=lambda _: _take_over(db_session, theirs))
+    with pytest.raises(ConflictError) as err:
+        SummaryService(uow, stub).regenerate(m.id)
+    assert err.value.code == "SUMMARY_GENERATING"
+    db_session.expire_all()
+    row = db_session.query(Summary).one()
+    assert row.overview == "Overview v1" and row.generating_since == theirs
+
+
+def test_failed_ai_does_not_clear_someone_elses_claim(db_session: Session) -> None:
+    uow, m = _meeting_with_transcript(db_session)
+    _save(uow, m, "v1")
+    theirs = datetime.now(UTC) + timedelta(seconds=5)
+    stub = StubSummarizer(fail=True, on_call=lambda _: _take_over(db_session, theirs))
+    with pytest.raises(ProviderError):
+        SummaryService(uow, stub).regenerate(m.id)
+    db_session.expire_all()
+    assert db_session.query(Summary).one().generating_since == theirs
+
+
+def test_failed_release_does_not_mask_ai_error(
+    db_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    uow, m = _meeting_with_transcript(db_session)
+    _save(uow, m, "v1")
+
+    def broken(*_: object) -> bool:
+        raise RuntimeError("db locked")
+
+    monkeypatch.setattr(uow.summaries, "release_claim", broken)
+    with pytest.raises(ProviderError):
+        SummaryService(uow, StubSummarizer(fail=True)).regenerate(m.id)
+
+
+def test_note_groups_with_same_title_stay_separate(db_session: Session) -> None:
+    uow, m = _meeting_with_transcript(db_session)
+    result = dataclasses.replace(
+        summary_result(),
+        notes=[NoteGroup("Risks", ["a"]), NoteGroup("Plan", ["b"]), NoteGroup("Risks", ["c"])],
+    )
+    SummaryService(uow, StubSummarizer()).save_result(m, result, "stub", None)
+    uow.commit()
+    out = SummaryService(uow, StubSummarizer()).get(m.id)
+    assert [(n.title, n.bullets) for n in out.notes] == [
+        ("Risks", ["a"]),
+        ("Plan", ["b"]),
+        ("Risks", ["c"]),
+    ]

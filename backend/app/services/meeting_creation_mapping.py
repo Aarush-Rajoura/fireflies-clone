@@ -1,7 +1,5 @@
-"""Pure helpers for meeting creation: name resolution, AI input, timing and previews."""
+"""Pure helpers for meeting creation: name resolution, AI input, talk time and previews."""
 
-import bisect
-import dataclasses
 import zlib
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -54,20 +52,6 @@ def ai_transcript(
             for i, s in enumerate(segments)
         ],
     )
-
-
-def snap(start_ms: int | None, starts: Sequence[int]) -> int | None:
-    """Move a position to the start of the line containing it, so clicks land on a line."""
-    if start_ms is None or not starts:
-        return start_ms
-    return starts[max(bisect.bisect_right(starts, start_ms) - 1, 0)]
-
-
-def snap_summary(result: SummaryResult, starts: Sequence[int]) -> SummaryResult:
-    outline = [
-        dataclasses.replace(e, start_ms=snap(e.start_ms, starts) or 0) for e in result.outline
-    ]
-    return dataclasses.replace(result, outline=outline)
 
 
 def talk_ms_by_name(segments: Sequence[SegmentIn], names: dict[str, str]) -> dict[str, int]:

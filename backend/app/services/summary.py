@@ -1,5 +1,7 @@
 """Summary reads and regeneration. The AI call always runs with no transaction open."""
 
+import logging
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from sqlalchemy.exc import IntegrityError
@@ -11,12 +13,15 @@ from app.db.unit_of_work import UnitOfWork
 from app.models import Keyword, Meeting, Summary, SummarySection
 from app.models.enums import SectionKind
 from app.schemas.summary import NoteGroupRead, OutlineEntryRead, SummaryRead
+from app.services import timeline
+from app.services.guards import require_active_meeting
 from app.services.meeting_mapping import GENERATING_CLAIM_TTL
-from app.services.meetings import MeetingService
 from app.services.transcript_text import build_transcript_for_ai
 
 SECTION_TITLE_MAX = 300
 KEYWORD_MAX = 100
+
+logger = logging.getLogger(__name__)
 
 _EMPTY = SummaryRead(
     overview="",
@@ -34,23 +39,27 @@ def _generating() -> ConflictError:
     return ConflictError("A summary is already being generated", code="SUMMARY_GENERATING")
 
 
+@dataclass(frozen=True)
+class _Claim:
+    summary: Summary
+    # The generating_since value we wrote: proof of ownership for every later write.
+    token: datetime
+    created: bool
+    transcript: TranscriptForAI
+    starts: list[int]
+
+
 class SummaryService:
     def __init__(self, uow: UnitOfWork, summarizer: Summarizer) -> None:
         self.uow = uow
         self.summarizer = summarizer
-        self._meetings = MeetingService(uow)
 
     def get(self, meeting_id: int) -> SummaryRead:
-        self._meetings.get_active_or_raise(meeting_id)
+        require_active_meeting(self.uow, meeting_id)
         summary = self.uow.summaries.get_by_meeting(meeting_id)
         if summary is None:
             return _EMPTY.model_copy()
         sections = self.uow.summaries.sections(summary.id)
-        notes: dict[str, list[str]] = {}
-        for s in sections:
-            if s.kind == SectionKind.NOTES:
-                lines = [line.strip() for line in s.body.splitlines()]
-                notes.setdefault(s.title, []).extend(line for line in lines if line)
         return SummaryRead(
             overview=summary.overview,
             keywords=self.uow.summaries.keyword_terms([meeting_id]).get(meeting_id, []),
@@ -59,7 +68,12 @@ class SummaryService:
                 for s in sections
                 if s.kind == SectionKind.OUTLINE
             ],
-            notes=[NoteGroupRead(title=t, bullets=b) for t, b in notes.items()],
+            # One group per row, in stored order: two groups may share a title.
+            notes=[
+                NoteGroupRead(title=s.title, bullets=_bullets(s.body))
+                for s in sections
+                if s.kind == SectionKind.NOTES
+            ],
             provider=summary.provider,
             model=summary.model,
             generated_at=summary.generated_at,
@@ -67,19 +81,26 @@ class SummaryService:
         )
 
     def regenerate(self, meeting_id: int) -> SummaryRead:
-        summary, created, transcript = self._claim(meeting_id)
+        claim = self._claim(meeting_id)
         try:
-            result = self.summarizer.summarize(transcript)
+            result = self.summarizer.summarize(claim.transcript)
         except BaseException:
-            self._release(summary, created)
+            self._release(claim)
             raise
         try:
-            meeting = self._meetings.get_active_or_raise(meeting_id)
+            meeting = require_active_meeting(self.uow, meeting_id)
+            # Clearing our own claim first makes the write conditional on still owning it.
+            if not self.uow.summaries.release_claim(claim.summary, claim.token):
+                raise _generating()
+            result = timeline.snap_summary(result, claim.starts)
             self.save_result(meeting, result, result.provider, result.model)
             self.uow.commit()
+        except ConflictError:
+            self.uow.rollback()
+            raise
         except BaseException:
             self.uow.rollback()
-            self._release(summary, created)
+            self._release(claim)
             raise
         return self.get(meeting_id)
 
@@ -100,18 +121,18 @@ class SummaryService:
         repo.replace_sections(summary.id, _sections(summary.id, result))
         repo.replace_keywords(meeting.id, _keywords(meeting.id, result))
 
-    def _claim(self, meeting_id: int) -> tuple[Summary, bool, TranscriptForAI]:
+    def _claim(self, meeting_id: int) -> _Claim:
         """Transaction 1: mark the summary as generating and snapshot the AI input."""
         try:
-            meeting = self._meetings.get_active_or_raise(meeting_id)
-            transcript = self._transcript(meeting)
-            now = datetime.now(UTC)
+            meeting = require_active_meeting(self.uow, meeting_id)
+            transcript, starts = self._transcript(meeting)
+            token = datetime.now(UTC)
             repo = self.uow.summaries
             summary = repo.get_by_meeting(meeting_id)
             created = summary is None
             if summary is None:
-                summary = repo.add(Summary(meeting_id=meeting_id, generating_since=now))
-            elif not repo.claim(summary, now, now - GENERATING_CLAIM_TTL):
+                summary = repo.add(Summary(meeting_id=meeting_id, generating_since=token))
+            elif not repo.claim(summary, token, token - GENERATING_CLAIM_TTL):
                 raise _generating()
             self.uow.commit()
         except IntegrityError as exc:
@@ -121,29 +142,43 @@ class SummaryService:
         except BaseException:
             self.uow.rollback()
             raise
-        return summary, created, transcript
+        return _Claim(summary, token, created, transcript, starts)
 
-    def _transcript(self, meeting: Meeting) -> TranscriptForAI:
+    def _transcript(self, meeting: Meeting) -> tuple[TranscriptForAI, list[int]]:
         segments = self.uow.transcript.segments(meeting.id)
         if not segments:
             raise ValidationFailedError(
                 "This meeting has no transcript to summarise", code="TRANSCRIPT_EMPTY"
             )
-        return build_transcript_for_ai(
+        transcript = build_transcript_for_ai(
             meeting,
             segments,
             self.uow.transcript.speakers(meeting.id),
             self.uow.participants.list_for_meeting(meeting.id),
         )
+        return transcript, timeline.line_starts(s.start_ms for s in segments)
 
-    def _release(self, summary: Summary, created: bool) -> None:
-        """Clear the claim in its own transaction; a row made only to hold it goes too."""
-        self.uow.rollback()
-        if created:
-            self.uow.summaries.delete(summary)
-        else:
-            self.uow.summaries.release_claim(summary)
-        self.uow.commit()
+    def _release(self, claim: _Claim) -> None:
+        """Clear our claim in its own transaction; never masks the caller's error.
+
+        A row created only to hold the claim is removed. A claim that was taken over
+        (ours went stale) is left alone.
+        """
+        try:
+            self.uow.rollback()
+            repo = self.uow.summaries
+            if claim.created:
+                repo.delete_if_claimed(claim.summary, claim.token)
+            else:
+                repo.release_claim(claim.summary, claim.token)
+            self.uow.commit()
+        except Exception:
+            self.uow.rollback()
+            logger.exception("Could not release the summary generation claim")
+
+
+def _bullets(body: str) -> list[str]:
+    return [line.strip() for line in body.splitlines() if line.strip()]
 
 
 def _sections(summary_id: int, result: SummaryResult) -> list[SummarySection]:

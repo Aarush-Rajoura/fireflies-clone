@@ -13,7 +13,7 @@ from app.schemas.action_item import (
     AssigneeRead,
 )
 from app.schemas.common import Page, PageParams
-from app.services.meetings import MeetingService
+from app.services.guards import require_active_meeting
 
 
 def action_item_read(item: ActionItem, participants: dict[int, Participant]) -> ActionItemRead:
@@ -34,10 +34,9 @@ def action_item_read(item: ActionItem, participants: dict[int, Participant]) -> 
 class ActionItemService:
     def __init__(self, uow: UnitOfWork) -> None:
         self.uow = uow
-        self._meetings = MeetingService(uow)
 
     def list(self, meeting_id: int, page: PageParams) -> Page[ActionItemRead]:
-        self._meetings.get_active_or_raise(meeting_id)
+        require_active_meeting(self.uow, meeting_id)
         items, total = self.uow.action_items.page_for_meeting(
             meeting_id, page.page_size, page.offset
         )
@@ -50,7 +49,12 @@ class ActionItemService:
         )
 
     def create(self, meeting_id: int, data: ActionItemCreate) -> ActionItemRead:
-        self._meetings.get_active_or_raise(meeting_id)
+        """Append a manual item after the existing ones.
+
+        The next sequence is read-then-written, so two concurrent creates can get the
+        same number; nothing is unique on it, and every list orders by (sequence, id).
+        """
+        require_active_meeting(self.uow, meeting_id)
         self._check_assignee(meeting_id, data.assignee_participant_id)
         item = self.uow.action_items.add(
             ActionItem(
@@ -91,7 +95,7 @@ class ActionItemService:
         item = self.uow.action_items.get(item_id)
         if item is None:
             raise NotFoundError("Action item not found", code="ACTION_ITEM_NOT_FOUND")
-        self._meetings.get_active_or_raise(item.meeting_id)
+        require_active_meeting(self.uow, item.meeting_id)
         return item
 
     def _check_assignee(self, meeting_id: int, participant_id: int | None) -> None:

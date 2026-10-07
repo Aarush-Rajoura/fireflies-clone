@@ -8,7 +8,7 @@ from app.ai.types import ActionItemDraft, TranscriptForAI
 from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
 from app.models import ActionItem, Meeting, Participant, Speaker, Summary, TranscriptSegment
-from app.models.enums import ActionItemSource, MeetingSource, MeetingStatus
+from app.models.enums import ActionItemSource, MeetingSource, MeetingStatus, ParticipantRole
 from app.parsers import default_registry
 from app.schemas.meeting import MeetingCreate
 from app.schemas.transcript import SegmentIn
@@ -63,7 +63,7 @@ def test_create_with_segments_writes_everything(db_session: Session) -> None:
     assert out.source == MeetingSource.PASTE and out.status == MeetingStatus.COMPLETED
     names = {p.display_name: p for p in out.participants}
     # "bob" matched the listed "Bob" case-insensitively; Alice was created from the transcript.
-    assert set(names) == {"Bob", "Carol", "Alice"}
+    assert set(names) == {"Bob", "Carol", "Alice", "Sarah Chen"}
     assert (names["Alice"].talk_ms, names["Bob"].talk_ms, names["Carol"].talk_ms) == (
         2400,
         1600,
@@ -150,7 +150,7 @@ def test_form_meeting_has_no_ai_and_empty_summary(db_session: Session) -> None:
     assert summ.calls == [] and ext.calls == []
     assert out.summary_status == "none" and out.duration_ms == 0
     assert out.status == MeetingStatus.COMPLETED and out.speakers == []
-    assert [p.display_name for p in out.participants] == ["Bob", "Carol"]
+    assert [p.display_name for p in out.participants] == ["Bob", "Carol", "Sarah Chen"]
     assert SummaryService(uow, summ).get(out.id).overview == ""
 
 
@@ -215,3 +215,50 @@ def test_colour_index_is_stable_per_label(db_session: Session) -> None:
     b = _service(uow).create(_data(title="Again"))
     colours = [{s.label: s.color_index for s in m.speakers} for m in (a, b)]
     assert colours[0] == colours[1]
+
+
+def test_host_is_added_as_host_participant(db_session: Session) -> None:
+    uow, user, _ = seeded(db_session)
+    out = _service(uow).create(_data(segments=None))
+    host = db_session.query(Participant).filter_by(meeting_id=out.id, user_id=user.id).one()
+    assert (host.display_name, host.role) == ("Sarah Chen", ParticipantRole.HOST)
+
+
+def test_listed_host_is_linked_not_duplicated(db_session: Session) -> None:
+    uow, user, _ = seeded(db_session)
+    out = _service(uow).create(_data(participants=["sarah chen", "Bob"], segments=None))
+    assert [p.display_name for p in out.participants] == ["sarah chen", "Bob"]
+    linked = db_session.query(Participant).filter_by(meeting_id=out.id, user_id=user.id).one()
+    assert linked.display_name == "sarah chen" and linked.role == ParticipantRole.HOST
+
+
+def test_bad_channel_costs_no_ai_call(db_session: Session) -> None:
+    uow, _, _ = seeded(db_session)
+    summ, ext = StubSummarizer(), StubExtractor()
+    with pytest.raises(ValidationFailedError) as err:
+        _service(uow, summ, ext).create(_data(channel_id=999))
+    assert err.value.code == "CHANNEL_NOT_FOUND"
+    assert summ.calls == [] and ext.calls == []
+    assert not uow.session.in_transaction()
+
+
+def test_leftover_read_transaction_is_closed_before_ai(db_session: Session) -> None:
+    uow, _, _ = seeded(db_session)
+    db_session.query(Meeting).count()  # a caller's read leaves a transaction open
+    assert uow.session.in_transaction()
+    seen: list[bool] = []
+    summ = StubSummarizer(on_call=lambda _: seen.append(uow.session.in_transaction()))
+    _service(uow, summ).create(_data())
+    assert seen == [False]
+
+
+def test_unsorted_segments_snap_correctly(db_session: Session) -> None:
+    uow, _, _ = seeded(db_session)
+    segments = [
+        SegmentIn(speaker="Alice", start_ms=1000, end_ms=2000, text="early"),
+        SegmentIn(speaker="Alice", start_ms=5000, end_ms=6000, text="late"),
+        SegmentIn(speaker="Alice", start_ms=3000, end_ms=4500, text="middle"),
+    ]
+    drafts = [ActionItemDraft(text="Do it", assignee=None, start_ms=4000)]
+    _service(uow, extractor=StubExtractor(drafts)).create(_data(segments=segments))
+    assert db_session.query(ActionItem).one().start_ms == 3000

@@ -5,6 +5,7 @@ provider must not hold the write lock); then everything is written in one short
 transaction, so a failure part-way leaves no half-built meeting.
 """
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.ai.interfaces import ActionItemExtractor, Summarizer
@@ -17,11 +18,19 @@ from app.parsers import ParserRegistry
 from app.schemas.meeting import MeetingCreate, MeetingDetail
 from app.schemas.transcript import SegmentIn, TranscriptPreview
 from app.services import meeting_creation_mapping as mapping
+from app.services import timeline
 from app.services.meeting_creation_mapping import AIOutput
 from app.services.meetings import MeetingService
 from app.services.summary import SummaryService
 
 BYTES_PER_MB = 1024 * 1024
+
+
+@dataclass(frozen=True)
+class _Host:
+    # Plain values: ORM rows are expired by the rollback that ends the pre-check read.
+    id: int
+    name: str
 
 
 class MeetingCreationService:
@@ -56,37 +65,51 @@ class MeetingCreationService:
         return mapping.preview(self.parsers.parse(content, filename))
 
     def create(self, data: MeetingCreate) -> MeetingDetail:
-        ai = self._run_ai(data)
+        host = self._precheck(data)
+        ai = self._run_ai(data, host)
         try:
-            meeting_id = self._write(data, ai)
+            meeting_id = self._write(data, ai, host)
             self.uow.commit()
         except BaseException:
             self.uow.rollback()
             raise
         return self._meetings.get(meeting_id)
 
-    def _run_ai(self, data: MeetingCreate) -> AIOutput | None:
+    def _precheck(self, data: MeetingCreate) -> _Host:
+        """Cheap reads that would fail step 2, done first so a bad request costs no AI call.
+
+        Ends with a rollback, so the AI step always starts with no transaction open (even
+        if the caller left a read transaction behind).
+        """
+        if self.uow.session.in_transaction():
+            self.uow.rollback()
+        try:
+            user = self.uow.users.get_default()
+            if user is None:
+                raise NotFoundError("Database has not been seeded", code="NOT_SEEDED")
+            if data.channel_id is not None and self.uow.channels.get(data.channel_id) is None:
+                raise ValidationFailedError(
+                    "Channel does not exist",
+                    code="CHANNEL_NOT_FOUND",
+                    details={"channel_id": data.channel_id},
+                )
+            return _Host(id=user.id, name=user.name)
+        finally:
+            self.uow.rollback()
+
+    def _run_ai(self, data: MeetingCreate, host: _Host) -> AIOutput | None:
         """Step 1: touches no database state, so no transaction is open during the calls."""
         if data.segments is None:
             return None
-        names = mapping.resolve_speaker_names(data.participants, _labels(data.segments))
+        names = mapping.resolve_speaker_names(_people(data, host), _labels(data.segments))
         transcript = mapping.ai_transcript(data.title, data.segments, names)
         return AIOutput(
             summary=self.summarizer.summarize(transcript),
             drafts=self.extractor.extract_action_items(transcript),
         )
 
-    def _write(self, data: MeetingCreate, ai: AIOutput | None) -> int:
+    def _write(self, data: MeetingCreate, ai: AIOutput | None, host: _Host) -> int:
         """Step 2: every row for the meeting; the caller commits once."""
-        host = self.uow.users.get_default()
-        if host is None:
-            raise NotFoundError("Database has not been seeded", code="NOT_SEEDED")
-        if data.channel_id is not None and self.uow.channels.get(data.channel_id) is None:
-            raise ValidationFailedError(
-                "Channel does not exist",
-                code="CHANNEL_NOT_FOUND",
-                details={"channel_id": data.channel_id},
-            )
         segments = data.segments or []
         meeting = self.uow.meetings.add(
             Meeting(
@@ -102,8 +125,9 @@ class MeetingCreationService:
             )
         )
         labels = _labels(segments)
-        names = mapping.resolve_speaker_names(data.participants, labels)
-        people = self._add_participants(meeting, data.participants, segments, names)
+        listed = _people(data, host)
+        names = mapping.resolve_speaker_names(listed, labels)
+        people = self._add_participants(meeting, listed, segments, names, host)
         speaker_ids = self._add_speakers(meeting, labels, names, people)
         self.uow.transcript.bulk_add_segments(
             [
@@ -121,8 +145,8 @@ class MeetingCreationService:
             ]
         )
         if ai is not None:
-            starts = [s.start_ms for s in segments]
-            summary = mapping.snap_summary(ai.summary, starts)
+            starts = timeline.line_starts(s.start_ms for s in segments)
+            summary = timeline.snap_summary(ai.summary, starts)
             self.summaries.save_result(meeting, summary, summary.provider, summary.model)
             self._add_ai_action_items(meeting, ai, starts, people)
         return meeting.id
@@ -133,15 +157,18 @@ class MeetingCreationService:
         listed: list[str],
         segments: list[SegmentIn],
         names: dict[str, str],
+        host: _Host,
     ) -> dict[str, Participant]:
         talk = mapping.talk_ms_by_name(segments, names)
         people: dict[str, Participant] = {}
         for name in mapping.distinct([*listed, *names.values()]):
+            is_host = name.lower() == host.name.lower()
             people[name.lower()] = self.uow.participants.add(
                 Participant(
                     meeting_id=meeting.id,
                     display_name=name,
-                    role=ParticipantRole.ATTENDEE,
+                    user_id=host.id if is_host else None,
+                    role=ParticipantRole.HOST if is_host else ParticipantRole.ATTENDEE,
                     talk_ms=talk.get(name.lower(), 0),
                 )
             )
@@ -183,12 +210,17 @@ class MeetingCreationService:
                     text=draft.text,
                     # An unknown name is not guessed at: the item stays unassigned.
                     assignee_participant_id=who.id if who else None,
-                    start_ms=mapping.snap(draft.start_ms, starts),
+                    start_ms=timeline.snap(draft.start_ms, starts),
                     source=ActionItemSource.AI,
                     sequence=i,
                 )
             )
         self.uow.action_items.bulk_add(items)
+
+
+def _people(data: MeetingCreate, host: _Host) -> list[str]:
+    """Listed participants plus the host; a listed spelling of the host's name wins."""
+    return mapping.distinct([*data.participants, host.name])
 
 
 def _labels(segments: list[SegmentIn]) -> list[str]:
