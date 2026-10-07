@@ -1,0 +1,346 @@
+{
+  "key": "q4-webinar-planning",
+  "title": "Q4 Webinar Series Planning",
+  "description": "Marketing, product, finance and customer success plan a four-webinar Q4 series with budget and attribution rules.",
+  "day_offset": -12,
+  "time": "15:00",
+  "host": "helena",
+  "participants": [
+    "helena",
+    "me",
+    "diego",
+    "fatima"
+  ],
+  "channel": null,
+  "has_media": false,
+  "transcript": [
+    {
+      "speaker": "helena",
+      "text": "Thanks for joining, everyone. This is planning for the Q4 webinar series. The goal is pipeline. I want 600 thousand dollars in influenced pipeline from webinars by year end."
+    },
+    {
+      "speaker": "fatima",
+      "text": "And what budget are you asking for? I have 42 thousand in the draft and want to confirm it's the same number you have."
+    },
+    {
+      "speaker": "helena",
+      "text": "Yes, 42 thousand across four webinars, so roughly ten and a half each, including ads, a production vendor, and speaker gifts."
+    },
+    {
+      "speaker": "me",
+      "text": "Four seems like a lot with a launch to support. Can we justify four?"
+    },
+    {
+      "speaker": "helena",
+      "text": "I think so, if each has a different job. First, the launch webinar on October 28th, a week after Insights 2.0 ships. That's the demo-heavy one."
+    },
+    {
+      "speaker": "helena",
+      "text": "Second, a customer story on November 12th. Third, an anomaly alerts how-to on December 3rd for existing customers. Fourth, a year-in-review and roadmap on December 17th."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Fine in principle. I'll want the numbers behind the funnel before I sign anything."
+    },
+    {
+      "speaker": "diego",
+      "text": "For the customer story, I'd love Brightpath Health. They signed last month and a healthcare analytics story would stand out. But they won't have results by November 12th."
+    },
+    {
+      "speaker": "me",
+      "text": "They'll barely be live. I'd rather do their story in January with real numbers. Who else could we use for November?"
+    },
+    {
+      "speaker": "diego",
+      "text": "Cobalt Commerce has been a customer for 18 months, and their 22 percent conversion lift is a real number."
+    },
+    {
+      "speaker": "helena",
+      "text": "Cobalt is e-commerce, which is our biggest segment, so I like it for pipeline. Diego, can you ask them?"
+    },
+    {
+      "speaker": "diego",
+      "text": "Sure. I'll reach out to Cobalt's head of growth by Wednesday and see if they'll present."
+    },
+    {
+      "speaker": "helena",
+      "text": "And we keep Brightpath as the Q1 story."
+    },
+    {
+      "speaker": "me",
+      "text": "For the launch webinar, I'll do the live demo, and I'll ask Tobias to join for the Q&A."
+    },
+    {
+      "speaker": "helena",
+      "text": "Perfect. I'd like a dry run on October 26th."
+    },
+    {
+      "speaker": "me",
+      "text": "Put it on my calendar."
+    },
+    {
+      "speaker": "helena",
+      "text": "Promotion. LinkedIn ads at 12 thousand over the quarter, email to our list of 18,400 contacts, and co-promotion with two integration partners."
+    },
+    {
+      "speaker": "fatima",
+      "text": "What conversion are you assuming from the email list?"
+    },
+    {
+      "speaker": "helena",
+      "text": "Conservatively a 2 percent registration rate, so about 370 per webinar from email alone. Add paid and partners and I think we land at 400 to 450 registrants per webinar, around 1,700 total."
+    },
+    {
+      "speaker": "me",
+      "text": "Are the two partners committed, or still talking?"
+    },
+    {
+      "speaker": "helena",
+      "text": "One has signed. The other is a verbal yes for now."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Show-up rate?"
+    },
+    {
+      "speaker": "helena",
+      "text": "38 percent live, plus on-demand recordings. Last quarter we hit 41, so 38 is safe."
+    },
+    {
+      "speaker": "fatima",
+      "text": "And SQLs?"
+    },
+    {
+      "speaker": "helena",
+      "text": "About 8 percent of attendees, so around 50 for the series."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Fifty SQLs at our average deal size of 18 thousand and a 20 percent close rate is roughly 180 thousand in closed revenue against 42 thousand spent. I can live with that, but I want attribution by webinar."
+    },
+    {
+      "speaker": "helena",
+      "text": "I'll build an attribution dashboard in Lumora itself. We should dogfood it."
+    },
+    {
+      "speaker": "me",
+      "text": "Love that. We could even feature it in the launch."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Then I'll approve the 42 thousand on one condition: release the LinkedIn spend in two tranches, the second after the first webinar."
+    },
+    {
+      "speaker": "helena",
+      "text": "That's fair."
+    },
+    {
+      "speaker": "helena",
+      "text": "Production. I'd like a vendor for the launch webinar, around 6,500 for run-of-show, moderation, and a clean recording. The others we do in house."
+    },
+    {
+      "speaker": "me",
+      "text": "The risk is the launch date. If Insights 2.0 slips, a webinar on the 28th is awkward."
+    },
+    {
+      "speaker": "helena",
+      "text": "I've thought about that. If the launch slips by a week, I'd move the webinar to November 4th, so I'll hold both dates with the vendor."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Hold both, but don't pay deposits until the launch is confirmed."
+    },
+    {
+      "speaker": "helena",
+      "text": "Understood. The vendor allows cancellation with seven days' notice and no penalty, which is why I'm comfortable holding both."
+    },
+    {
+      "speaker": "me",
+      "text": "Should we record all four and put the replays behind a form?"
+    },
+    {
+      "speaker": "helena",
+      "text": "Yes, replays behind a form. That's where a lot of SQLs come from."
+    },
+    {
+      "speaker": "diego",
+      "text": "Customer success can help with registrants too. I could email 60 key accounts personally."
+    },
+    {
+      "speaker": "helena",
+      "text": "Please do. I'll send you a sample note with the registration link by Monday."
+    },
+    {
+      "speaker": "me",
+      "text": "I'll draft the demo script and get it to you before the dry run, by October 19th."
+    },
+    {
+      "speaker": "diego",
+      "text": "And I'll send those 60 personal emails once the registration page is open."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Let me restate the decisions. Four webinars, 42 thousand total, LinkedIn spend in two tranches, attribution by webinar. Customer story is Cobalt in November, Brightpath in Q1."
+    },
+    {
+      "speaker": "helena",
+      "text": "Yes. I'll write the series plan and share a one-pager with everyone by next Wednesday."
+    },
+    {
+      "speaker": "helena",
+      "text": "I'll also open the registration page for the October 28th webinar by October 1st."
+    },
+    {
+      "speaker": "fatima",
+      "text": "And I'll release the first tranche of the LinkedIn spend once Helena sends the plan."
+    },
+    {
+      "speaker": "helena",
+      "text": "Great. Thanks, everyone."
+    }
+  ],
+  "summary": {
+    "overview": "The group planned a four-webinar Q4 series with a 42 thousand dollar budget and a goal of 600 thousand dollars in influenced pipeline. The topics are the Insights 2.0 launch demo on October 28th, a Cobalt Commerce customer story on November 12th, an anomaly alerts how-to on December 3rd, and a year-in-review on December 17th, with Brightpath Health saved for a Q1 story. Helena projected around 1,700 registrants and about 50 SQLs, and Fatima approved the budget with LinkedIn spend released in two tranches and attribution tracked per webinar. A backup date of November 4th is held in case the launch slips.",
+    "outline": [
+      {
+        "title": "Goals and series overview",
+        "at_line": 0
+      },
+      {
+        "title": "Topics and speakers",
+        "at_line": 7
+      },
+      {
+        "title": "Promotion and funnel math",
+        "at_line": 16
+      },
+      {
+        "title": "Production, timeline, and risks",
+        "at_line": 30
+      },
+      {
+        "title": "Decisions and next steps",
+        "at_line": 41
+      }
+    ],
+    "notes": [
+      {
+        "title": "Goals and series overview",
+        "bullets": [
+          "Goal is 600k in influenced pipeline from webinars by year end on a 42k budget.",
+          "Four webinars: October 28 launch demo, November 12 customer story, December 3 alerts how-to, December 17 year-in-review.",
+          "Fatima wants the funnel numbers before signing off."
+        ]
+      },
+      {
+        "title": "Topics and speakers",
+        "bullets": [
+          "Brightpath Health will be featured in Q1 once real results exist; Cobalt Commerce (22% conversion lift) is the November story.",
+          "Diego asks Cobalt's head of growth to present.",
+          "Nadia gives the launch demo with Tobias for Q&A; dry run on October 26th."
+        ]
+      },
+      {
+        "title": "Promotion and funnel math",
+        "bullets": [
+          "Channels: 12k LinkedIn ads, an email list of 18,400 contacts, and two integration partners.",
+          "Assumes 400-450 registrants per webinar (about 1,700 total), 38% live attendance, and about 50 SQLs.",
+          "Fatima computes roughly 180k closed revenue against 42k spend and requires attribution by webinar, which Helena will build in Lumora.",
+          "LinkedIn spend is released in two tranches."
+        ]
+      },
+      {
+        "title": "Production, timeline, and risks",
+        "bullets": [
+          "A vendor is planned for the launch webinar at about 6,500; the other webinars are in house.",
+          "If the launch slips a week, the webinar moves to November 4th; both dates are held, with no deposits until the launch is confirmed.",
+          "Diego will personally email 60 key accounts; Nadia owes the demo script by October 19th."
+        ]
+      },
+      {
+        "title": "Decisions and next steps",
+        "bullets": [
+          "Decisions: four webinars at 42k, two-tranche LinkedIn spend, per-webinar attribution, Cobalt in November and Brightpath in Q1.",
+          "Helena owns the one-pager and registration page; Fatima releases the first tranche after the plan is sent."
+        ]
+      }
+    ],
+    "keywords": [
+      {
+        "term": "webinar series",
+        "weight": 0.95
+      },
+      {
+        "term": "influenced pipeline",
+        "weight": 0.84
+      },
+      {
+        "term": "budget",
+        "weight": 0.73
+      },
+      {
+        "term": "Cobalt Commerce",
+        "weight": 0.62
+      },
+      {
+        "term": "attribution",
+        "weight": 0.51
+      },
+      {
+        "term": "launch webinar",
+        "weight": 0.4
+      }
+    ]
+  },
+  "action_items": [
+    {
+      "text": "Ask Cobalt Commerce's head of growth to present at the November 12th webinar by Wednesday",
+      "assignee": "diego",
+      "due_offset_days": 5,
+      "status": "completed",
+      "at_line": 11
+    },
+    {
+      "text": "Send Diego a sample outreach note with the registration link by Monday",
+      "assignee": "helena",
+      "due_offset_days": 3,
+      "status": "completed",
+      "at_line": 38
+    },
+    {
+      "text": "Draft the launch webinar demo script and send it to Helena by October 19th",
+      "assignee": "me",
+      "due_offset_days": 24,
+      "status": "open",
+      "at_line": 39
+    },
+    {
+      "text": "Email 60 key accounts personally once the registration page is open",
+      "assignee": "diego",
+      "due_offset_days": 10,
+      "status": "open",
+      "at_line": 40
+    },
+    {
+      "text": "Write the series plan and share a one-pager by next Wednesday",
+      "assignee": "helena",
+      "due_offset_days": 5,
+      "status": "completed",
+      "at_line": 42
+    },
+    {
+      "text": "Open the registration page for the October 28th webinar by October 1st",
+      "assignee": "helena",
+      "due_offset_days": 6,
+      "status": "completed",
+      "at_line": 43
+    },
+    {
+      "text": "Release the first tranche of the LinkedIn spend once the series plan is sent",
+      "assignee": "fatima",
+      "due_offset_days": 5,
+      "status": "completed",
+      "at_line": 44
+    }
+  ]
+}

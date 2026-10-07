@@ -1,0 +1,356 @@
+{
+  "key": "brightpath-kickoff",
+  "title": "Brightpath Health — Onboarding Kickoff",
+  "description": "Kickoff with Brightpath Health covering success goals, privacy requirements, integration plan, and training timeline.",
+  "day_offset": -1,
+  "time": "11:00",
+  "host": "diego",
+  "participants": [
+    "diego",
+    "me",
+    "priyanka",
+    "callum",
+    "kenji"
+  ],
+  "channel": "customers",
+  "has_media": false,
+  "transcript": [
+    {
+      "speaker": "diego",
+      "text": "Welcome, everyone, and thanks for joining the Brightpath kickoff. I'm Diego, your customer success manager. With me are Nadia from product, and Kenji, who'll be your integration engineer."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "Thanks, Diego. I'm Priyanka Nair, I lead clinical informatics here, and Callum Reeves runs IT integration. We're excited, honestly. We've struggled to understand our patient portal for a long time."
+    },
+    {
+      "speaker": "callum",
+      "text": "Hi all. I'm the one who'll be asking the annoying security questions, so apologies in advance."
+    },
+    {
+      "speaker": "me",
+      "text": "Annoying security questions are welcome. Priyanka, what does success look like in six months?"
+    },
+    {
+      "speaker": "priyanka",
+      "text": "Today 41 percent of patients who start booking an appointment in the portal abandon it. I want that under 30 percent by the end of Q1."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "The second goal is knowing which of our nine clinics has the worst drop-off, so we can focus the front-desk teams there."
+    },
+    {
+      "speaker": "diego",
+      "text": "Good, measurable goals. We'll build the dashboards around exactly that funnel."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "Also, the contract covers 85 seats, but I'd like to start with 25 for the pilot."
+    },
+    {
+      "speaker": "callum",
+      "text": "Let me jump to privacy, since it gates everything. We cannot send protected health information into any analytics tool. No names, no record numbers, no dates of birth."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Understood. Our SDK has a property allowlist, so only fields you explicitly name are sent. For patient identity, we recommend a salted hash generated on your side, so we never see the raw ID."
+    },
+    {
+      "speaker": "callum",
+      "text": "A salted hash with a key we rotate works. What about free-text fields, like the search box in the portal?"
+    },
+    {
+      "speaker": "kenji",
+      "text": "I'd exclude those entirely, because people type symptoms into search boxes. I'll send you a list of recommended SDK exclusions, including form text and URL query strings."
+    },
+    {
+      "speaker": "callum",
+      "text": "Please do. And the data processing addendum, legal countersigned that last week, right?"
+    },
+    {
+      "speaker": "diego",
+      "text": "Yes, on the 30th. I'll resend you the fully executed copy so you have it on file."
+    },
+    {
+      "speaker": "callum",
+      "text": "Next, data residency. We need US-only storage."
+    },
+    {
+      "speaker": "diego",
+      "text": "Your workspace is provisioned in our US-East region, and our CTO, Tobias, can confirm that in writing if your auditors ask."
+    },
+    {
+      "speaker": "callum",
+      "text": "One more thing. We heard Lumora had an ingestion outage last week. How stale did the data get, and what stops it from happening again?",
+      "pause_ms": 700
+    },
+    {
+      "speaker": "diego",
+      "text": "Fair question, and I'd rather address it directly. On October 1st we had about two and a half hours of delayed ingestion. No data was lost. The cause was one large tenant flooding a partition."
+    },
+    {
+      "speaker": "me",
+      "text": "The fix is per-tenant rate limits shipping to production by October 14th, ahead of the Insights 2.0 launch on the 21st."
+    },
+    {
+      "speaker": "callum",
+      "text": "Okay. I'd like a written summary, with the rate limit numbers."
+    },
+    {
+      "speaker": "diego",
+      "text": "I'll send you the incident summary by Friday, including the numbers."
+    },
+    {
+      "speaker": "kenji",
+      "text": "For integration, the plan is the JavaScript SDK on the patient portal, plus a server-side connection for the scheduling system's booking-confirmed event."
+    },
+    {
+      "speaker": "callum",
+      "text": "Our scheduling vendor can send webhooks, but they're sometimes late. Is there a batch option too?"
+    },
+    {
+      "speaker": "kenji",
+      "text": "Yes, batches of up to 5,000 events per request. I'd use webhooks for freshness and a nightly batch to reconcile."
+    },
+    {
+      "speaker": "callum",
+      "text": "Fine. We're on a change freeze through October 9th, so I can't touch the portal until the week of the 12th."
+    },
+    {
+      "speaker": "kenji",
+      "text": "That works. If I get a staging environment by the 12th, I can have the SDK instrumented and verified with you by the 16th."
+    },
+    {
+      "speaker": "callum",
+      "text": "I'll set up the staging access and send you credentials by Monday the 12th."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Event naming matters too. We suggest a verb-object convention like appointment_booked, so the funnels read cleanly."
+    },
+    {
+      "speaker": "callum",
+      "text": "Our analysts will love that. The scheduling vendor's field names are a mess."
+    },
+    {
+      "speaker": "callum",
+      "text": "SSO is the other piece. We use Okta, and we want SCIM provisioning so offboarded staff lose access automatically."
+    },
+    {
+      "speaker": "me",
+      "text": "SSO with SCIM is supported on your plan. Kenji will include the setup guide, and Diego can schedule a call with your Okta admin."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "Let's talk about what my team sees. Day one, I want the booking funnel by clinic: portal visit, login, choose provider, choose time, confirm."
+    },
+    {
+      "speaker": "me",
+      "text": "That's one of our standard funnel templates. With Insights 2.0 you'd also get anomaly alerts, so if a clinic's confirm step suddenly drops, you're notified."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "That would have saved us in August, when a scheduling bug cost us a week of bookings and nobody noticed."
+    },
+    {
+      "speaker": "callum",
+      "text": "Can analysts share dashboards with clinic managers without giving them edit rights?"
+    },
+    {
+      "speaker": "me",
+      "text": "Yes, there are viewer roles, and you can schedule a weekly digest per clinic so managers don't have to log in at all."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "Managers would love that. They hate new logins."
+    },
+    {
+      "speaker": "me",
+      "text": "Exactly the use case. Insights 2.0 launches October 21st, and I'll add Brightpath to the early-access list this week so you get alerts before general availability."
+    },
+    {
+      "speaker": "diego",
+      "text": "For training, I suggest two sessions, one for analysts and one for clinic managers. How about October 28th for the analysts?"
+    },
+    {
+      "speaker": "priyanka",
+      "text": "The 28th works. Clinic managers are busier, so can we do them after the first week of November?"
+    },
+    {
+      "speaker": "diego",
+      "text": "Then November 5th. I'll send calendar holds for both."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "And I'll send the list of the 25 pilot users with their roles by next Wednesday."
+    },
+    {
+      "speaker": "diego",
+      "text": "Let me recap. Callum sends staging access by Monday the 12th. Kenji sends the SDK guide and exclusions list. I send the incident summary and the executed addendum."
+    },
+    {
+      "speaker": "me",
+      "text": "Let's schedule a check-in for next Tuesday, October 13th, to review staging progress."
+    },
+    {
+      "speaker": "diego",
+      "text": "One last thing, we also keep a shared channel with each customer. Who should be in it?"
+    },
+    {
+      "speaker": "priyanka",
+      "text": "Me, Callum, and two of my analysts. Give me a day to confirm who."
+    },
+    {
+      "speaker": "priyanka",
+      "text": "Works for me. Thank you all, this was clearer than any vendor kickoff we've had."
+    },
+    {
+      "speaker": "callum",
+      "text": "Agreed. Talk next week."
+    }
+  ],
+  "summary": {
+    "overview": "Lumora kicked off onboarding with Brightpath Health, a nine-clinic healthcare network. Their success goal is cutting patient-portal booking abandonment from 41% to under 30% by the end of Q1, starting with a 25-user pilot. Privacy was the main gating topic: no PHI will be sent, identities will be hashed client-side, and free-text fields will be excluded. The team agreed on staging access by October 12th, SDK verification by the 16th, trainings on October 28th and November 5th, and a written incident summary after Callum asked about the October 1st outage.",
+    "outline": [
+      {
+        "title": "Introductions and goals",
+        "at_line": 0
+      },
+      {
+        "title": "Data privacy and security",
+        "at_line": 8
+      },
+      {
+        "title": "Technical integration plan",
+        "at_line": 21
+      },
+      {
+        "title": "Dashboards, training, and timeline",
+        "at_line": 31
+      },
+      {
+        "title": "Recap and follow-up",
+        "at_line": 42
+      }
+    ],
+    "notes": [
+      {
+        "title": "Introductions and goals",
+        "bullets": [
+          "Priyanka Nair (clinical informatics) and Callum Reeves (IT integration) represent Brightpath.",
+          "Goal is to reduce portal booking abandonment from 41% to under 30% by end of Q1 and find the worst clinics out of nine.",
+          "Contract covers 85 seats; the pilot starts with 25."
+        ]
+      },
+      {
+        "title": "Data privacy and security",
+        "bullets": [
+          "No protected health information may be sent; the SDK allowlist and a client-side salted hash for patient IDs will be used.",
+          "Free-text fields, form text and URL query strings will be excluded.",
+          "Data processing addendum was countersigned on September 30th; workspace is in US-East.",
+          "Callum asked about the October 1st outage; Diego owes a written summary with rate limit numbers by Friday."
+        ]
+      },
+      {
+        "title": "Technical integration plan",
+        "bullets": [
+          "Plan is the JavaScript SDK on the portal plus server-side booking-confirmed events via webhooks, with a nightly batch reconcile.",
+          "Brightpath is in a change freeze through October 9th; staging access arrives by Monday the 12th and SDK verification by the 16th.",
+          "Okta SSO with SCIM provisioning is supported on their plan."
+        ]
+      },
+      {
+        "title": "Dashboards, training, and timeline",
+        "bullets": [
+          "Day-one dashboard is the booking funnel by clinic: visit, login, choose provider, choose time, confirm.",
+          "Insights 2.0 anomaly alerts would catch issues like August's scheduling bug; Brightpath goes on the early-access list.",
+          "Training on October 28th for analysts and November 5th for clinic managers; pilot user list due next Wednesday."
+        ]
+      },
+      {
+        "title": "Recap and follow-up",
+        "bullets": [
+          "Recap of owners: Callum on staging, Kenji on SDK guide, Diego on incident summary and addendum.",
+          "Check-in scheduled for Tuesday, October 13th."
+        ]
+      }
+    ],
+    "keywords": [
+      {
+        "term": "Brightpath Health",
+        "weight": 0.95
+      },
+      {
+        "term": "patient portal",
+        "weight": 0.84
+      },
+      {
+        "term": "PHI",
+        "weight": 0.73
+      },
+      {
+        "term": "SDK",
+        "weight": 0.62
+      },
+      {
+        "term": "booking abandonment",
+        "weight": 0.51
+      },
+      {
+        "term": "Okta SSO",
+        "weight": 0.4
+      }
+    ]
+  },
+  "action_items": [
+    {
+      "text": "Send Brightpath the SDK configuration guide and recommended exclusions list by tomorrow",
+      "assignee": "kenji",
+      "due_offset_days": 1,
+      "status": "open",
+      "at_line": 11
+    },
+    {
+      "text": "Resend the fully executed data processing addendum to Callum",
+      "assignee": "diego",
+      "due_offset_days": 0,
+      "status": "completed",
+      "at_line": 13
+    },
+    {
+      "text": "Send Callum the written incident summary with rate limit numbers by Friday",
+      "assignee": "diego",
+      "due_offset_days": 3,
+      "status": "open",
+      "at_line": 20
+    },
+    {
+      "text": "Set up staging access and send Kenji credentials by Monday the 12th",
+      "assignee": "callum",
+      "due_offset_days": 6,
+      "status": "open",
+      "at_line": 26
+    },
+    {
+      "text": "Add Brightpath to the Insights 2.0 early-access list this week",
+      "assignee": "me",
+      "due_offset_days": 3,
+      "status": "open",
+      "at_line": 37
+    },
+    {
+      "text": "Send calendar holds for the October 28th and November 5th training sessions",
+      "assignee": "diego",
+      "due_offset_days": 0,
+      "status": "completed",
+      "at_line": 40
+    },
+    {
+      "text": "Send the list of 25 pilot users with roles by next Wednesday",
+      "assignee": "priyanka",
+      "due_offset_days": 8,
+      "status": "open",
+      "at_line": 41
+    }
+  ]
+}

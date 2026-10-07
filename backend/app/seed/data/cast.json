@@ -1,0 +1,14 @@
+[
+  {"key": "me", "name": "Nadia Brennan", "email": "nadia.brennan@lumora.io", "title": "Head of Product"},
+  {"key": "tobias", "name": "Tobias Hartmann", "email": "tobias.hartmann@lumora.io", "title": "Chief Technology Officer"},
+  {"key": "imani", "name": "Imani Okonkwo", "email": "imani.okonkwo@lumora.io", "title": "Engineering Manager, Platform"},
+  {"key": "kenji", "name": "Kenji Watanabe", "email": "kenji.watanabe@lumora.io", "title": "Senior Backend Engineer"},
+  {"key": "lucia", "name": "Lucia Marchetti", "email": "lucia.marchetti@lumora.io", "title": "Head of People"},
+  {"key": "arjun", "name": "Arjun Venkataraman", "email": "arjun.venkataraman@lumora.io", "title": "SRE Lead"},
+  {"key": "helena", "name": "Helena Sørensen", "email": "helena.sorensen@lumora.io", "title": "VP of Marketing"},
+  {"key": "diego", "name": "Diego Castellanos", "email": "diego.castellanos@lumora.io", "title": "Customer Success Manager"},
+  {"key": "ben", "name": "Ben Achterberg", "email": "ben.achterberg@lumora.io", "title": "Chief Executive Officer"},
+  {"key": "fatima", "name": "Fatima Al-Rashid", "email": "fatima.alrashid@lumora.io", "title": "Chief Financial Officer"},
+  {"key": "priyanka", "name": "Priyanka Nair", "email": "priyanka.nair@brightpathhealth.org", "title": "Director of Clinical Informatics, Brightpath Health"},
+  {"key": "callum", "name": "Callum Reeves", "email": "callum.reeves@brightpathhealth.org", "title": "IT Integration Lead, Brightpath Health"}
+]

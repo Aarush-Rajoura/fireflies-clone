@@ -1,0 +1,360 @@
+{
+  "key": "hiring-debrief",
+  "title": "Senior Backend Hiring Debrief — Candidate: Omar Haddad",
+  "description": "The panel debriefs Omar Haddad's onsite loop for the senior backend engineer role and agrees to make an offer.",
+  "day_offset": 0,
+  "time": "10:30",
+  "host": "me",
+  "participants": [
+    "me",
+    "imani",
+    "kenji",
+    "lucia",
+    "tobias"
+  ],
+  "channel": "hiring",
+  "has_media": false,
+  "transcript": [
+    {
+      "speaker": "imani",
+      "text": "Okay, let's get started. Thanks everyone for making time, I know it's a packed morning."
+    },
+    {
+      "speaker": "lucia",
+      "text": "No problem. For context, Omar finished his loop yesterday, so everyone's impressions should still be fresh."
+    },
+    {
+      "speaker": "me",
+      "text": "Before we dig in, can we agree on how we're deciding? I'd like each interviewer to give a strong hire, hire, or no hire first, and then we discuss."
+    },
+    {
+      "speaker": "imani",
+      "text": "Works for me. Quick reminder of the role: senior backend engineer on the ingestion team, owning the event pipeline roadmap for the next year."
+    },
+    {
+      "speaker": "tobias",
+      "text": "And we've been looking for this seat since June. That's not a reason to lower the bar, but let's be honest about the cost of waiting."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Agreed. I'll go first since I ran the system design round. Strong hire from me."
+    },
+    {
+      "speaker": "imani",
+      "text": "Strong hire as well, with one caveat I'll get to."
+    },
+    {
+      "speaker": "lucia",
+      "text": "I did the values conversation and I'm a hire. Nadia, you?"
+    },
+    {
+      "speaker": "me",
+      "text": "Hire. I want to understand the caveats before I go to strong."
+    },
+    {
+      "speaker": "tobias",
+      "text": "I only met him for thirty minutes at the end, so lean hire, and I'll defer to the people who went deeper."
+    },
+    {
+      "speaker": "kenji",
+      "text": "So the prompt was a multi-tenant event ingestion service, roughly fifty thousand events per second at peak, with per-customer rate limits."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Omar went straight to failure modes. He asked what happens when one tenant floods us, and proposed partitioning Kafka topics by tenant tier instead of by tenant ID."
+    },
+    {
+      "speaker": "imani",
+      "text": "That impressed me too. He called out that hot partitions would be the first thing to bite us, which is exactly what happened to us in the spring."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Did he talk about backpressure, or just partitioning?"
+    },
+    {
+      "speaker": "kenji",
+      "text": "Both. He suggested a token bucket at the edge and a dead-letter queue with a replay tool, and he had strong opinions on idempotency keys. An event ID plus a client timestamp bucket."
+    },
+    {
+      "speaker": "me",
+      "text": "Was there anything he got wrong?"
+    },
+    {
+      "speaker": "kenji",
+      "text": "He underestimated storage cost. He guessed about two terabytes a month, and for our largest tenants it's closer to six. But when I gave him the real number, he adjusted the retention tiering on the spot."
+    },
+    {
+      "speaker": "imani",
+      "text": "That's the behavior I care about. He revised without getting defensive."
+    },
+    {
+      "speaker": "lucia",
+      "text": "That matches what I saw. He told me, \"I'd rather be corrected early than be wrong in production.\""
+    },
+    {
+      "speaker": "kenji",
+      "text": "He also asked sharp questions about our schema registry, which tells me he has run one before."
+    },
+    {
+      "speaker": "imani",
+      "text": "I ran the coding round. He wrote a sliding window rate limiter in Go and finished with fifteen minutes to spare."
+    },
+    {
+      "speaker": "imani",
+      "text": "He wrote tests before I asked. His table-driven tests caught an off-by-one in his own window boundary."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Was it clean code, or interview code?"
+    },
+    {
+      "speaker": "imani",
+      "text": "Closer to clean than most. Good naming, and he narrated his thinking without prompting. I'd give communication a nine out of ten."
+    },
+    {
+      "speaker": "me",
+      "text": "How did he handle the follow-up where you changed the requirements?"
+    },
+    {
+      "speaker": "imani",
+      "text": "I switched it to a distributed limiter halfway through. He paused, sketched Redis with Lua scripts, and flagged the clock skew problem himself."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Same instinct I saw in design. He looks for where things break first."
+    },
+    {
+      "speaker": "lucia",
+      "text": "One more thing from my side. He was great with the junior folks on the panel. He explained a tradeoff to our intern without talking down to her."
+    },
+    {
+      "speaker": "me",
+      "text": "Okay, Imani, you mentioned a caveat."
+    },
+    {
+      "speaker": "imani",
+      "text": "Yeah. His last company had about forty engineers and he hasn't managed anyone. The role is senior, not staff, so I want to be sure he isn't expecting a tech lead title in six months."
+    },
+    {
+      "speaker": "lucia",
+      "text": "I asked him directly. He said he likes mentoring and isn't pushing for management. His goal is staff engineer within three years."
+    },
+    {
+      "speaker": "tobias",
+      "text": "That's a reasonable timeline, and honestly what I'd hope to hear."
+    },
+    {
+      "speaker": "lucia",
+      "text": "On compensation, he's at 168 thousand base today and asking for 185. Our senior band tops out at 190."
+    },
+    {
+      "speaker": "me",
+      "text": "Did equity come up?"
+    },
+    {
+      "speaker": "lucia",
+      "text": "He asked about the refresh policy and strike price. He seemed more interested in equity than in the extra base."
+    },
+    {
+      "speaker": "tobias",
+      "text": "I'd rather stretch equity than base. Can we offer 180 base with a grant above the band midpoint?",
+      "pause_ms": 700
+    },
+    {
+      "speaker": "lucia",
+      "text": "I can model that. I'll need approval from Fatima since it's above the midpoint."
+    },
+    {
+      "speaker": "imani",
+      "text": "I don't love going above midpoint before he's even started, but I'm okay if we tie it to a one-year review."
+    },
+    {
+      "speaker": "kenji",
+      "text": "One more concern. He's based in Toronto, and our on-call rotation lands on Pacific hours. He said it was fine, but we should confirm."
+    },
+    {
+      "speaker": "me",
+      "text": "Good catch. That deserves a direct question, not an assumption."
+    },
+    {
+      "speaker": "imani",
+      "text": "So where are we? Three hires or strong hires, and Tobias at lean hire."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Lean hire becomes hire. The design round alone convinced me."
+    },
+    {
+      "speaker": "me",
+      "text": "Then it's unanimous. Let's make an offer."
+    },
+    {
+      "speaker": "lucia",
+      "text": "Great. I'll draft the offer letter with 180 base and the larger equity grant, and get Fatima's approval by Thursday."
+    },
+    {
+      "speaker": "imani",
+      "text": "I'll write up the formal scorecard summary and send it to Lucia today, so the approval has a paper trail."
+    },
+    {
+      "speaker": "kenji",
+      "text": "I'll call Omar on Friday after the offer goes out. He asked about the team, and a casual chat will help us close."
+    },
+    {
+      "speaker": "me",
+      "text": "Can you also confirm the on-call hours with him on that call, Kenji?"
+    },
+    {
+      "speaker": "kenji",
+      "text": "Yes, I'll confirm the Pacific on-call timing with him on Friday."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Let's make sure the offer is out by Friday so he doesn't sit on competing offers. He mentioned another process closing next week."
+    },
+    {
+      "speaker": "lucia",
+      "text": "I'll also send Omar a quick thank-you email today so he knows we're moving."
+    },
+    {
+      "speaker": "imani",
+      "text": "Perfect. Anything else? No? Thanks, everybody."
+    }
+  ],
+  "summary": {
+    "overview": "The panel debriefed Omar Haddad's onsite loop for the senior backend engineer role. All four interviewers who went deep rated him hire or strong hire, praising his failure-mode thinking in system design, his clean Go code, and how he responded to correction. The open points were seniority expectations, a compensation gap (he asks 185k base against a 190k band cap), and confirming Pacific-hours on-call from Toronto. The group agreed unanimously to make an offer at 180k base with a larger equity grant, targeted to go out by Friday.",
+    "outline": [
+      {
+        "title": "Kickoff and interview recap",
+        "at_line": 0
+      },
+      {
+        "title": "System design deep dive",
+        "at_line": 10
+      },
+      {
+        "title": "Coding round and communication",
+        "at_line": 20
+      },
+      {
+        "title": "Concerns: seniority and compensation",
+        "at_line": 28
+      },
+      {
+        "title": "Decision and next steps",
+        "at_line": 40
+      }
+    ],
+    "notes": [
+      {
+        "title": "Kickoff and interview recap",
+        "bullets": [
+          "Four of five interviewers opened with strong hire or hire; Tobias started at lean hire after a short conversation.",
+          "Role is senior backend engineer on the ingestion team; the seat has been open since June."
+        ]
+      },
+      {
+        "title": "System design deep dive",
+        "bullets": [
+          "System design prompt was multi-tenant ingestion at about 50k events per second with per-tenant limits.",
+          "Omar proposed partitioning Kafka by tenant tier, a token bucket at the edge, and a dead-letter queue with replay.",
+          "He underestimated storage (2 TB vs about 6 TB a month for the largest tenants) but revised retention tiering immediately."
+        ]
+      },
+      {
+        "title": "Coding round and communication",
+        "bullets": [
+          "Wrote a sliding window rate limiter in Go with 15 minutes to spare and caught his own off-by-one via tests.",
+          "Handled a mid-round switch to a distributed limiter by sketching Redis with Lua and flagging clock skew.",
+          "Communication rated 9/10; he was also good with the junior panelists."
+        ]
+      },
+      {
+        "title": "Concerns: seniority and compensation",
+        "bullets": [
+          "No management experience; he wants staff engineer within three years and is not pushing for management.",
+          "Currently at 168k base, asking 185k; senior band tops out at 190k and he cares more about equity.",
+          "Plan is 180k base with an above-midpoint grant tied to a one-year review, pending Fatima's approval.",
+          "Toronto-based, so Pacific on-call hours need to be confirmed directly."
+        ]
+      },
+      {
+        "title": "Decision and next steps",
+        "bullets": [
+          "Decision is unanimous: make an offer, aiming to send it by Friday because Omar has a competing process closing next week.",
+          "Follow-ups are an offer letter, a scorecard write-up, a thank-you email, and a Friday call from Kenji."
+        ]
+      }
+    ],
+    "keywords": [
+      {
+        "term": "system design",
+        "weight": 0.95
+      },
+      {
+        "term": "offer",
+        "weight": 0.84
+      },
+      {
+        "term": "Kafka partitioning",
+        "weight": 0.73
+      },
+      {
+        "term": "compensation",
+        "weight": 0.62
+      },
+      {
+        "term": "on-call",
+        "weight": 0.51
+      },
+      {
+        "term": "rate limiter",
+        "weight": 0.4
+      }
+    ]
+  },
+  "action_items": [
+    {
+      "text": "Draft the offer letter (180k base plus a larger equity grant) and get Fatima's approval by Thursday",
+      "assignee": "lucia",
+      "due_offset_days": 1,
+      "status": "open",
+      "at_line": 43
+    },
+    {
+      "text": "Write up the scorecard summary and send it to Lucia today",
+      "assignee": "imani",
+      "due_offset_days": 0,
+      "status": "completed",
+      "at_line": 44
+    },
+    {
+      "text": "Call Omar on Friday after the offer goes out",
+      "assignee": "kenji",
+      "due_offset_days": 2,
+      "status": "open",
+      "at_line": 45
+    },
+    {
+      "text": "Confirm the Pacific-hours on-call timing with Omar on the Friday call",
+      "assignee": "kenji",
+      "due_offset_days": 2,
+      "status": "open",
+      "at_line": 47
+    },
+    {
+      "text": "Get the offer out to Omar by Friday",
+      "assignee": null,
+      "due_offset_days": 2,
+      "status": "open",
+      "at_line": 48
+    },
+    {
+      "text": "Send Omar a thank-you email today",
+      "assignee": "lucia",
+      "due_offset_days": 0,
+      "status": "completed",
+      "at_line": 49
+    }
+  ]
+}

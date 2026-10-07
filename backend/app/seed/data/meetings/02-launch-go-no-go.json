@@ -1,0 +1,385 @@
+{
+  "key": "launch-go-no-go",
+  "title": "Lumora Insights 2.0 — Launch Go/No-Go",
+  "description": "Leads review launch readiness for Insights 2.0 and make a conditional go for October 21st.",
+  "day_offset": 0,
+  "time": "14:00",
+  "host": "me",
+  "participants": [
+    "me",
+    "tobias",
+    "imani",
+    "arjun",
+    "diego",
+    "helena"
+  ],
+  "channel": "product",
+  "has_media": true,
+  "transcript": [
+    {
+      "speaker": "me",
+      "text": "Okay, let's start. This is the go/no-go for Lumora Insights 2.0, targeting public launch on October 21st, two weeks from today."
+    },
+    {
+      "speaker": "me",
+      "text": "I want to leave with a clear decision, or clear conditions. Imani, can you start with engineering status?"
+    },
+    {
+      "speaker": "imani",
+      "text": "Sure. Everything in launch scope is feature complete: the new funnel builder, anomaly alerts, and the SQL export. We have 212 test cases in the release suite and 198 pass, so about 93 percent."
+    },
+    {
+      "speaker": "tobias",
+      "text": "What's in the other fourteen?"
+    },
+    {
+      "speaker": "imani",
+      "text": "Eleven are flaky date picker tests, which we've confirmed are test problems and not product bugs. Three are real. One is a P1: anomaly alerts fire twice when a workspace has two admins."
+    },
+    {
+      "speaker": "diego",
+      "text": "That one would hurt us with customers. Double pings are how alerts get muted."
+    },
+    {
+      "speaker": "imani",
+      "text": "Agreed. Kenji has a fix in review, and I expect it merged tomorrow."
+    },
+    {
+      "speaker": "tobias",
+      "text": "And the other two?"
+    },
+    {
+      "speaker": "imani",
+      "text": "P2s. A CSV export that drops the last row when a funnel has more than ten thousand rows, and a tooltip that's cut off in Safari."
+    },
+    {
+      "speaker": "helena",
+      "text": "Can the Safari tooltip wait? Our demo videos all use Chrome."
+    },
+    {
+      "speaker": "imani",
+      "text": "It can wait. I'd ship it in a point release."
+    },
+    {
+      "speaker": "me",
+      "text": "Okay. The double-alert P1 and the CSV bug are launch blockers. The tooltip is not."
+    },
+    {
+      "speaker": "arjun",
+      "text": "On performance, we load tested at three times current traffic. Query p95 came out at 1.8 seconds, and our target was 1.5."
+    },
+    {
+      "speaker": "tobias",
+      "text": "That's a miss. Where is the time going?"
+    },
+    {
+      "speaker": "arjun",
+      "text": "Mostly funnel queries on workspaces with more than 90 days of data. A materialized rollup table should take us to roughly 1.2 seconds."
+    },
+    {
+      "speaker": "imani",
+      "text": "I've scoped that. It's about four days of work, plus a backfill I'd run over a weekend."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Now the elephant in the room. Arjun, the ingestion outage. How worried should we be?"
+    },
+    {
+      "speaker": "arjun",
+      "text": "We lost about two and a half hours of ingestion on October 1st. No data was lost, we replayed everything from the queue, but dashboards were up to ninety minutes stale."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Root cause was one large tenant flooding a single partition with no backpressure. The fix has two parts: per-tenant rate limits at the edge, and a dead-letter queue with replay tooling."
+    },
+    {
+      "speaker": "tobias",
+      "text": "And the new anomaly alerts depend on that same pipeline, correct?"
+    },
+    {
+      "speaker": "arjun",
+      "text": "Yes. If ingestion lags, alerts are late or wrong. So I'm not comfortable launching without at least the rate limits in production."
+    },
+    {
+      "speaker": "me",
+      "text": "When can we have them there?"
+    },
+    {
+      "speaker": "arjun",
+      "text": "I'll deploy the rate limits to production by October 14th, and I'll run a load test against them the day after."
+    },
+    {
+      "speaker": "imani",
+      "text": "I'll pair on the dead-letter queue. It might slip past launch, but I'll have a minimal replay tool ready by the 16th."
+    },
+    {
+      "speaker": "tobias",
+      "text": "I'm fine with that as long as the replay tool isn't a launch condition. The rate limits are."
+    },
+    {
+      "speaker": "me",
+      "text": "Diego, how are customers feeling about it?"
+    },
+    {
+      "speaker": "diego",
+      "text": "Good overall. We have 14 design partners on the beta, and 11 gave us a 4 or 5 on satisfaction. The funnel builder is the clear favorite."
+    },
+    {
+      "speaker": "diego",
+      "text": "The concern I'm hearing is from Brightpath Health. They kicked off yesterday, and their IT lead, Callum, asked pointedly about data freshness after the outage."
+    },
+    {
+      "speaker": "me",
+      "text": "What did you tell him?"
+    },
+    {
+      "speaker": "diego",
+      "text": "The truth. We had an incident, here's the root cause, here's the fix timeline. I said I'd send a written summary."
+    },
+    {
+      "speaker": "me",
+      "text": "Can you make sure that goes out before next week's follow-up? I want Brightpath to hear it from us.",
+      "pause_ms": 600
+    },
+    {
+      "speaker": "diego",
+      "text": "I'll send a customer-facing incident summary to Callum and Priyanka by Friday."
+    },
+    {
+      "speaker": "diego",
+      "text": "Also, support docs. The help center articles for anomaly alerts are about 60 percent done."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Can we get those finished by the 17th? Support shouldn't be reading release notes to learn the product on launch day."
+    },
+    {
+      "speaker": "diego",
+      "text": "Yes, I'll get the remaining help center articles done by the 17th."
+    },
+    {
+      "speaker": "helena",
+      "text": "On marketing, the launch blog post and landing page are drafted. The press embargo lifts at 9 a.m. Pacific on October 21st, and we have three trade outlets lined up."
+    },
+    {
+      "speaker": "helena",
+      "text": "The risk is that the pricing page changes depend on the new Team plan, which finance hasn't signed off on."
+    },
+    {
+      "speaker": "me",
+      "text": "I'll chase that. I'll get the Team plan pricing approved by Fatima by Monday."
+    },
+    {
+      "speaker": "helena",
+      "text": "Thanks. The launch webinar is booked for the 28th, with 340 registrants so far."
+    },
+    {
+      "speaker": "tobias",
+      "text": "What's the target?"
+    },
+    {
+      "speaker": "helena",
+      "text": "500. We'll send two more email pushes. I also need the UI frozen by the 16th so I can record a three-minute walkthrough for the launch post."
+    },
+    {
+      "speaker": "me",
+      "text": "UI freeze on the 16th works. Imani, flag it if the bug fixes need UI changes."
+    },
+    {
+      "speaker": "imani",
+      "text": "Only the tooltip, which we're deferring anyway, so we're fine."
+    },
+    {
+      "speaker": "me",
+      "text": "Alright, let's decide. The blockers so far: the double-alert P1, the CSV export bug, rate limits in production, and the p95 rollup. Did I miss anything?"
+    },
+    {
+      "speaker": "tobias",
+      "text": "Add the Team plan pricing sign-off. Otherwise that's the list."
+    },
+    {
+      "speaker": "arjun",
+      "text": "One more, a rollback plan. All the new features are behind feature flags, so we can switch them off per workspace in minutes. I'll document the runbook."
+    },
+    {
+      "speaker": "me",
+      "text": "Do I hear a go, conditional on those items by October 16th?"
+    },
+    {
+      "speaker": "tobias",
+      "text": "Conditional go from me."
+    },
+    {
+      "speaker": "imani",
+      "text": "Conditional go. The rollup is tight but doable."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Conditional go, with the rate limits as my hard line."
+    },
+    {
+      "speaker": "diego",
+      "text": "Go from customer success."
+    },
+    {
+      "speaker": "helena",
+      "text": "Go from marketing, but I need the UI freeze to hold."
+    },
+    {
+      "speaker": "me",
+      "text": "Then it's a conditional go. We hold a final checkpoint on the 16th, and if the rate limits or the P1 aren't done, we slip the launch one week to October 28th."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Fair. Let's put that in writing."
+    },
+    {
+      "speaker": "me",
+      "text": "I'll send the decision and conditions to the company channel this afternoon."
+    }
+  ],
+  "summary": {
+    "overview": "The team reviewed readiness for the Insights 2.0 launch targeted for October 21st. Engineering reported 198 of 212 release tests passing, one P1 (duplicate anomaly alerts) and a CSV export bug as blockers, and a p95 query time of 1.8s against a 1.5s target. The October 1st ingestion outage made per-tenant rate limits a hard launch condition. Customer success and marketing reported being on track, and the group made a conditional go with a final checkpoint on October 16th and a fallback launch date of October 28th.",
+    "outline": [
+      {
+        "title": "Readiness status and open bugs",
+        "at_line": 0
+      },
+      {
+        "title": "Performance and the ingestion outage",
+        "at_line": 12
+      },
+      {
+        "title": "Customer and support readiness",
+        "at_line": 25
+      },
+      {
+        "title": "Marketing and launch plan",
+        "at_line": 35
+      },
+      {
+        "title": "Decision and rollback plan",
+        "at_line": 43
+      }
+    ],
+    "notes": [
+      {
+        "title": "Readiness status and open bugs",
+        "bullets": [
+          "198 of 212 release tests pass; 11 failures are flaky date picker tests, 3 are real bugs.",
+          "P1: anomaly alerts fire twice for workspaces with two admins; fix is in review.",
+          "Blockers are the double-alert P1 and the CSV export bug dropping the last row above 10,000 rows; the Safari tooltip is deferred."
+        ]
+      },
+      {
+        "title": "Performance and the ingestion outage",
+        "bullets": [
+          "Load test at 3x traffic gave p95 of 1.8s against a 1.5s target; a rollup table should reach about 1.2s.",
+          "The October 1st outage delayed ingestion by about 2.5 hours with no data loss; cause was one tenant flooding a partition.",
+          "Per-tenant rate limits must be in production by October 14th; the replay tool by the 16th is not a launch condition."
+        ]
+      },
+      {
+        "title": "Customer and support readiness",
+        "bullets": [
+          "14 beta design partners, 11 rated satisfaction 4 or 5; the funnel builder is the favorite.",
+          "Brightpath Health raised data freshness concerns and is owed a written incident summary.",
+          "Anomaly alert help center articles are about 60% done and must finish by the 17th."
+        ]
+      },
+      {
+        "title": "Marketing and launch plan",
+        "bullets": [
+          "Launch post and landing page are drafted; press embargo lifts 9 a.m. Pacific on October 21st with three outlets lined up.",
+          "Pricing page depends on Team plan sign-off from finance.",
+          "Launch webinar on the 28th has 340 of 500 target registrants; UI freeze set for the 16th."
+        ]
+      },
+      {
+        "title": "Decision and rollback plan",
+        "bullets": [
+          "Blockers: double-alert P1, CSV bug, rate limits in production, the p95 rollup, and Team plan pricing.",
+          "All new features sit behind feature flags, giving a per-workspace rollback.",
+          "Unanimous conditional go; checkpoint on October 16th, slipping to October 28th if rate limits or the P1 are not done."
+        ]
+      }
+    ],
+    "keywords": [
+      {
+        "term": "Insights 2.0",
+        "weight": 0.95
+      },
+      {
+        "term": "rate limits",
+        "weight": 0.84
+      },
+      {
+        "term": "ingestion outage",
+        "weight": 0.73
+      },
+      {
+        "term": "conditional go",
+        "weight": 0.62
+      },
+      {
+        "term": "anomaly alerts",
+        "weight": 0.51
+      },
+      {
+        "term": "p95 latency",
+        "weight": 0.4
+      }
+    ]
+  },
+  "action_items": [
+    {
+      "text": "Deploy per-tenant rate limits to production by October 14th and load test them the next day",
+      "assignee": "arjun",
+      "due_offset_days": 7,
+      "status": "open",
+      "at_line": 22
+    },
+    {
+      "text": "Have a minimal replay tool ready by October 16th",
+      "assignee": "imani",
+      "due_offset_days": 9,
+      "status": "open",
+      "at_line": 23
+    },
+    {
+      "text": "Send a customer-facing incident summary to Callum and Priyanka at Brightpath by Friday",
+      "assignee": "diego",
+      "due_offset_days": 2,
+      "status": "open",
+      "at_line": 31
+    },
+    {
+      "text": "Finish the remaining help center articles for anomaly alerts by the 17th",
+      "assignee": "diego",
+      "due_offset_days": 10,
+      "status": "open",
+      "at_line": 34
+    },
+    {
+      "text": "Get the Team plan pricing approved by Fatima by Monday",
+      "assignee": "me",
+      "due_offset_days": 5,
+      "status": "open",
+      "at_line": 37
+    },
+    {
+      "text": "Document the feature-flag rollback runbook for Insights 2.0",
+      "assignee": "arjun",
+      "due_offset_days": null,
+      "status": "open",
+      "at_line": 45
+    },
+    {
+      "text": "Send the go/no-go decision and conditions to the company channel this afternoon",
+      "assignee": "me",
+      "due_offset_days": 0,
+      "status": "completed",
+      "at_line": 54
+    }
+  ]
+}

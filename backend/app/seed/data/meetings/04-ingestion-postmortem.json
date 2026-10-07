@@ -1,0 +1,346 @@
+{
+  "key": "ingestion-postmortem",
+  "title": "Postmortem — Analytics Ingestion Outage (Oct 1)",
+  "description": "Blameless postmortem of the October 1st ingestion outage, covering timeline, root cause, and remediation owners.",
+  "day_offset": -4,
+  "time": "10:00",
+  "host": "arjun",
+  "participants": [
+    "arjun",
+    "me",
+    "imani",
+    "tobias",
+    "kenji",
+    "diego"
+  ],
+  "channel": "product",
+  "has_media": true,
+  "transcript": [
+    {
+      "speaker": "arjun",
+      "text": "Let's get started. This is a blameless postmortem for the ingestion outage on the night of October 1st. I'll walk the timeline first, then contributing factors, then actions."
+    },
+    {
+      "speaker": "arjun",
+      "text": "At 9:42 p.m. Pacific, a customer we'll call tenant C started a bulk historical backfill. Their normal traffic is about 800 events per second. The backfill hit roughly 32,000."
+    },
+    {
+      "speaker": "imani",
+      "text": "And all of that hashed to a single partition, because we key by tenant ID."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Right, partition 7. Lag climbed immediately and the consumer for that partition couldn't keep up. The autoscaler added consumers, but you can't have more consumers than partitions, so it did nothing useful."
+    },
+    {
+      "speaker": "kenji",
+      "text": "I remember looking at the autoscaler graph around midnight and thinking it was working, because the consumer count had gone from 12 to 24. But 12 of them were idle."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Exactly. Next, detection. The first sign was a support ticket at 10:05 p.m. from a customer saying their dashboard was empty."
+    },
+    {
+      "speaker": "diego",
+      "text": "Right, the ticket came in at 10:05. Our alerting didn't page until 10:31, so customers beat us by 26 minutes."
+    },
+    {
+      "speaker": "arjun",
+      "text": "I was paged at 10:31, mitigation started at 10:50 when we isolated the tenant's traffic into a separate topic, and the lag was fully drained at 12:13 a.m."
+    },
+    {
+      "speaker": "tobias",
+      "text": "So what's the total impact?"
+    },
+    {
+      "speaker": "arjun",
+      "text": "Two hours and thirty-one minutes of delayed ingestion, peak staleness of 91 minutes, and 312 workspaces affected. We replayed about 38 million events. No permanent data loss."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Let's talk root cause. Is it really the backfill, or is that just the trigger?"
+    },
+    {
+      "speaker": "arjun",
+      "text": "The backfill is the trigger. The root cause is that we had no per-tenant rate limit and no isolation, so one tenant can saturate a shared partition."
+    },
+    {
+      "speaker": "imani",
+      "text": "I'd add that partitioning by tenant ID was a decision we made two years ago when we had forty customers. It made sense then."
+    },
+    {
+      "speaker": "me",
+      "text": "I'd like to understand why the alert was late. Twenty-six minutes feels long."
+    },
+    {
+      "speaker": "arjun",
+      "text": "The lag alert only fires after fifteen minutes of sustained lag over a threshold, and then it routes through the old on-call schedule. The first page went to Sven, who left in August."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Which is embarrassing. I believed the schedule had been updated in the migration."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Nobody owned that. It's a process gap, not a person."
+    },
+    {
+      "speaker": "diego",
+      "text": "On customer comms, we didn't update the status page until 10:52. That was 47 minutes after the first ticket."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Why so slow?"
+    },
+    {
+      "speaker": "diego",
+      "text": "Support didn't know who could post. The status page login sits with Arjun's team, and the runbook didn't say how to get access."
+    },
+    {
+      "speaker": "me",
+      "text": "So to summarize: no isolation, a lax alert, a stale on-call rotation, and unclear comms ownership."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Yes, four contributing factors."
+    },
+    {
+      "speaker": "imani",
+      "text": "I do want to say what went well. Replay from the queue worked, since we retain seven days, so we never lost anything."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Isolating the tenant into its own topic was quick once we decided to do it. Imani and I did it in about twenty minutes."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Agreed, the team coordinated nicely in the incident channel. Diego's updates to affected customers after 10:52 were also clear."
+    },
+    {
+      "speaker": "diego",
+      "text": "Thanks. A couple of customers actually wrote back to thank us for the transparency."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Let's talk fixes. First, per-tenant rate limits at the edge with a token bucket. I'll take that, and I'll have it in production by October 14th."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Can that happen faster?"
+    },
+    {
+      "speaker": "arjun",
+      "text": "Not safely. We need to load test it, and I'd rather not ship rate limits that throttle good customers by mistake."
+    },
+    {
+      "speaker": "imani",
+      "text": "Second, a dead-letter queue and a replay tool, so we don't replay by hand at midnight. I'll build the first version of the replay tool by the 16th."
+    },
+    {
+      "speaker": "kenji",
+      "text": "I'll change the partition key from tenant ID to tenant tier plus a hash bucket, so a single tenant spreads across several partitions. That's a bigger project, so let me aim for the end of October."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Can you add a migration plan? I don't want to repartition live production traffic without a rollback path."
+    },
+    {
+      "speaker": "kenji",
+      "text": "Yes, I'll write the migration plan and share it with you by next Friday."
+    },
+    {
+      "speaker": "arjun",
+      "text": "Third, the alert. I'll lower the lag alert threshold from fifteen minutes to three minutes, and I'll fix the on-call schedule today."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Please do it today. That's a five-minute fix with a big payoff."
+    },
+    {
+      "speaker": "diego",
+      "text": "For comms, I'll write a status page template and a short runbook for support, so anyone on support can post within ten minutes."
+    },
+    {
+      "speaker": "me",
+      "text": "Please include a customer email template as well."
+    },
+    {
+      "speaker": "diego",
+      "text": "I'll add that, and I'll have both ready by Wednesday."
+    },
+    {
+      "speaker": "me",
+      "text": "Let me ask the uncomfortable question. Insights 2.0 launches October 21st and the anomaly alerts depend on fresh data. Does this put the launch at risk?"
+    },
+    {
+      "speaker": "tobias",
+      "text": "It could. My view is that the rate limits are a launch condition and everything else isn't."
+    },
+    {
+      "speaker": "arjun",
+      "text": "I agree. If the limits aren't in production by the 14th, I'd recommend slipping."
+    },
+    {
+      "speaker": "me",
+      "text": "I'll bring that to the go/no-go meeting. I want it on the checklist as a hard gate."
+    },
+    {
+      "speaker": "imani",
+      "text": "And Brightpath Health kicks off on Tuesday. They're a healthcare customer and will be sensitive to outages."
+    },
+    {
+      "speaker": "diego",
+      "text": "Yes, Callum is going to ask about this. I'll prepare a customer-facing summary."
+    },
+    {
+      "speaker": "me",
+      "text": "Good. Let's publish this postmortem internally by Monday."
+    },
+    {
+      "speaker": "arjun",
+      "text": "I'll publish the written postmortem to the company wiki by Monday."
+    },
+    {
+      "speaker": "tobias",
+      "text": "Thank you, everyone. Good, honest discussion."
+    }
+  ],
+  "summary": {
+    "overview": "The team held a blameless postmortem for the October 1st ingestion outage, which delayed ingestion by 2 hours 31 minutes, peaked at 91 minutes of staleness, and affected 312 workspaces with no permanent data loss. A single tenant's bulk backfill saturated one Kafka partition, and four factors made it worse: no per-tenant isolation, a 15-minute lag alert, a stale on-call rotation, and unclear status page ownership. The remediation plan covers rate limits by October 14th, a replay tool, repartitioning, a tighter alert, and comms templates. Per-tenant rate limits were flagged as a hard gate for the Insights 2.0 launch.",
+    "outline": [
+      {
+        "title": "Timeline of the incident",
+        "at_line": 0
+      },
+      {
+        "title": "Root cause and contributing factors",
+        "at_line": 10
+      },
+      {
+        "title": "What went well",
+        "at_line": 22
+      },
+      {
+        "title": "Remediation plan",
+        "at_line": 26
+      },
+      {
+        "title": "Launch impact and wrap-up",
+        "at_line": 38
+      }
+    ],
+    "notes": [
+      {
+        "title": "Timeline of the incident",
+        "bullets": [
+          "A bulk backfill from one tenant took traffic from about 800 to 32,000 events per second at 9:42 p.m. Pacific, all landing on partition 7.",
+          "The autoscaler doubled consumers from 12 to 24 but half sat idle because consumers cannot exceed partitions.",
+          "A customer ticket at 10:05 beat the 10:31 page; mitigation began at 10:50 and lag drained at 12:13 a.m.",
+          "Impact: 2h31m of delay, 91 minutes peak staleness, 312 workspaces, 38 million events replayed."
+        ]
+      },
+      {
+        "title": "Root cause and contributing factors",
+        "bullets": [
+          "Root cause was the lack of per-tenant rate limits and isolation; the tenant-ID partition key dates from when there were about forty customers.",
+          "The lag alert needed 15 minutes of sustained lag and paged a former employee through an outdated on-call schedule.",
+          "The status page was updated 47 minutes after the first ticket because support lacked access and a runbook."
+        ]
+      },
+      {
+        "title": "What went well",
+        "bullets": [
+          "Seven-day queue retention meant replay lost nothing.",
+          "Isolating the tenant into its own topic took about twenty minutes.",
+          "Customers thanked the team for transparent updates."
+        ]
+      },
+      {
+        "title": "Remediation plan",
+        "bullets": [
+          "Arjun ships edge rate limits by October 14th and lowers the alert threshold to 3 minutes while fixing on-call.",
+          "Imani builds the first replay tool by the 16th; Kenji will repartition by tenant tier plus hash bucket, starting with a migration plan.",
+          "Diego owns a status page template, support runbook and customer email template."
+        ]
+      },
+      {
+        "title": "Launch impact and wrap-up",
+        "bullets": [
+          "Rate limits are a hard gate for the October 21st Insights 2.0 launch; the team would recommend slipping if they are not live by the 14th.",
+          "Brightpath Health kicks off Tuesday and Diego will prepare a customer-facing summary.",
+          "The postmortem is to be published internally by Monday."
+        ]
+      }
+    ],
+    "keywords": [
+      {
+        "term": "ingestion lag",
+        "weight": 0.95
+      },
+      {
+        "term": "partition 7",
+        "weight": 0.84
+      },
+      {
+        "term": "rate limits",
+        "weight": 0.73
+      },
+      {
+        "term": "on-call schedule",
+        "weight": 0.62
+      },
+      {
+        "term": "status page",
+        "weight": 0.51
+      },
+      {
+        "term": "Insights 2.0 launch",
+        "weight": 0.4
+      }
+    ]
+  },
+  "action_items": [
+    {
+      "text": "Ship per-tenant rate limits at the edge to production by October 14th",
+      "assignee": "arjun",
+      "due_offset_days": 11,
+      "status": "open",
+      "at_line": 26
+    },
+    {
+      "text": "Build the first version of the dead-letter queue replay tool by October 16th",
+      "assignee": "imani",
+      "due_offset_days": 13,
+      "status": "open",
+      "at_line": 29
+    },
+    {
+      "text": "Write the repartitioning migration plan, with a rollback path, and share it with Tobias by next Friday",
+      "assignee": "kenji",
+      "due_offset_days": 6,
+      "status": "open",
+      "at_line": 32
+    },
+    {
+      "text": "Lower the lag alert threshold from 15 to 3 minutes and fix the on-call schedule today",
+      "assignee": "arjun",
+      "due_offset_days": 0,
+      "status": "completed",
+      "at_line": 33
+    },
+    {
+      "text": "Write the status page template, support runbook, and customer email template by Wednesday",
+      "assignee": "diego",
+      "due_offset_days": 4,
+      "status": "completed",
+      "at_line": 37
+    },
+    {
+      "text": "Publish the written postmortem to the company wiki by Monday",
+      "assignee": "arjun",
+      "due_offset_days": 2,
+      "status": "completed",
+      "at_line": 45
+    }
+  ]
+}

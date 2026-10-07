@@ -1,0 +1,337 @@
+{
+  "key": "board-prep",
+  "title": "Investor Update and Board Prep — September",
+  "description": "Leadership aligns on metrics, narrative, risks and asks for the September board meeting and investor update.",
+  "day_offset": -35,
+  "time": "09:00",
+  "host": "ben",
+  "participants": [
+    "ben",
+    "me",
+    "fatima",
+    "tobias",
+    "helena"
+  ],
+  "channel": null,
+  "has_media": false,
+  "transcript": [
+    {
+      "speaker": "ben",
+      "text": "Morning, everyone. The board meeting is September 17th, and the investor update goes out Friday the 11th. Today I want to align on the story and the numbers."
+    },
+    {
+      "speaker": "ben",
+      "text": "My headline is: growth is healthy, we're about to launch the product that unlocks the next stage, and we're capital efficient."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Fair headline, as long as the numbers back it. Let me walk through the metrics."
+    },
+    {
+      "speaker": "helena",
+      "text": "And can we agree up front that we show the bad news plainly? Boards punish surprises more than misses."
+    },
+    {
+      "speaker": "ben",
+      "text": "Agreed. No surprises."
+    },
+    {
+      "speaker": "fatima",
+      "text": "ARR closed August at 4.2 million dollars, up from 3.1 million at the start of the year. That's 35 percent growth in eight months."
+    },
+    {
+      "speaker": "ben",
+      "text": "And net revenue retention?"
+    },
+    {
+      "speaker": "fatima",
+      "text": "118 percent trailing twelve months. Gross retention is 91."
+    },
+    {
+      "speaker": "tobias",
+      "text": "So we lost about nine percent. Where did that come from?"
+    },
+    {
+      "speaker": "fatima",
+      "text": "Mostly two mid-market accounts that churned in July, together about 140 thousand dollars of ARR. One was acquired, the other cut analytics tooling entirely."
+    },
+    {
+      "speaker": "ben",
+      "text": "I want to show that. I'd rather the board hear it from the update than from a question."
+    },
+    {
+      "speaker": "helena",
+      "text": "Agreed, but I'd frame it with the reasons. An acquisition isn't a product failure."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Right, I'll include a churn reason table. Burn is 310 thousand a month and cash is 6.8 million, so about 22 months of runway."
+    },
+    {
+      "speaker": "ben",
+      "text": "Should we show 22 months, or the 26 months we'd have if we held hiring flat?"
+    },
+    {
+      "speaker": "fatima",
+      "text": "Show 22. It includes the planned hires, and it's the honest number."
+    },
+    {
+      "speaker": "ben",
+      "text": "Fine. We go with 22."
+    },
+    {
+      "speaker": "me",
+      "text": "On customers, the big news is Brightpath Health. They signed last week at 96 thousand dollars in annual contract value, our first healthcare logo and our largest new logo of the year."
+    },
+    {
+      "speaker": "ben",
+      "text": "That's the vertical story. Helena, how do we present it?"
+    },
+    {
+      "speaker": "helena",
+      "text": "As proof we can sell into regulated industries. One caveat: they aren't live yet. Kickoff is planned for early October after their change freeze, and we should say that in the update."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Q4 pipeline is at 1.9 million unweighted and about 620 thousand weighted, against a Q4 new ARR target of 260 thousand. That's 2.4 times coverage."
+    },
+    {
+      "speaker": "ben",
+      "text": "Good. What's driving the pipeline?"
+    },
+    {
+      "speaker": "helena",
+      "text": "Outbound into e-commerce and a four-webinar series we're planning for Q4. I'm taking the plan to Fatima on the 25th."
+    },
+    {
+      "speaker": "ben",
+      "text": "Nadia, product."
+    },
+    {
+      "speaker": "me",
+      "text": "Insights 2.0 launches October 21st. That's the funnel builder rewrite, anomaly alerts, and SQL export. We have 14 design partners in the beta and an NPS of 52."
+    },
+    {
+      "speaker": "ben",
+      "text": "Is the date safe? Last quarter the funnel builder slipped a month."
+    },
+    {
+      "speaker": "me",
+      "text": "Safe but not guaranteed. The riskiest piece is anomaly alerts, which depend on ingestion capacity. Tobias has a view."
+    },
+    {
+      "speaker": "tobias",
+      "text": "We're doing capacity work in September, mostly rate limiting and better isolation across tenants. We hit hot partitions in the spring, and I don't want that to repeat at launch. I'd say October 21st with a possible one-week slip."
+    },
+    {
+      "speaker": "ben",
+      "text": "I'll put October 21st in the update and call it targeted."
+    },
+    {
+      "speaker": "me",
+      "text": "Please do. I'd rather under-promise."
+    },
+    {
+      "speaker": "ben",
+      "text": "Hiring. Where are we on the senior backend role?"
+    },
+    {
+      "speaker": "tobias",
+      "text": "We've been looking since June, and two finalists fell through on compensation. I have six new candidates, and the first onsite is next week."
+    },
+    {
+      "speaker": "fatima",
+      "text": "Headcount is 38 now, with 44 planned by year end."
+    },
+    {
+      "speaker": "ben",
+      "text": "I want to be honest that this hire is a risk to the roadmap."
+    },
+    {
+      "speaker": "tobias",
+      "text": "It is. Without it, Kenji and Imani carry ingestion."
+    },
+    {
+      "speaker": "ben",
+      "text": "Then we say so. Now the asks: intros to healthcare-focused investors and customers, and advice on Series A timing."
+    },
+    {
+      "speaker": "fatima",
+      "text": "I'd say we plan to open Series A conversations in Q1, after launch metrics are in."
+    },
+    {
+      "speaker": "helena",
+      "text": "Agreed. Launch metrics make a better story than projections."
+    },
+    {
+      "speaker": "ben",
+      "text": "Risks I'll list: ingestion capacity, the backend hire, and customer concentration. Our top three customers are about 31 percent of ARR."
+    },
+    {
+      "speaker": "fatima",
+      "text": "I'll confirm the exact concentration figure before it goes out."
+    },
+    {
+      "speaker": "ben",
+      "text": "Next steps. Fatima, can you send me the metrics and churn tables by Friday?"
+    },
+    {
+      "speaker": "fatima",
+      "text": "Yes, I'll send the final metrics tables and the churn table by Friday."
+    },
+    {
+      "speaker": "me",
+      "text": "I'll write the product section, one page with the roadmap and launch date, by Tuesday."
+    },
+    {
+      "speaker": "helena",
+      "text": "I'll draft the customer and pipeline section, including the Brightpath paragraph, by Tuesday too."
+    },
+    {
+      "speaker": "tobias",
+      "text": "I'll write the capacity and hiring risk paragraph by Tuesday."
+    },
+    {
+      "speaker": "ben",
+      "text": "And I'll assemble the draft and circulate it on Wednesday, so we have two days to edit before it goes out."
+    }
+  ],
+  "summary": {
+    "overview": "Leadership prepared the September 17th board meeting and the investor update going out on the 11th. They reviewed 4.2 million dollars of ARR, 118% net revenue retention, 22 months of runway, and two July churns worth about 140 thousand dollars. Brightpath Health was highlighted as the first healthcare logo at 96 thousand dollars ACV, and Insights 2.0 was framed as targeted for October 21st with a possible one-week slip because of ingestion capacity. The team also flagged the unfilled senior backend role and customer concentration as risks, and chose Series A timing and healthcare intros as the asks.",
+    "outline": [
+      {
+        "title": "Board meeting objectives",
+        "at_line": 0
+      },
+      {
+        "title": "Financial and growth metrics",
+        "at_line": 5
+      },
+      {
+        "title": "Customers and pipeline",
+        "at_line": 16
+      },
+      {
+        "title": "Product roadmap and launch",
+        "at_line": 22
+      },
+      {
+        "title": "Team, risks, and next steps",
+        "at_line": 29
+      }
+    ],
+    "notes": [
+      {
+        "title": "Board meeting objectives",
+        "bullets": [
+          "Board meets September 17th; the investor update goes out Friday the 11th.",
+          "Headline: healthy growth, an upcoming launch that unlocks the next stage, and capital efficiency.",
+          "The team agreed to show bad news plainly."
+        ]
+      },
+      {
+        "title": "Financial and growth metrics",
+        "bullets": [
+          "ARR closed August at 4.2M, up from 3.1M at the start of the year (35% growth); NRR 118%, gross retention 91%.",
+          "Two mid-market churns in July totaled about 140k ARR; a churn reason table will be included.",
+          "Burn is 310k per month with 6.8M cash; runway will be shown as 22 months including planned hires."
+        ]
+      },
+      {
+        "title": "Customers and pipeline",
+        "bullets": [
+          "Brightpath Health signed at 96k ACV as the first healthcare logo; they are not live yet, with kickoff planned for early October.",
+          "Q4 pipeline is 1.9M unweighted and about 620k weighted against a 260k target, or 2.4x coverage.",
+          "Drivers are e-commerce outbound and a planned four-webinar series."
+        ]
+      },
+      {
+        "title": "Product roadmap and launch",
+        "bullets": [
+          "Insights 2.0 targets October 21st with 14 design partners and an NPS of 52.",
+          "Anomaly alerts are the riskiest part because they depend on ingestion capacity; Tobias plans rate limiting and isolation work in September.",
+          "The update will call the date targeted, with a possible one-week slip."
+        ]
+      },
+      {
+        "title": "Team, risks, and next steps",
+        "bullets": [
+          "The senior backend search has run since June after two finalists fell through; headcount is 38 with 44 planned.",
+          "Asks are healthcare investor and customer intros plus Series A timing advice, with conversations planned for Q1.",
+          "Listed risks are ingestion capacity, the backend hire, and top-three customer concentration of about 31%.",
+          "Section owners deliver drafts by Tuesday; Ben circulates the draft on Wednesday."
+        ]
+      }
+    ],
+    "keywords": [
+      {
+        "term": "board meeting",
+        "weight": 0.95
+      },
+      {
+        "term": "ARR",
+        "weight": 0.84
+      },
+      {
+        "term": "net revenue retention",
+        "weight": 0.73
+      },
+      {
+        "term": "runway",
+        "weight": 0.62
+      },
+      {
+        "term": "Brightpath Health",
+        "weight": 0.51
+      },
+      {
+        "term": "Series A",
+        "weight": 0.4
+      }
+    ]
+  },
+  "action_items": [
+    {
+      "text": "Confirm the exact top-three customer concentration figure before the update goes out",
+      "assignee": "fatima",
+      "due_offset_days": 2,
+      "status": "open",
+      "at_line": 38
+    },
+    {
+      "text": "Send Ben the final metrics tables and churn table by Friday",
+      "assignee": "fatima",
+      "due_offset_days": 2,
+      "status": "completed",
+      "at_line": 40
+    },
+    {
+      "text": "Write the one-page product section with roadmap and launch date by Tuesday",
+      "assignee": "me",
+      "due_offset_days": 6,
+      "status": "completed",
+      "at_line": 41
+    },
+    {
+      "text": "Draft the customer and pipeline section, including the Brightpath paragraph, by Tuesday",
+      "assignee": "helena",
+      "due_offset_days": 6,
+      "status": "completed",
+      "at_line": 42
+    },
+    {
+      "text": "Write the capacity and hiring risk paragraph by Tuesday",
+      "assignee": "tobias",
+      "due_offset_days": 6,
+      "status": "open",
+      "at_line": 43
+    },
+    {
+      "text": "Assemble the investor update draft and circulate it on Wednesday",
+      "assignee": "ben",
+      "due_offset_days": 7,
+      "status": "completed",
+      "at_line": 44
+    }
+  ]
+}

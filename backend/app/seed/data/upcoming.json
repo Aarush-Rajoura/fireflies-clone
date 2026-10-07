@@ -1,0 +1,22 @@
+[
+  {
+    "key": "launch-readiness-sync",
+    "title": "Insights 2.0 Launch Readiness Sync",
+    "day_offset": 1,
+    "time": "09:30",
+    "host": "me",
+    "participants": ["me", "tobias", "imani", "arjun", "helena"],
+    "meeting_url": "https://meet.google.com/lmr-qxvt-hde",
+    "platform": "meet"
+  },
+  {
+    "key": "brightpath-checkin",
+    "title": "Brightpath Health — Staging and Integration Check-in",
+    "day_offset": 6,
+    "time": "11:00",
+    "host": "diego",
+    "participants": ["diego", "me", "priyanka", "callum", "kenji"],
+    "meeting_url": "https://zoom.us/j/84217305591",
+    "platform": "zoom"
+  }
+]
