@@ -1,6 +1,8 @@
 from collections.abc import Sequence
+from datetime import datetime
+from typing import Any, cast
 
-from sqlalchemy import select
+from sqlalchemy import CursorResult, delete, or_, select, update
 
 from app.models import Keyword, Summary, SummarySection
 from app.repositories.base import Repository
@@ -47,3 +49,44 @@ class SummaryRepository(Repository[Summary]):
         for mid, term in self.session.execute(stmt):
             out.setdefault(mid, []).append(term)
         return out
+
+    def claim(self, summary: Summary, now: datetime, abandoned_before: datetime) -> bool:
+        """Conditional UPDATE so two concurrent callers cannot both win the claim."""
+        result = cast(
+            CursorResult[Any],
+            self.session.execute(
+                update(Summary)
+                .where(
+                    Summary.id == summary.id,
+                    or_(
+                        Summary.generating_since.is_(None),
+                        Summary.generating_since < abandoned_before,
+                    ),
+                )
+                .values(generating_since=now)
+                .execution_options(synchronize_session=False)
+            ),
+        )
+        self.session.expire(summary, ["generating_since"])
+        return result.rowcount == 1
+
+    def release_claim(self, summary: Summary) -> None:
+        self.session.execute(
+            update(Summary)
+            .where(Summary.id == summary.id)
+            .values(generating_since=None)
+            .execution_options(synchronize_session=False)
+        )
+        self.session.expire(summary, ["generating_since"])
+
+    def replace_sections(self, summary_id: int, sections: Sequence[SummarySection]) -> None:
+        self.session.execute(delete(SummarySection).where(SummarySection.summary_id == summary_id))
+        self.session.add_all(sections)
+        self.session.flush()
+
+    def replace_keywords(self, meeting_id: int, keywords: Sequence[Keyword]) -> None:
+        # Delete runs before the inserts, so re-adding an unchanged term cannot trip the
+        # (meeting_id, term) unique constraint.
+        self.session.execute(delete(Keyword).where(Keyword.meeting_id == meeting_id))
+        self.session.add_all(keywords)
+        self.session.flush()
