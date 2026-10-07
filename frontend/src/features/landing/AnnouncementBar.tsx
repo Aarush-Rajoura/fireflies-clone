@@ -19,7 +19,10 @@ export function AnnouncementBar() {
         {ANNOUNCEMENT.badge}
       </span>
       <span>{ANNOUNCEMENT.text}</span>{" "}
-      <Link href={ANNOUNCEMENT.href} className="whitespace-nowrap font-medium underline underline-offset-2">
+      <Link
+        href={ANNOUNCEMENT.href}
+        className="whitespace-nowrap font-medium underline underline-offset-2"
+      >
         {ANNOUNCEMENT.cta}
       </Link>
       <button

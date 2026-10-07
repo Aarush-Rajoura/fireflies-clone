@@ -16,7 +16,11 @@ function RatingPill() {
           R
         </span>
         {HERO.rating}
-        <span className="inline-flex text-[var(--mk-star)]" role="img" aria-label="4.8 out of 5 stars">
+        <span
+          className="inline-flex text-[var(--mk-star)]"
+          role="img"
+          aria-label="4.8 out of 5 stars"
+        >
           {[0, 1, 2, 3].map((i) => (
             <Icon key={i} name="star" filled size={18} />
           ))}
@@ -36,7 +40,7 @@ function RatingPill() {
 export function Hero() {
   return (
     <section aria-labelledby="hero-title" className="mk-starfield relative overflow-hidden">
-      <Container className="pb-16 pt-16 text-center sm:pt-24 lg:pt-28">
+      <Container className="pb-14 pt-14 text-center sm:pt-20 lg:pt-24">
         {/* Above the fold: CSS-only entrance so the headline never waits on JS. */}
         <div className="mk-rise">
           <h1
@@ -45,7 +49,7 @@ export function Hero() {
           >
             {HERO.title}
           </h1>
-          <p className="mx-auto mt-6 max-w-[720px] text-[17px] leading-relaxed text-[var(--mk-on-dark-muted)] sm:text-[20px]">
+          <p className="mx-auto mt-6 max-w-[720px] text-[15px] leading-relaxed text-[var(--mk-on-dark-muted)] sm:text-[18px]">
             {HERO.subtitle}
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
@@ -56,7 +60,7 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="mk-rise mt-16 [animation-delay:150ms] sm:mt-24">
+        <div className="mk-rise mt-14 [animation-delay:150ms] sm:mt-20">
           <RatingPill />
           <ProductMock />
         </div>

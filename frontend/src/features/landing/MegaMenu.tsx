@@ -19,11 +19,23 @@ interface MegaMenuProps {
 /** Number of arrow-key stops in a menu: every column link plus the card CTA. */
 export const megaItemCount = (menu: MegaMenuData) => menu.columns.length + 1;
 
-export function MegaMenu({ menu, panelId, labelledBy, registerItem, onItemKeyDown, onNavigate }: MegaMenuProps) {
+export function MegaMenu({
+  menu,
+  panelId,
+  labelledBy,
+  registerItem,
+  onItemKeyDown,
+  onNavigate,
+}: MegaMenuProps) {
   const ctaIndex = menu.columns.length;
   return (
     // Top padding bridges the gap under the trigger so hover does not drop while moving down.
-    <div id={panelId} role="region" aria-labelledby={labelledBy} className="absolute inset-x-4 top-full pt-1 sm:inset-x-6 lg:inset-x-8">
+    <div
+      id={panelId}
+      role="region"
+      aria-labelledby={labelledBy}
+      className="absolute inset-x-4 top-full pt-1 sm:inset-x-6 lg:inset-x-8"
+    >
       <div className="mk-pop grid grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-10 rounded-2xl bg-[var(--mk-white)] p-10 shadow-[0_30px_80px_var(--mk-shadow-strong)]">
         <ul className="grid grid-cols-2 content-start gap-x-10 gap-y-7">
           {menu.columns.map((link, i) => (
@@ -38,7 +50,9 @@ export function MegaMenu({ menu, panelId, labelledBy, registerItem, onItemKeyDow
                 <span className="block text-[17px] text-[var(--mk-ink)] group-hover:text-[var(--mk-violet)]">
                   {link.title}
                 </span>
-                <span className="mt-1.5 block text-[15px] leading-relaxed text-[var(--mk-muted)]">{link.description}</span>
+                <span className="mt-1.5 block text-[15px] leading-relaxed text-[var(--mk-muted)]">
+                  {link.description}
+                </span>
               </Link>
             </li>
           ))}
@@ -46,7 +60,9 @@ export function MegaMenu({ menu, panelId, labelledBy, registerItem, onItemKeyDow
         <div>
           {menu.card.visual === "tiles" ? <TilesVisual /> : <GlowVisual />}
           <p className="mt-6 text-[17px] text-[var(--mk-ink)]">{menu.card.title}</p>
-          <p className="mt-2 text-[15px] leading-relaxed text-[var(--mk-muted)]">{menu.card.body}</p>
+          <p className="mt-2 text-[15px] leading-relaxed text-[var(--mk-muted)]">
+            {menu.card.body}
+          </p>
           <Link
             href={menu.card.href}
             ref={(el) => registerItem(ctaIndex, el)}

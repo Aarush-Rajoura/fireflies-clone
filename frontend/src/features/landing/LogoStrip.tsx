@@ -15,7 +15,9 @@ export function LogoStrip() {
             className="flex items-center justify-center gap-2 text-[var(--mk-on-dark-muted)] opacity-90 grayscale-[35%]"
           >
             <PlaceholderMark shape={logo.shape} tone={logo.tone} size={24} />
-            <span className="mk-display whitespace-nowrap text-[17px] font-semibold tracking-tight">{logo.name}</span>
+            <span className="mk-display whitespace-nowrap text-[17px] font-semibold tracking-tight">
+              {logo.name}
+            </span>
           </li>
         ))}
       </ul>

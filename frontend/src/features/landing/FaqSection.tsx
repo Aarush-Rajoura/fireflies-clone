@@ -10,12 +10,20 @@ export function FaqSection() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section aria-labelledby="faq-title" className="bg-[var(--mk-white)] py-20 sm:py-28">
+    <section
+      id="faq"
+      aria-labelledby="faq-title"
+      className="scroll-mt-4 bg-[var(--mk-white)] py-14 sm:py-20"
+    >
       <Container className="max-w-[860px]">
         <Reveal>
-          <AccentHeading id="faq-title" text="Frequently Asked *Questions*" className="text-center text-[32px] sm:text-[44px]" />
+          <AccentHeading
+            id="faq-title"
+            text="Frequently Asked *Questions*"
+            className="text-center text-[28px] sm:text-[38px]"
+          />
         </Reveal>
-        <ul className="mt-12 divide-y divide-[var(--mk-line)] border-y border-[var(--mk-line)]">
+        <ul className="mt-10 divide-y divide-[var(--mk-line)] border-y border-[var(--mk-line)]">
           {FAQ.map((item, i) => {
             const isOpen = open === i;
             return (
@@ -27,7 +35,7 @@ export function FaqSection() {
                     aria-expanded={isOpen}
                     aria-controls={`faq-a-${i}`}
                     onClick={() => setOpen(isOpen ? null : i)}
-                    className="flex w-full items-center justify-between gap-6 py-5 text-left text-[17px] font-medium text-[var(--mk-ink)] hover:text-[var(--mk-violet)]"
+                    className="flex w-full items-center justify-between gap-6 py-4 text-left text-[16px] font-medium text-[var(--mk-ink)] hover:text-[var(--mk-violet)]"
                   >
                     {item.q}
                     <span
@@ -39,8 +47,15 @@ export function FaqSection() {
                     </span>
                   </button>
                 </h3>
-                <div id={`faq-a-${i}`} role="region" aria-labelledby={`faq-q-${i}`} hidden={!isOpen}>
-                  <p className="pb-6 pr-12 text-[15.5px] leading-relaxed text-[var(--mk-body)]">{item.a}</p>
+                <div
+                  id={`faq-a-${i}`}
+                  role="region"
+                  aria-labelledby={`faq-q-${i}`}
+                  hidden={!isOpen}
+                >
+                  <p className="pb-5 pr-12 text-[15px] leading-relaxed text-[var(--mk-body)]">
+                    {item.a}
+                  </p>
                 </div>
               </li>
             );

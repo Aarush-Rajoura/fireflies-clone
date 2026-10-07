@@ -20,7 +20,11 @@ const SIZES: Record<ButtonSize, string> = {
   lg: "h-[52px] px-6 text-[17px]",
 };
 
-export function buttonClass(variant: ButtonVariant = "primary", size: ButtonSize = "md", extra = "") {
+export function buttonClass(
+  variant: ButtonVariant = "primary",
+  size: ButtonSize = "md",
+  extra = "",
+) {
   return `inline-flex items-center justify-center gap-2 rounded-md font-medium whitespace-nowrap transition-colors duration-150 ${VARIANTS[variant]} ${SIZES[size]} ${extra}`;
 }
 
@@ -31,7 +35,14 @@ interface ButtonLinkProps extends Omit<ComponentProps<typeof Link>, "className">
   className?: string;
 }
 
-export function ButtonLink({ variant, size, arrow, className, children, ...rest }: ButtonLinkProps) {
+export function ButtonLink({
+  variant,
+  size,
+  arrow,
+  className,
+  children,
+  ...rest
+}: ButtonLinkProps) {
   return (
     <Link className={buttonClass(variant, size, className)} {...rest}>
       {children}
@@ -83,6 +94,16 @@ export function AccentHeading({
   );
 }
 
-export function Container({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-8 ${className}`}>{children}</div>;
+export function Container({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8 ${className}`}>
+      {children}
+    </div>
+  );
 }

@@ -7,7 +7,7 @@ import { DemoButton } from "./DemoModal";
 import { Icon } from "./icons";
 import { Wordmark } from "./marks";
 import { MegaMenu, megaItemCount } from "./MegaMenu";
-import { initialMenuState, menuKeyAction, menuReducer } from "./menuState";
+import { initialMenuState, menuKeyAction, menuReducer, triggerClickAction } from "./menuState";
 import { MobileMenu } from "./MobileMenu";
 import { ButtonLink } from "./ui";
 
@@ -58,14 +58,15 @@ export function MarketingNav() {
     closeTimer.current = window.setTimeout(() => dispatch({ type: "close" }), HOVER_CLOSE_DELAY);
   };
 
-  const handleKey = (id: string, where: "trigger" | "item", total: number) => (e: KeyboardEvent<HTMLElement>) => {
-    const result = menuKeyAction(e.key, where, { id, openId: state.openId, count: total });
-    if (!result) return;
-    e.preventDefault();
-    e.stopPropagation();
-    dispatch(result.action);
-    if (result.restoreFocus) triggers.current[id]?.focus();
-  };
+  const handleKey =
+    (id: string, where: "trigger" | "item", total: number) => (e: KeyboardEvent<HTMLElement>) => {
+      const result = menuKeyAction(e.key, where, { id, openId: state.openId, count: total });
+      if (!result) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dispatch(result.action);
+      if (result.restoreFocus) triggers.current[id]?.focus();
+    };
 
   const registerItem = useCallback((index: number, el: HTMLAnchorElement | null) => {
     items.current[index] = el;
@@ -78,22 +79,36 @@ export function MarketingNav() {
 
   return (
     <header className="relative z-50 bg-[var(--mk-navy)]">
-      <nav ref={navRef} aria-label="Main" className="relative mx-auto flex h-[72px] w-full max-w-[1440px] items-stretch px-4 sm:px-6 lg:h-[84px] lg:px-8">
-        <Link href={ROUTES.home} className="flex items-center self-center rounded-md" aria-label="fireflies.ai home">
+      <nav
+        ref={navRef}
+        aria-label="Main"
+        className="relative mx-auto flex h-[72px] w-full max-w-[1280px] items-stretch px-4 sm:px-6 lg:h-[84px] lg:px-8"
+      >
+        <Link
+          href={ROUTES.home}
+          className="flex items-center self-center rounded-md"
+          aria-label="fireflies.ai home"
+        >
           <Wordmark />
         </Link>
 
         <ul
           className="ml-6 hidden items-stretch lg:flex xl:ml-10"
           onBlur={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) dispatch({ type: "close" });
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+              dispatch({ type: "close" });
           }}
         >
           {MEGA_MENUS.map((menu) => {
             const isOpen = state.openId === menu.id;
             const total = megaItemCount(menu);
             return (
-              <li key={menu.id} className="flex items-center" onMouseEnter={(e) => hoverOpen(menu.id, e.timeStamp)} onMouseLeave={hoverClose}>
+              <li
+                key={menu.id}
+                className="flex items-center"
+                onMouseEnter={(e) => hoverOpen(menu.id, e.timeStamp)}
+                onMouseLeave={hoverClose}
+              >
                 <button
                   type="button"
                   id={`mk-trigger-${menu.id}`}
@@ -104,17 +119,25 @@ export function MarketingNav() {
                   aria-controls={`mk-menu-${menu.id}`}
                   onKeyDown={handleKey(menu.id, "trigger", total)}
                   onClick={(e) => {
-                    // Keyboard activation is handled in onKeyDown; a click right after hover-open keeps it open.
-                    if (e.detail === 0) return;
-                    if (isOpen && e.timeStamp - hoverOpenedAt.current < 400) return;
-                    dispatch({ type: "toggle", id: menu.id });
+                    const action = triggerClickAction(
+                      menu.id,
+                      state.openId,
+                      e.timeStamp - hoverOpenedAt.current,
+                    );
+                    if (action) dispatch(action);
                   }}
                   className={`flex items-center gap-1 rounded-md px-2 py-2 text-[14px] font-medium transition-colors xl:px-3.5 xl:text-[16px] ${
-                    isOpen ? "text-[var(--mk-white)]" : "text-[var(--mk-on-dark-muted)] hover:text-[var(--mk-white)]"
+                    isOpen
+                      ? "text-[var(--mk-white)]"
+                      : "text-[var(--mk-on-dark-muted)] hover:text-[var(--mk-white)]"
                   }`}
                 >
                   {menu.label}
-                  <Icon name="chevron-down" size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  <Icon
+                    name="chevron-down"
+                    size={16}
+                    className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
                 {isOpen && (
                   <MegaMenu
@@ -142,11 +165,19 @@ export function MarketingNav() {
         </ul>
 
         <div className="ml-auto hidden items-center gap-3 lg:flex">
-          <Link href={ROUTES.login} className="hidden rounded-md px-2 py-2 text-[15px] font-medium text-[var(--mk-on-dark-muted)] hover:text-[var(--mk-white)] 2xl:inline-flex">
+          <Link
+            href={ROUTES.login}
+            className="hidden rounded-md px-2 py-2 text-[15px] font-medium text-[var(--mk-on-dark-muted)] hover:text-[var(--mk-white)] 2xl:inline-flex"
+          >
             Log in
           </Link>
           <DemoButton variant="white" size="md" className="xl:h-12 xl:text-[17px]" />
-          <ButtonLink href={ROUTES.login} variant="primary" size="md" className="xl:h-12 xl:text-[17px]">
+          <ButtonLink
+            href={ROUTES.login}
+            variant="primary"
+            size="md"
+            className="xl:h-12 xl:text-[17px]"
+          >
             Open App
           </ButtonLink>
         </div>

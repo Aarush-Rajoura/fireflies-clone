@@ -23,7 +23,10 @@ function AnalyticsMock() {
             <Avatar name={s.name} tone={s.tone} size={20} />
             <span className="w-12 text-[var(--mk-body)]">{s.name}</span>
             <span className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--mk-surface-2)]">
-              <span className="block h-full rounded-full" style={{ width: `${s.share}%`, background: toneVar(s.tone) }} />
+              <span
+                className="block h-full rounded-full"
+                style={{ width: `${s.share}%`, background: toneVar(s.tone) }}
+              />
             </span>
             <span className="w-9 text-right tabular-nums text-[var(--mk-muted)]">{s.share}%</span>
           </li>
@@ -31,15 +34,29 @@ function AnalyticsMock() {
       </ul>
 
       <p className="mt-7 text-[13px] font-medium text-[var(--mk-ink)]">Sentiment over the call</p>
-      <div className="relative mt-3 flex h-24 gap-1.5" role="img" aria-label="Mostly positive sentiment with three brief dips">
+      <div
+        className="relative mt-3 flex h-24 gap-1.5"
+        role="img"
+        aria-label="Mostly positive sentiment with three brief dips"
+      >
         <span aria-hidden="true" className="absolute inset-x-0 top-1/2 h-px bg-[var(--mk-line)]" />
         {SENTIMENT.map((v, i) => (
           <span key={i} className="flex h-full flex-1 flex-col">
             <span className="flex flex-1 items-end">
-              {v > 0 && <span className="w-full rounded-t-sm bg-[var(--mk-tone-4)]" style={{ height: `${v * 12}%` }} />}
+              {v > 0 && (
+                <span
+                  className="w-full rounded-t-sm bg-[var(--mk-tone-4)]"
+                  style={{ height: `${v * 12}%` }}
+                />
+              )}
             </span>
             <span className="flex flex-1 items-start">
-              {v < 0 && <span className="w-full rounded-b-sm bg-[var(--mk-tone-6)]" style={{ height: `${-v * 12}%` }} />}
+              {v < 0 && (
+                <span
+                  className="w-full rounded-b-sm bg-[var(--mk-tone-6)]"
+                  style={{ height: `${-v * 12}%` }}
+                />
+              )}
             </span>
           </span>
         ))}
@@ -48,7 +65,10 @@ function AnalyticsMock() {
       <p className="mt-6 text-[13px] font-medium text-[var(--mk-ink)]">Topic trackers</p>
       <ul className="mt-3 flex flex-wrap gap-2">
         {TOPICS.map((t) => (
-          <li key={t.label} className="rounded-full bg-[var(--mk-violet-tint)] px-3 py-1 text-[12px] text-[var(--mk-link)]">
+          <li
+            key={t.label}
+            className="rounded-full bg-[var(--mk-violet-tint)] px-3 py-1 text-[12px] text-[var(--mk-link)]"
+          >
             {t.label} <span className="font-semibold">{t.count}</span>
           </li>
         ))}
@@ -59,21 +79,25 @@ function AnalyticsMock() {
 
 export function IntelligenceSection() {
   return (
-    <section aria-labelledby="intelligence-title" className="bg-[var(--mk-surface)] py-20 sm:py-28">
+    <section
+      id="intelligence"
+      aria-labelledby="intelligence-title"
+      className="scroll-mt-4 bg-[var(--mk-surface)] py-14 sm:py-20"
+    >
       <Container className="grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
         <Reveal>
           <AccentHeading
             id="intelligence-title"
             text={"Drive Insights With\n*Conversation Intelligence*"}
-            className="text-[32px] sm:text-[40px]"
+            className="text-[28px] sm:text-[38px]"
           />
-          <p className="mt-5 max-w-[480px] text-[17px] leading-relaxed text-[var(--mk-body)]">
+          <p className="mt-4 max-w-[480px] text-[15px] leading-relaxed text-[var(--mk-body)]">
             Detailed analytics that uncover what works across every conversation, for every team.
           </p>
           <ButtonLink href={ROUTES.signup} arrow className="mt-8">
             Get Started
           </ButtonLink>
-          <div className="mt-12 grid gap-x-10 gap-y-9 sm:grid-cols-2">
+          <div className="mt-10 grid gap-x-10 gap-y-7 sm:grid-cols-2">
             {INTELLIGENCE_POINTS.map((f) => (
               <FeatureItem key={f.title} feature={f} />
             ))}

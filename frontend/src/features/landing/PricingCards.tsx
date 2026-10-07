@@ -9,17 +9,28 @@ function priceFor(tier: PricingTier, cycle: BillingCycle) {
   const value = cycle === "annual" ? tier.annual : tier.monthly;
   if (value === null) return { amount: "Custom", note: "Billed annually" };
   if (value === 0) return { amount: "$0", note: "Free forever" };
-  return { amount: `$${value}`, note: cycle === "annual" ? "per seat / month, billed annually" : "per seat / month, billed monthly" };
+  return {
+    amount: `$${value}`,
+    note:
+      cycle === "annual" ? "per seat / month, billed annually" : "per seat / month, billed monthly",
+  };
 }
 
-/** Monthly/annual toggle plus the four plan cards. Used on /pricing and the landing teaser. */
-export function PricingCards() {
+/**
+ * Monthly/annual toggle plus the four plan cards. Used on /pricing and (compact, without the
+ * feature lists) as the landing teaser.
+ */
+export function PricingCards({ compact = false }: { compact?: boolean }) {
   const [cycle, setCycle] = useState<BillingCycle>("annual");
 
   return (
     <div>
       <div className="flex justify-center">
-        <div role="group" aria-label="Billing cycle" className="inline-flex rounded-full border border-[var(--mk-line)] bg-[var(--mk-white)] p-1">
+        <div
+          role="group"
+          aria-label="Billing cycle"
+          className="inline-flex rounded-full border border-[var(--mk-line)] bg-[var(--mk-white)] p-1"
+        >
           {(["monthly", "annual"] as const).map((c) => (
             <button
               key={c}
@@ -27,7 +38,9 @@ export function PricingCards() {
               aria-pressed={cycle === c}
               onClick={() => setCycle(c)}
               className={`rounded-full px-5 py-2 text-[14px] font-medium transition-colors ${
-                cycle === c ? "bg-[var(--mk-navy)] text-[var(--mk-white)]" : "text-[var(--mk-body)] hover:text-[var(--mk-ink)]"
+                cycle === c
+                  ? "bg-[var(--mk-navy)] text-[var(--mk-white)]"
+                  : "text-[var(--mk-body)] hover:text-[var(--mk-ink)]"
               }`}
             >
               {c === "monthly" ? "Monthly" : "Annual"}
@@ -60,26 +73,48 @@ export function PricingCards() {
                 </span>
               )}
               <h3 className="mk-display text-[22px] font-medium">{tier.name}</h3>
-              <p className={`mt-1.5 min-h-[44px] text-[14px] ${hl ? "text-[var(--mk-on-dark-muted)]" : "text-[var(--mk-body)]"}`}>
+              <p
+                className={`mt-1.5 min-h-[44px] text-[14px] ${hl ? "text-[var(--mk-on-dark-muted)]" : "text-[var(--mk-body)]"}`}
+              >
                 {tier.blurb}
               </p>
               <p className="mt-5 flex items-baseline gap-1">
-                <span className="mk-display text-[40px] font-medium leading-none" aria-live="polite">
+                <span
+                  className="mk-display text-[40px] font-medium leading-none"
+                  aria-live="polite"
+                >
                   {price.amount}
                 </span>
               </p>
-              <p className={`mt-2 text-[13px] ${hl ? "text-[var(--mk-on-dark-muted)]" : "text-[var(--mk-muted)]"}`}>{price.note}</p>
-              <ButtonLink href={tier.href} variant={hl ? "primary" : "ghost"} className="mt-6 w-full">
+              <p
+                className={`mt-2 text-[13px] ${hl ? "text-[var(--mk-on-dark-muted)]" : "text-[var(--mk-muted)]"}`}
+              >
+                {price.note}
+              </p>
+              <ButtonLink
+                href={tier.href}
+                variant={hl ? "primary" : "ghost"}
+                className="mt-6 w-full"
+              >
                 {tier.cta}
               </ButtonLink>
-              <ul className="mt-6 space-y-2.5">
-                {tier.features.map((f) => (
-                  <li key={f} className={`flex gap-2.5 text-[14px] ${hl ? "text-[var(--mk-on-dark-muted)]" : "text-[var(--mk-body)]"}`}>
-                    <Icon name="check" size={18} className={`shrink-0 ${hl ? "text-[var(--mk-violet-soft)]" : "text-[var(--mk-violet)]"}`} />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+              {!compact && (
+                <ul className="mt-6 space-y-2.5">
+                  {tier.features.map((f) => (
+                    <li
+                      key={f}
+                      className={`flex gap-2.5 text-[14px] ${hl ? "text-[var(--mk-on-dark-muted)]" : "text-[var(--mk-body)]"}`}
+                    >
+                      <Icon
+                        name="check"
+                        size={18}
+                        className={`shrink-0 ${hl ? "text-[var(--mk-violet-soft)]" : "text-[var(--mk-violet)]"}`}
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           );
         })}

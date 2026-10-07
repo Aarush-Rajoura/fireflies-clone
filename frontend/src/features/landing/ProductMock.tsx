@@ -8,7 +8,10 @@ const RAIL: IconName[] = ["search", "sparkles", "target", "message", "bookmark"]
 /** Static rendering of the meeting page: notes on the left, transcript on the right. */
 export function ProductMock() {
   return (
-    <figure aria-label="Fireflies meeting page showing AI notes and a live transcript" className="relative mx-auto max-w-[1040px]">
+    <figure
+      aria-label="Fireflies meeting page showing AI notes and a live transcript"
+      className="relative mx-auto max-w-[1040px]"
+    >
       <MockWindow className="rounded-t-none sm:rounded-t-xl">
         <MockTopBar />
         <div className="grid md:grid-cols-[44px_minmax(0,1fr)_300px]">
@@ -45,8 +48,8 @@ export function ProductMock() {
 
             <p className="mt-5 text-[13px] font-medium text-[var(--mk-ink)]">Overview</p>
             <p className="mt-2 text-[13px] leading-relaxed text-[var(--mk-body)]">
-              The kickoff introduced Northbeam and Acme. Acme plans to use Fireflies to streamline internal
-              communication, automate sales follow-ups and improve meeting workflows.
+              The kickoff introduced Northbeam and Acme. Acme plans to use Fireflies to streamline
+              internal communication, automate sales follow-ups and improve meeting workflows.
             </p>
 
             <p className="mt-6 text-[13px] font-medium text-[var(--mk-ink)]">Notes</p>
@@ -54,12 +57,19 @@ export function ProductMock() {
               {MEETING_NOTES.map((note) => (
                 <div key={note.heading}>
                   <p className="flex items-center gap-2.5 text-[13px] font-medium text-[var(--mk-ink)]">
-                    <span aria-hidden="true" className="h-3 w-3 rounded-sm bg-[var(--mk-secondary)]" />
-                    {note.heading}: <span className="font-normal text-[var(--mk-body)]">{note.range}</span>
+                    <span
+                      aria-hidden="true"
+                      className="h-3 w-3 rounded-sm bg-[var(--mk-secondary)]"
+                    />
+                    {note.heading}:{" "}
+                    <span className="font-normal text-[var(--mk-body)]">{note.range}</span>
                   </p>
                   <ul className="mt-1.5 space-y-1 pl-6">
                     {note.bullets.map((b) => (
-                      <li key={b} className="list-disc text-[12.5px] leading-relaxed text-[var(--mk-body)] marker:text-[var(--mk-muted)]">
+                      <li
+                        key={b}
+                        className="list-disc text-[12.5px] leading-relaxed text-[var(--mk-body)] marker:text-[var(--mk-muted)]"
+                      >
                         {b}
                       </li>
                     ))}
@@ -82,16 +92,18 @@ export function ProductMock() {
 /** The bot "tile" that appears in the call while it records. */
 function NotetakerCard() {
   return (
-    <div className="absolute bottom-6 right-4 w-[180px] overflow-hidden rounded-xl border-2 border-[var(--mk-violet)] bg-[var(--mk-navy)] p-3 shadow-[0_16px_40px_var(--mk-shadow-strong)]">
-      <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--mk-violet)] text-[var(--mk-white)]">
+    <div className="absolute bottom-6 right-4 w-[190px] overflow-hidden rounded-xl border-2 border-[var(--mk-tone-5)] bg-[var(--mk-navy)] p-3 shadow-[0_16px_40px_var(--mk-shadow-strong)]">
+      <span className="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--mk-tone-5)] text-[var(--mk-white)]">
         <Icon name="mic" size={10} />
       </span>
-      <div className="flex justify-center py-3">
-        <span className="mk-pulse flex h-16 w-16 items-center justify-center rounded-full bg-[var(--mk-navy-raised)] ring-2 ring-[var(--mk-magenta)]">
+      <div className="flex justify-center py-4">
+        <span className="mk-orb flex h-[72px] w-[72px] items-center justify-center rounded-full">
           <BrandMark size={26} />
         </span>
       </div>
-      <p className="text-[11px] font-medium text-[var(--mk-on-dark)]">Sarah&apos;s Fireflies AI Notetaker</p>
+      <p className="text-[11px] font-medium text-[var(--mk-on-dark)]">
+        Sarah&apos;s Fireflies AI Notetaker
+      </p>
     </div>
   );
 }

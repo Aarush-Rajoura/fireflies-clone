@@ -1,13 +1,29 @@
 import { describe, expect, test } from "vitest";
 import { scriptedReply } from "./chatScript";
 import { CHAT_FALLBACK, CHAT_QUICK_REPLIES, SUMMARY_TABS } from "./content";
-import { initialMenuState, menuKeyAction, menuReducer, type MenuState } from "./menuState";
+import {
+  HOVER_CLICK_GRACE_MS,
+  initialMenuState,
+  menuKeyAction,
+  menuReducer,
+  triggerClickAction,
+  type MenuState,
+} from "./menuState";
 import { findSummaryTab, nextTabIndex } from "./tabsState";
 
 /** Feed a key into the reducer the way MarketingNav does. */
-function press(state: MenuState, key: string, where: "trigger" | "item", id = "product", count = 4) {
+function press(
+  state: MenuState,
+  key: string,
+  where: "trigger" | "item",
+  id = "product",
+  count = 4,
+) {
   const result = menuKeyAction(key, where, { id, openId: state.openId, count });
-  return { state: result ? menuReducer(state, result.action) : state, restoreFocus: result?.restoreFocus ?? false };
+  return {
+    state: result ? menuReducer(state, result.action) : state,
+    restoreFocus: result?.restoreFocus ?? false,
+  };
 }
 
 describe("nav mega-menu keyboard behaviour", () => {
@@ -24,7 +40,10 @@ describe("nav mega-menu keyboard behaviour", () => {
   });
 
   test("ArrowUp on a trigger opens with the last item focused", () => {
-    expect(press(initialMenuState, "ArrowUp", "trigger").state).toEqual({ openId: "product", activeIndex: 3 });
+    expect(press(initialMenuState, "ArrowUp", "trigger").state).toEqual({
+      openId: "product",
+      activeIndex: 3,
+    });
   });
 
   test("Escape closes the menu and asks for focus to return to the trigger", () => {
@@ -36,7 +55,9 @@ describe("nav mega-menu keyboard behaviour", () => {
   });
 
   test("Escape does nothing when the menu is already closed", () => {
-    expect(menuKeyAction("Escape", "trigger", { id: "product", openId: null, count: 4 })).toBeNull();
+    expect(
+      menuKeyAction("Escape", "trigger", { id: "product", openId: null, count: 4 }),
+    ).toBeNull();
   });
 
   test("arrow keys move between items and wrap around", () => {
@@ -69,8 +90,29 @@ describe("nav mega-menu keyboard behaviour", () => {
     expect(s).toEqual(initialMenuState);
   });
 
+  test("any click on a trigger toggles, including assistive-tech / el.click() clicks", () => {
+    // Screen readers and el.click() fire clicks with detail === 0; they must still open the menu.
+    const opened = triggerClickAction("product", null, Infinity);
+    expect(opened).toEqual({ type: "toggle", id: "product" });
+    const s = menuReducer(initialMenuState, opened!);
+    expect(s.openId).toBe("product");
+    expect(menuReducer(s, triggerClickAction("product", "product", Infinity)!)).toEqual(
+      initialMenuState,
+    );
+  });
+
+  test("a click right after hover-open keeps the menu open", () => {
+    expect(triggerClickAction("product", "product", 50)).toBeNull();
+    expect(triggerClickAction("product", "product", HOVER_CLICK_GRACE_MS + 1)).toEqual({
+      type: "toggle",
+      id: "product",
+    });
+  });
+
   test("moving inside a closed menu is a no-op", () => {
-    expect(menuReducer(initialMenuState, { type: "move", delta: 1, count: 4 })).toBe(initialMenuState);
+    expect(menuReducer(initialMenuState, { type: "move", delta: 1, count: 4 })).toBe(
+      initialMenuState,
+    );
   });
 });
 
@@ -90,12 +132,21 @@ describe("summary tabs", () => {
     const actions = findSummaryTab("actions");
     expect(overview.label).toBe("Overview");
     expect(actions.label).toBe("Action Items");
-    expect(actions.items.every((i) => i.owner)).toBe(true);
-    expect(overview.items[0]?.text).not.toBe(actions.items[0]?.text);
+    expect(actions.groups.map((g) => g.label)).toEqual(["Chris", "Sarah", "Janice"]);
+    expect(
+      actions.groups.every((g) => g.items.every((i) => /^\d\d:\d\d$/.test(i.time ?? ""))),
+    ).toBe(true);
+    expect(overview.intro).toBeTruthy();
+    expect(overview.groups[0]?.items[0]?.text).not.toBe(actions.groups[0]?.items[0]?.text);
   });
 
   test("tabs are Overview, Bullet Points, Action Items, Custom Notes", () => {
-    expect(SUMMARY_TABS.map((t) => t.label)).toEqual(["Overview", "Bullet Points", "Action Items", "Custom Notes"]);
+    expect(SUMMARY_TABS.map((t) => t.label)).toEqual([
+      "Overview",
+      "Bullet Points",
+      "Action Items",
+      "Custom Notes",
+    ]);
   });
 });
 

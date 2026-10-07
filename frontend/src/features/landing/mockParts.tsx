@@ -39,7 +39,13 @@ export function MockTopBar({ extra }: { extra?: string }) {
   );
 }
 
-export function TranscriptEntry({ line, active = false }: { line: TranscriptLine; active?: boolean }) {
+export function TranscriptEntry({
+  line,
+  active = false,
+}: {
+  line: TranscriptLine;
+  active?: boolean;
+}) {
   return (
     <div className={`rounded-lg px-2 py-2 ${active ? "bg-[var(--mk-violet-tint)]" : ""}`}>
       <div className="flex items-center gap-1.5 text-[12px]">
@@ -49,13 +55,21 @@ export function TranscriptEntry({ line, active = false }: { line: TranscriptLine
         <span className="text-[var(--mk-muted)]">·</span>
         <span className="text-[var(--mk-link)] underline underline-offset-2">{line.time}</span>
       </div>
-      <p className="mt-1.5 pl-[22px] text-[12.5px] leading-relaxed text-[var(--mk-body)]">{line.text}</p>
+      <p className="mt-1.5 pl-[22px] text-[12.5px] leading-relaxed text-[var(--mk-body)]">
+        {line.text}
+      </p>
     </div>
   );
 }
 
 /** Transcript column with search box, as on the meeting page. */
-export function TranscriptPanel({ lines = TRANSCRIPT, activeIndex = -1 }: { lines?: TranscriptLine[]; activeIndex?: number }) {
+export function TranscriptPanel({
+  lines = TRANSCRIPT,
+  activeIndex = -1,
+}: {
+  lines?: TranscriptLine[];
+  activeIndex?: number;
+}) {
   return (
     <div className="flex h-full flex-col bg-[var(--mk-white)] text-left">
       <p className="px-4 pt-3 text-[12px] font-medium text-[var(--mk-ink)]">Transcript</p>
@@ -65,7 +79,11 @@ export function TranscriptPanel({ lines = TRANSCRIPT, activeIndex = -1 }: { line
       </div>
       <div className="mt-2 space-y-1 px-2 pb-3">
         {lines.map((line, i) => (
-          <TranscriptEntry key={`${line.speaker}-${line.time}`} line={line} active={i === activeIndex} />
+          <TranscriptEntry
+            key={`${line.speaker}-${line.time}`}
+            line={line}
+            active={i === activeIndex}
+          />
         ))}
       </div>
     </div>
@@ -73,7 +91,13 @@ export function TranscriptPanel({ lines = TRANSCRIPT, activeIndex = -1 }: { line
 }
 
 /** Fake browser-ish frame that holds a mock-up. */
-export function MockWindow({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function MockWindow({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <div
       className={`overflow-hidden rounded-xl border border-[var(--mk-line)] bg-[var(--mk-white)] text-left shadow-[0_24px_70px_var(--mk-shadow-strong)] ${className}`}

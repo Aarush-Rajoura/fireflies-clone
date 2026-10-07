@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { DemoForm } from "./DemoForm";
 import { Icon } from "./icons";
 import { buttonClass, type ButtonSize, type ButtonVariant } from "./ui";
@@ -41,6 +50,9 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const FOCUSABLE =
+  'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
+
 function DemoDialog({ onClose }: { onClose: () => void }) {
   const panel = useRef<HTMLDivElement>(null);
 
@@ -49,12 +61,17 @@ function DemoDialog({ onClose }: { onClose: () => void }) {
     document.body.style.overflow = "hidden";
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
-      // Minimal focus trap: keep Tab cycling inside the dialog.
+      // Minimal focus trap: keep Tab cycling inside the dialog, and pull stray focus back in.
       if (e.key === "Tab" && panel.current) {
-        const nodes = panel.current.querySelectorAll<HTMLElement>("button, input, select, a[href]");
+        const nodes = panel.current.querySelectorAll<HTMLElement>(FOCUSABLE);
         const first = nodes[0];
         const last = nodes[nodes.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
+        const active = document.activeElement as HTMLElement | null;
+        // Outside the panel, or on a non-tabbable node inside it (e.g. the success message).
+        if (!active || !panel.current.contains(active) || !Array.from(nodes).includes(active)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first)?.focus();
+        } else if (e.shiftKey && document.activeElement === first) {
           e.preventDefault();
           last?.focus();
         } else if (!e.shiftKey && document.activeElement === last) {
@@ -72,7 +89,11 @@ function DemoDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[var(--mk-scrim)] backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div
+        className="absolute inset-0 bg-[var(--mk-scrim)] backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
       <div
         ref={panel}
         role="dialog"

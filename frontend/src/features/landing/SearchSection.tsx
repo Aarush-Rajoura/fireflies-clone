@@ -10,8 +10,18 @@ const TINT = {
 } as const;
 
 const RESULTS = [
-  { title: "Roadmap Planning", who: "Matt", date: "May 15", snippet: "…we agreed the mobile release slips to Q3…" },
-  { title: "Pricing Review", who: "Priya", date: "Apr 2", snippet: "…annual plans get a 20% discount…" },
+  {
+    title: "Roadmap Planning",
+    who: "Matt",
+    date: "May 15",
+    snippet: "…we agreed the mobile release slips to Q3…",
+  },
+  {
+    title: "Pricing Review",
+    who: "Priya",
+    date: "Apr 2",
+    snippet: "…annual plans get a 20% discount…",
+  },
 ];
 
 function SearchMock() {
@@ -23,7 +33,10 @@ function SearchMock() {
       </div>
       <ul className="mt-3 space-y-2">
         {RESULTS.map((r, i) => (
-          <li key={r.title} className={`flex gap-3 rounded-lg p-2.5 ${i === 0 ? "bg-[var(--mk-surface)]" : ""}`}>
+          <li
+            key={r.title}
+            className={`flex gap-3 rounded-lg p-2.5 ${i === 0 ? "bg-[var(--mk-surface)]" : ""}`}
+          >
             <Avatar name={r.who} tone={i === 0 ? 5 : 2} size={28} />
             <div className="min-w-0">
               <p className="text-[13px] font-medium text-[var(--mk-ink)]">{r.title}</p>
@@ -31,7 +44,9 @@ function SearchMock() {
                 {r.who} · {r.date}
               </p>
               <p className="mt-1 truncate text-[12px] text-[var(--mk-body)]">
-                <mark className="rounded bg-[var(--mk-violet-tint)] px-0.5 text-[var(--mk-ink)]">{r.snippet}</mark>
+                <mark className="rounded bg-[var(--mk-violet-tint)] px-0.5 text-[var(--mk-ink)]">
+                  {r.snippet}
+                </mark>
               </p>
             </div>
           </li>
@@ -52,8 +67,8 @@ function AskFredMock() {
         <div>
           <p className="text-[11px] font-medium text-[var(--mk-ink)]">AskFred</p>
           <p className="mt-1 text-[12.5px] leading-relaxed text-[var(--mk-body)]">
-            Sam said social ad pricing is more competitive this quarter, but cost per click has risen slightly.{" "}
-            <span className="text-[var(--mk-link)]">14:02</span>
+            Sam said social ad pricing is more competitive this quarter, but cost per click has
+            risen slightly. <span className="text-[var(--mk-link)]">14:02</span>
           </p>
         </div>
       </div>
@@ -70,22 +85,30 @@ function AskFredMock() {
 
 export function SearchSection() {
   return (
-    <section aria-labelledby="search-title" className="bg-[var(--mk-white)] py-20 sm:py-28">
+    <section
+      id="search"
+      aria-labelledby="search-title"
+      className="scroll-mt-4 bg-[var(--mk-white)] py-14 sm:py-20"
+    >
       <Container>
         <Reveal>
           <AccentHeading
             id="search-title"
             text={"*Remember* Every Conversation\nWith *AI Powered Search*"}
-            className="text-center text-[32px] sm:text-[44px]"
+            className="text-center text-[28px] sm:text-[38px]"
           />
         </Reveal>
-        <div className="mx-auto mt-14 grid max-w-[1000px] grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-2">
+        <div className="mx-auto mt-10 grid max-w-[1000px] grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-2">
           {SEARCH_CARDS.map((card, i) => (
             <Reveal key={card.title} delay={i * 90}>
-              <article className={`flex h-full flex-col rounded-2xl border border-[var(--mk-line)] p-5 sm:p-8 ${TINT[card.tint]}`}>
+              <article
+                className={`flex h-full flex-col rounded-2xl border border-[var(--mk-line)] p-5 sm:p-8 ${TINT[card.tint]}`}
+              >
                 {i === 0 ? <SearchMock /> : <AskFredMock />}
-                <h3 className="mt-8 text-[20px] font-medium text-[var(--mk-ink)]">{card.title}</h3>
-                <p className="mt-2 text-[15px] leading-relaxed text-[var(--mk-body)]">{card.body}</p>
+                <h3 className="mt-6 text-[18px] font-medium text-[var(--mk-ink)]">{card.title}</h3>
+                <p className="mt-1.5 text-[14.5px] leading-relaxed text-[var(--mk-body)]">
+                  {card.body}
+                </p>
               </article>
             </Reveal>
           ))}

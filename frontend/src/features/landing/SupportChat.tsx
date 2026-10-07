@@ -62,7 +62,12 @@ export function SupportChat() {
           className="mk-pop fixed inset-x-3 bottom-24 z-[65] flex max-h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-2xl bg-[var(--mk-white)] shadow-[0_24px_70px_var(--mk-shadow-strong)] sm:inset-x-auto sm:right-6 sm:w-[400px]"
         >
           <header className="flex items-center gap-3 border-b border-[var(--mk-line)] px-4 py-3.5">
-            <button type="button" onClick={close} aria-label="Close chat" className="rounded-md p-1.5 text-[var(--mk-body)] hover:bg-[var(--mk-surface)]">
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close chat"
+              className="rounded-md p-1.5 text-[var(--mk-body)] hover:bg-[var(--mk-surface)]"
+            >
               <Icon name="arrow-left" size={20} />
             </button>
             <FredAvatar size={40} />
@@ -82,7 +87,11 @@ export function SupportChat() {
             </button>
           </header>
 
-          <div ref={listRef} aria-live="polite" className="min-h-[200px] flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          <div
+            ref={listRef}
+            aria-live="polite"
+            className="min-h-[200px] flex-1 space-y-3 overflow-y-auto px-4 py-4"
+          >
             {messages.map((m) =>
               m.from === "fred" ? (
                 <div key={m.id} className="flex items-start gap-2.5">
@@ -92,7 +101,10 @@ export function SupportChat() {
                   </p>
                 </div>
               ) : (
-                <p key={m.id} className="ml-auto w-fit max-w-[85%] rounded-xl rounded-br-sm bg-[var(--mk-violet)] px-3.5 py-2.5 text-[14px] text-[var(--mk-white)]">
+                <p
+                  key={m.id}
+                  className="ml-auto w-fit max-w-[85%] rounded-xl rounded-br-sm bg-[var(--mk-violet)] px-3.5 py-2.5 text-[14px] text-[var(--mk-white)]"
+                >
                   {m.text}
                 </p>
               ),
@@ -112,7 +124,10 @@ export function SupportChat() {
             ))}
           </div>
 
-          <form onSubmit={onSubmit} className="mx-4 mb-3 flex items-center gap-2 rounded-xl bg-[var(--mk-surface)] px-3 py-2">
+          <form
+            onSubmit={onSubmit}
+            className="mx-4 mb-3 flex items-center gap-2 rounded-xl bg-[var(--mk-surface)] px-3 py-2"
+          >
             <label htmlFor="mk-chat-input" className="sr-only">
               Write a message
             </label>
@@ -137,12 +152,14 @@ export function SupportChat() {
 
           <div className="border-t border-[var(--mk-line)] px-4 py-3">
             <p className="flex items-center justify-center gap-1.5 text-[12px] text-[var(--mk-muted)]">
-              Powered by <span className="font-semibold text-[var(--mk-ink)]">fireflies.ai</span> <BrandMark size={14} />
+              Powered by <span className="font-semibold text-[var(--mk-ink)]">Fred</span>{" "}
+              <BrandMark size={14} />
             </p>
             {showNotice && (
               <div className="relative mt-2.5 flex gap-2 rounded-lg border border-[var(--mk-line)] p-2.5 pr-8 text-[12px] leading-relaxed text-[var(--mk-body)]">
                 <Icon name="bulb" size={16} className="mt-0.5 shrink-0" />
-                This is a demo assistant with scripted answers. Nothing you type leaves your browser.
+                This is a demo assistant with scripted answers. Nothing you type leaves your
+                browser.
                 <button
                   type="button"
                   onClick={() => setShowNotice(false)}

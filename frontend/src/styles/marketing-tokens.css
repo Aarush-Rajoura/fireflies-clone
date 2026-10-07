@@ -65,16 +65,19 @@
   /* overlays */
   --mk-scrim: rgba(8, 4, 24, 0.66);
   --mk-glow: rgba(122, 94, 239, 0.35);
+  --mk-magenta-glow: rgba(224, 54, 140, 0.28);
   --mk-shadow: rgba(16, 8, 46, 0.12);
   --mk-shadow-strong: rgba(16, 8, 46, 0.28);
   --mk-star-dot: rgba(255, 255, 255, 0.55);
   --mk-white-08: rgba(255, 255, 255, 0.08);
   --mk-white-14: rgba(255, 255, 255, 0.14);
 
-  --mk-font: "Inter", "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
-  --mk-font-display: "DM Sans", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mk-font:
+    var(--mk-font-inter, "Inter"), "Inter", "DM Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mk-font-display:
+    var(--mk-font-dm, "DM Sans"), "DM Sans", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
   font-family: var(--mk-font);
   color: var(--mk-ink);
@@ -108,8 +111,16 @@
     radial-gradient(1px 1px at 93% 88%, var(--mk-star-dot), transparent 60%),
     radial-gradient(1px 1px at 5% 84%, var(--mk-star-dot), transparent 60%),
     radial-gradient(60% 45% at 50% 100%, var(--mk-glow), transparent 70%);
-  background-size: 640px 520px, 640px 520px, 640px 520px, 640px 520px, 640px 520px, 640px 520px,
-    640px 520px, 640px 520px, 100% 100%;
+  background-size:
+    640px 520px,
+    640px 520px,
+    640px 520px,
+    640px 520px,
+    640px 520px,
+    640px 520px,
+    640px 520px,
+    640px 520px,
+    100% 100%;
 }
 
 /* Painted "landscape" for the Live Assist banner (no image assets). */
@@ -121,17 +132,20 @@
     linear-gradient(180deg, var(--mk-secondary) 0%, var(--mk-navy) 100%);
 }
 
-/* Scroll reveal: elements start slightly lowered and fade in once observed. */
+/*
+ * Scroll reveal: elements start slightly lowered and fade in once observed.
+ * The hidden state reads two variables that default to "visible"; the layout's inline script
+ * flips them (via a <style> in <head>, which React leaves alone during hydration), so visitors
+ * without JS always see every section.
+ */
 .mk-reveal {
-  opacity: 0;
-  transform: translateY(18px);
   transition:
     opacity 600ms ease,
     transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.mk-reveal[data-visible="true"] {
-  opacity: 1;
-  transform: none;
+.mk-reveal:not([data-visible="true"]) {
+  opacity: var(--mk-reveal-opacity, 1);
+  transform: translateY(var(--mk-reveal-shift, 0px));
 }
 
 @keyframes mk-pop {
@@ -162,6 +176,22 @@
   animation: mk-rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
+/* Glowing violet-to-magenta ring around the notetaker glyph. */
+.mk-orb {
+  background:
+    radial-gradient(circle at 50% 50%, var(--mk-navy-raised) 0 52%, transparent 53%),
+    conic-gradient(
+      from 200deg,
+      var(--mk-violet),
+      var(--mk-magenta),
+      var(--mk-tone-5),
+      var(--mk-violet)
+    );
+  box-shadow:
+    0 0 24px 4px var(--mk-glow),
+    0 0 48px 8px var(--mk-magenta-glow);
+}
+
 @keyframes mk-pulse {
   0%,
   100% {
@@ -176,7 +206,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mk-reveal {
+  .mk-reveal,
+  .mk-reveal:not([data-visible="true"]) {
     opacity: 1;
     transform: none;
     transition: none;

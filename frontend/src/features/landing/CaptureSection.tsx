@@ -11,10 +11,15 @@ const TINT = { lilac: "bg-[var(--mk-tint-lilac)]", cream: "bg-[var(--mk-tint-cre
 function Participant({ name, tone }: { name: string; tone: string }) {
   return (
     <div className="relative h-full w-full overflow-hidden bg-[var(--mk-secondary)]">
-      <div className="absolute inset-0 opacity-60" style={{ background: `radial-gradient(80% 70% at 30% 20%, ${tone}, transparent 70%)` }} />
+      <div
+        className="absolute inset-0 opacity-60"
+        style={{ background: `radial-gradient(80% 70% at 30% 20%, ${tone}, transparent 70%)` }}
+      />
       <div className="absolute bottom-0 left-1/2 h-[46%] w-[58%] -translate-x-1/2 rounded-t-full bg-[var(--mk-navy-raised)]" />
       <div className="absolute bottom-[40%] left-1/2 aspect-square w-[16%] -translate-x-1/2 rounded-full bg-[var(--mk-on-dark-faint)]" />
-      <span className="absolute bottom-2 left-2 rounded bg-[var(--mk-scrim)] px-1.5 py-0.5 text-[10px] text-[var(--mk-on-dark)]">{name}</span>
+      <span className="absolute bottom-2 left-2 rounded bg-[var(--mk-scrim)] px-1.5 py-0.5 text-[10px] text-[var(--mk-on-dark)]">
+        {name}
+      </span>
     </div>
   );
 }
@@ -29,7 +34,10 @@ function BotIllustration() {
           <p className="text-[11px] font-medium text-[var(--mk-ink)]">Sales Demo</p>
           <p className="text-[10px] text-[var(--mk-muted)]">Janice, +2</p>
         </div>
-        <span aria-hidden="true" className="flex h-4 w-7 items-center justify-end rounded-full bg-[var(--mk-violet)] px-0.5">
+        <span
+          aria-hidden="true"
+          className="flex h-4 w-7 items-center justify-end rounded-full bg-[var(--mk-violet)] px-0.5"
+        >
           <span className="h-3 w-3 rounded-full bg-[var(--mk-white)]" />
         </span>
       </div>
@@ -37,7 +45,9 @@ function BotIllustration() {
         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--mk-white-14)]">
           <BrandMark size={20} />
         </span>
-        <span className="text-[10px] text-[var(--mk-on-dark)]">Janice&apos;s Fireflies Notetaker</span>
+        <span className="text-[10px] text-[var(--mk-on-dark)]">
+          Janice&apos;s Fireflies Notetaker
+        </span>
       </div>
       <div className="absolute left-3 top-3 flex gap-1.5 rounded-md bg-[var(--mk-navy)] p-1.5">
         {INTEGRATIONS.slice(0, 4).map((it) => (
@@ -82,27 +92,33 @@ function ExtensionIllustration() {
 
 export function CaptureSection() {
   return (
-    <section aria-labelledby="capture-title" className="bg-[var(--mk-surface)] py-20 sm:py-28">
+    <section
+      id="capture"
+      aria-labelledby="capture-title"
+      className="scroll-mt-4 bg-[var(--mk-surface)] py-14 sm:py-20"
+    >
       <Container>
         <Reveal>
           <AccentHeading
             id="capture-title"
             text="*Capture* Meetings *Anywhere* & Anytime"
-            className="text-center text-[32px] sm:text-[44px]"
+            className="text-center text-[28px] sm:text-[38px]"
           />
         </Reveal>
-        <div className="mx-auto mt-14 grid max-w-[1000px] gap-5 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <div className="mx-auto mt-10 grid max-w-[1000px] gap-5 md:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
           {CAPTURE_HIGHLIGHTS.map((card, i) => (
             <Reveal key={card.title} delay={i * 90}>
               <article className={`h-full rounded-2xl p-5 sm:p-6 ${TINT[card.tint]}`}>
-                <h3 className="text-[17px] font-medium text-[var(--mk-ink)]">{card.title}</h3>
-                <p className="mt-2 text-[14.5px] leading-relaxed text-[var(--mk-body)]">{card.body}</p>
+                <h3 className="text-[16px] font-medium text-[var(--mk-ink)]">{card.title}</h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-[var(--mk-body)]">
+                  {card.body}
+                </p>
                 {i === 0 ? <BotIllustration /> : <ExtensionIllustration />}
               </article>
             </Reveal>
           ))}
         </div>
-        <div className="mx-auto mt-14 grid max-w-[1000px] gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto mt-10 grid max-w-[1000px] gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {CAPTURE_FEATURES.map((f, i) => (
             <Reveal key={f.title} delay={i * 70}>
               <FeatureItem feature={f} />

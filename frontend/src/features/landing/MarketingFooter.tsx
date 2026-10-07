@@ -6,11 +6,15 @@ import { Container } from "./ui";
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-[var(--mk-line-dark)] bg-[var(--mk-navy-deep)] pb-10 pt-16 text-[var(--mk-on-dark-muted)]">
+    <footer className="border-t border-[var(--mk-line-dark)] bg-[var(--mk-navy-deep)] pb-8 pt-12 text-[var(--mk-on-dark-muted)]">
       <Container>
         <div className="grid gap-12 md:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))]">
           <div>
-            <Link href={ROUTES.home} aria-label="fireflies.ai home" className="inline-flex rounded-md">
+            <Link
+              href={ROUTES.home}
+              aria-label="fireflies.ai home"
+              className="inline-flex rounded-md"
+            >
               <Wordmark />
             </Link>
             <p className="mt-4 max-w-[300px] text-[15px] leading-relaxed">
@@ -27,7 +31,9 @@ export function MarketingFooter() {
           </div>
           {FOOTER_COLUMNS.map((col) => (
             <nav key={col.title} aria-label={col.title}>
-              <h2 className="text-[14px] font-semibold uppercase tracking-[0.08em] text-[var(--mk-on-dark)]">{col.title}</h2>
+              <h2 className="text-[14px] font-semibold uppercase tracking-[0.08em] text-[var(--mk-on-dark)]">
+                {col.title}
+              </h2>
               <ul className="mt-4 space-y-3">
                 {col.links.map((link) => (
                   <li key={link.label}>
@@ -40,9 +46,11 @@ export function MarketingFooter() {
             </nav>
           ))}
         </div>
-        <div className="mt-14 flex flex-col gap-3 border-t border-[var(--mk-line-dark)] pt-6 text-[13px] sm:flex-row sm:items-center sm:justify-between">
-          <p>© {new Date().getFullYear()} Fireflies clone. A demo project, not affiliated with Fireflies.ai.</p>
-          <p className="text-[var(--mk-on-dark-faint)]">Company names and marks shown on this site are fictional placeholders.</p>
+        <div className="mt-10 flex flex-col gap-3 border-t border-[var(--mk-line-dark)] pt-6 text-[13px] sm:flex-row sm:items-center sm:justify-between">
+          <p>© 2026 Fireflies clone. A demo project, not affiliated with Fireflies.ai.</p>
+          <p className="text-[var(--mk-on-dark-faint)]">
+            Company names and marks shown on this site are fictional placeholders.
+          </p>
         </div>
       </Container>
     </footer>

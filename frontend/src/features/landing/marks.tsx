@@ -30,7 +30,15 @@ export function Wordmark({ dark = true, className = "" }: { dark?: boolean; clas
 }
 
 /** Abstract shapes standing in for customer and integration logos. */
-export function PlaceholderMark({ shape, tone, size = 28 }: { shape: number; tone: Tone; size?: number }) {
+export function PlaceholderMark({
+  shape,
+  tone,
+  size = 28,
+}: {
+  shape: number;
+  tone: Tone;
+  size?: number;
+}) {
   const c = toneVar(tone);
   const shapes = [
     <g key="0" fill={c}>
@@ -39,7 +47,15 @@ export function PlaceholderMark({ shape, tone, size = 28 }: { shape: number; ton
     </g>,
     <g key="1" fill={c}>
       <rect x="5" y="5" width="14" height="14" rx="3" transform="rotate(45 12 12)" />
-      <rect x="9.5" y="9.5" width="5" height="5" rx="1" fill="var(--mk-white)" transform="rotate(45 12 12)" />
+      <rect
+        x="9.5"
+        y="9.5"
+        width="5"
+        height="5"
+        rx="1"
+        fill="var(--mk-white)"
+        transform="rotate(45 12 12)"
+      />
     </g>,
     <g key="2" fill="none" stroke={c} strokeWidth="2.5">
       <circle cx="12" cy="12" r="7.5" />
@@ -86,7 +102,12 @@ export function FredAvatar({ size = 32 }: { size?: number }) {
       style={{ width: size, height: size }}
     >
       <svg viewBox="0 0 24 24" width={size * 0.62} height={size * 0.62}>
-        <path d="M9 4.5l1 2.5M15 4.5l-1 2.5" stroke="var(--mk-violet)" strokeWidth="1.6" strokeLinecap="round" />
+        <path
+          d="M9 4.5l1 2.5M15 4.5l-1 2.5"
+          stroke="var(--mk-violet)"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
         <rect x="4" y="7" width="16" height="12" rx="6" fill="var(--mk-violet)" />
         <rect x="6.5" y="10" width="11" height="6" rx="3" fill="var(--mk-navy)" />
         <circle cx="9.7" cy="13" r="1.2" fill="var(--mk-violet-soft)" />

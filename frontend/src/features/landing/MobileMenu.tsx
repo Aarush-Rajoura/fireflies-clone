@@ -64,14 +64,26 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
                   className="flex w-full items-center justify-between py-4 text-left text-lg font-medium text-[var(--mk-white)]"
                 >
                   {menu.label}
-                  <Icon name="chevron-down" size={20} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                  <Icon
+                    name="chevron-down"
+                    size={20}
+                    className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                  />
                 </button>
                 <ul id={`mk-mobile-${menu.id}`} hidden={!isOpen} className="space-y-1 pb-4">
                   {menu.columns.map((link) => (
                     <li key={link.title}>
-                      <Link href={link.href} onClick={onClose} className="block rounded-lg px-3 py-2.5 hover:bg-[var(--mk-white-08)]">
-                        <span className="block text-[15px] text-[var(--mk-white)]">{link.title}</span>
-                        <span className="mt-0.5 block text-sm text-[var(--mk-on-dark-muted)]">{link.description}</span>
+                      <Link
+                        href={link.href}
+                        onClick={onClose}
+                        className="block rounded-lg px-3 py-2.5 hover:bg-[var(--mk-white-08)]"
+                      >
+                        <span className="block text-[15px] text-[var(--mk-white)]">
+                          {link.title}
+                        </span>
+                        <span className="mt-0.5 block text-sm text-[var(--mk-on-dark-muted)]">
+                          {link.description}
+                        </span>
                       </Link>
                     </li>
                   ))}
@@ -81,7 +93,11 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
           })}
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
-              <Link href={link.href} onClick={onClose} className="block py-4 text-lg font-medium text-[var(--mk-white)]">
+              <Link
+                href={link.href}
+                onClick={onClose}
+                className="block py-4 text-lg font-medium text-[var(--mk-white)]"
+              >
                 {link.label}
               </Link>
             </li>
@@ -90,7 +106,13 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
 
         <div className="mt-8 grid gap-3">
           <DemoButton variant="white" size="lg" className="w-full" onOpen={onClose} />
-          <ButtonLink href={ROUTES.login} variant="primary" size="lg" className="w-full" onClick={onClose}>
+          <ButtonLink
+            href={ROUTES.login}
+            variant="primary"
+            size="lg"
+            className="w-full"
+            onClick={onClose}
+          >
             Open App
           </ButtonLink>
           <div className="grid grid-cols-2 gap-3">

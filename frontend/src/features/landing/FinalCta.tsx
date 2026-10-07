@@ -6,7 +6,7 @@ import { AccentHeading, ButtonLink, Container } from "./ui";
 
 export function FinalCta() {
   return (
-    <section aria-labelledby="final-cta-title" className="mk-starfield py-24 text-center sm:py-32">
+    <section aria-labelledby="final-cta-title" className="mk-starfield py-16 text-center sm:py-24">
       <Container>
         <Reveal>
           <span className="mk-pulse mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--mk-navy-raised)] ring-1 ring-[var(--mk-violet)]">
@@ -16,10 +16,11 @@ export function FinalCta() {
             id="final-cta-title"
             dark
             text={"Never Take Meeting Notes\n*Again*"}
-            className="mt-8 text-[34px] sm:text-[52px]"
+            className="mt-6 text-[30px] sm:text-[44px]"
           />
-          <p className="mx-auto mt-5 max-w-[520px] text-[17px] leading-relaxed text-[var(--mk-on-dark-muted)]">
-            Join over a million companies that let Fireflies record, transcribe and summarize their conversations.
+          <p className="mx-auto mt-4 max-w-[520px] text-[15px] leading-relaxed text-[var(--mk-on-dark-muted)]">
+            Join over a million companies that let Fireflies record, transcribe and summarize their
+            conversations.
           </p>
           <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
             <ButtonLink href={ROUTES.signup} size="lg" arrow className="w-full sm:w-auto">

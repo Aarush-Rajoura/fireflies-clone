@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { COMPANY_SIZES } from "./content";
 import { Icon } from "./icons";
 import { buttonClass } from "./ui";
@@ -12,9 +12,21 @@ const field =
  * Request-a-demo form. Purely presentational: submitting only flips to a success state,
  * nothing is sent to a server.
  */
-export function DemoForm({ onSubmitted, autoFocus = false }: { onSubmitted?: (name: string) => void; autoFocus?: boolean }) {
+export function DemoForm({
+  onSubmitted,
+  autoFocus = false,
+}: {
+  onSubmitted?: (name: string) => void;
+  autoFocus?: boolean;
+}) {
   const id = useId();
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const successHeading = useRef<HTMLParagraphElement>(null);
+
+  // The submit button unmounts on success; move focus to the message so it doesn't fall to <body>.
+  useEffect(() => {
+    if (sentTo) successHeading.current?.focus();
+  }, [sentTo]);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,7 +43,13 @@ export function DemoForm({ onSubmitted, autoFocus = false }: { onSubmitted?: (na
         <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--mk-green-tint)] text-[var(--mk-green-ink)]">
           <Icon name="check" size={26} />
         </span>
-        <p className="mk-display mt-4 text-xl font-medium text-[var(--mk-ink)]">Thanks, {sentTo}!</p>
+        <p
+          ref={successHeading}
+          tabIndex={-1}
+          className="mk-display mt-4 text-xl font-medium text-[var(--mk-ink)]"
+        >
+          Thanks, {sentTo}!
+        </p>
         <p className="mt-2 max-w-xs text-sm text-[var(--mk-body)]">
           Our team will reach out within one business day to find a time that works.
         </p>
@@ -88,7 +106,9 @@ export function DemoForm({ onSubmitted, autoFocus = false }: { onSubmitted?: (na
         Request Demo
         <Icon name="arrow-right" size={18} />
       </button>
-      <p className="text-center text-xs text-[var(--mk-muted)]">Demo only: nothing is sent from this form.</p>
+      <p className="text-center text-xs text-[var(--mk-muted)]">
+        Demo only: nothing is sent from this form.
+      </p>
     </form>
   );
 }

@@ -62,7 +62,8 @@ export function menuKeyAction(
     if (key === "Enter" || key === " " || key === "ArrowDown") {
       return { action: { type: "open", id: ctx.id, focus: "first" } };
     }
-    if (key === "ArrowUp") return { action: { type: "open", id: ctx.id, focus: "last", count: ctx.count } };
+    if (key === "ArrowUp")
+      return { action: { type: "open", id: ctx.id, focus: "last", count: ctx.count } };
     return null;
   }
   if (!isOpen) return null;
@@ -80,4 +81,21 @@ export function menuKeyAction(
     default:
       return null;
   }
+}
+
+/** A click this soon after a hover-open is the same gesture, so it must not toggle the menu shut. */
+export const HOVER_CLICK_GRACE_MS = 400;
+
+/**
+ * Action for a pointer/AT click on a trigger. Every click counts (screen readers and
+ * el.click() report detail === 0); keyboard Enter/Space never get here because the
+ * keydown handler prevents their default click.
+ */
+export function triggerClickAction(
+  id: string,
+  openId: string | null,
+  msSinceHoverOpen: number,
+): MenuAction | null {
+  if (openId === id && msSinceHoverOpen < HOVER_CLICK_GRACE_MS) return null;
+  return { type: "toggle", id };
 }
