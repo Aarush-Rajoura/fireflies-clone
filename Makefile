@@ -16,7 +16,7 @@ dev-frontend: ## Run the Next.js dev server on :3000
 	cd frontend && npm run dev
 
 migrate: ## Apply database migrations
-	@echo "not available until the database layer exists"
+	cd backend && uv run alembic upgrade head
 
 seed: ## Populate demo data
 	@echo "not available until the seed data exists"
