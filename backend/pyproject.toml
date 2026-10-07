@@ -16,11 +16,23 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["pytest", "pytest-cov", "ruff", "mypy"]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "httpx2>=2.13.1",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+filterwarnings = [
+    "error",
+    # SQLite cannot reflect expression-based indexes; documented in docs/schema.md.
+    "ignore:Skipped unsupported reflection of expression-based index:sqlalchemy.exc.SAWarning",
+    "ignore:autogenerate skipping metadata-specified expression-based index:UserWarning",
+]
 
 [tool.ruff]
 line-length = 100
