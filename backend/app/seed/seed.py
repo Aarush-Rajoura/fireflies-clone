@@ -1,6 +1,7 @@
 """Populates a database with demo meetings: `python -m app.seed.seed [--reset] [--if-empty]`."""
 
 import argparse
+import sys
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -19,7 +20,8 @@ from app.seed.content import Person, load_cast, load_past_meetings, load_upcomin
 from app.seed.writer import write_meeting
 
 CHANNELS = ("hiring", "product", "customers")
-MEDIA_FILE = "sample-meeting.wav"
+MEDIA_STEM = "sample-meeting"
+MEDIA_SUFFIXES = (".mp3", ".wav")  # first one present wins
 DEFAULT_USER_KEY = "me"
 
 
@@ -50,10 +52,10 @@ def seed(
     anchor = settings.seed_anchor_date or datetime.now(UTC)
     if anchor.tzinfo is None:
         anchor = anchor.replace(tzinfo=UTC)
-    media_url = f"media/{MEDIA_FILE}" if (Path(settings.media_dir) / MEDIA_FILE).is_file() else None
+    media_url = _media_url(Path(settings.media_dir))
     cast = {p.key: p for p in load_cast()}
     with UnitOfWork(session) as uow:
-        users = _ensure_users(uow, cast)
+        users = _ensure_users(uow, cast, anchor)
         channels = _ensure_channels(uow, users[DEFAULT_USER_KEY])
         added = 0
         for m in [*load_past_meetings(), *load_upcoming()]:
@@ -68,13 +70,20 @@ def seed(
     return SeedResult(added)
 
 
+def _media_url(media_dir: Path) -> str | None:
+    for suffix in MEDIA_SUFFIXES:
+        if (media_dir / f"{MEDIA_STEM}{suffix}").is_file():
+            return f"media/{MEDIA_STEM}{suffix}"
+    return None
+
+
 def _exists(session: Session, title: str) -> bool:
     # Titles are unique within the seed set; dates move with "today", so they cannot be the key.
     stmt = select(Meeting.id).where(Meeting.title == title, Meeting.source == MeetingSource.SEED)
     return session.scalar(stmt) is not None
 
 
-def _ensure_users(uow: UnitOfWork, cast: dict[str, Person]) -> dict[str, User]:
+def _ensure_users(uow: UnitOfWork, cast: dict[str, Person], anchor: datetime) -> dict[str, User]:
     users: dict[str, User] = {}
     for key, person in cast.items():
         user = uow.users.get_by_email(person.email)
@@ -83,7 +92,7 @@ def _ensure_users(uow: UnitOfWork, cast: dict[str, Person]) -> dict[str, User]:
         users[key] = user
     me = users[DEFAULT_USER_KEY]
     if me.onboarded_at is None:
-        me.onboarded_at = datetime.now(UTC)
+        me.onboarded_at = anchor
         me.job_title = cast[DEFAULT_USER_KEY].title
         uow.flush()
     return users
@@ -102,9 +111,18 @@ def _ensure_channels(uow: UnitOfWork, owner: User) -> dict[str, Channel]:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Seed demo data.")
     parser.add_argument("--reset", action="store_true", help="delete all data first")
+    parser.add_argument("--yes", action="store_true", help="confirm --reset")
     parser.add_argument("--if-empty", action="store_true", help="do nothing if any user exists")
     args = parser.parse_args(argv)
     settings = get_settings()
+    if args.reset and not args.yes:
+        print(
+            f"--reset deletes ALL data in {settings.database_url}; re-run with --yes to confirm",
+            file=sys.stderr,
+        )
+        return 1
+    if args.reset:
+        print(f"resetting {settings.database_url}")
     engine: Engine = make_engine(settings.database_url)
     factory: sessionmaker[Session] = make_session_factory(engine)
     with factory() as session:

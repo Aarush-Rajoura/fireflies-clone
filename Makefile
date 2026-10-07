@@ -22,7 +22,7 @@ seed: ## Populate demo data
 	cd backend && uv run python -m app.seed.seed
 
 seed-reset: ## Wipe and re-seed demo data
-	cd backend && uv run python -m app.seed.seed --reset
+	cd backend && uv run python -m app.seed.seed --reset --yes
 
 test: ## Run backend and frontend tests
 	cd backend && uv run pytest -q

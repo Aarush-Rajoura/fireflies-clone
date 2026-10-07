@@ -4,3 +4,6 @@
 `python -m app.seed.sample_audio` (no ffmpeg needed). It is not a real
 recording: it only gives the player something to load for the two seeded
 meetings that have media.
+
+The seeder looks for `sample-meeting.mp3` first, then `sample-meeting.wav`
+(see `MEDIA_SUFFIXES` in `app/seed/seed.py`).

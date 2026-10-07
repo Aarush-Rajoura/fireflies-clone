@@ -82,7 +82,7 @@ def write_meeting(
     if m.lines:
         _write_transcript(uow, meeting, m, cast, people)
         _write_summary(uow, meeting, m)
-        _write_action_items(uow, meeting, m, anchor, people)
+        _write_action_items(uow, meeting, m, people)
     return meeting
 
 
@@ -154,10 +154,10 @@ def _write_action_items(
     uow: UnitOfWork,
     meeting: Meeting,
     m: SeedMeeting,
-    anchor: datetime,
     people: dict[str, Participant],
 ) -> None:
-    today = anchor.astimezone(UTC).date()
+    # Offsets in the seed content are relative to the meeting day, not to today.
+    meeting_day = meeting.started_at.date()
     items = [
         ActionItem(
             meeting_id=meeting.id,
@@ -165,7 +165,7 @@ def _write_action_items(
             assignee_participant_id=people[a.assignee].id if a.assignee else None,
             due_date=None
             if a.due_offset_days is None
-            else today + timedelta(days=a.due_offset_days),
+            else meeting_day + timedelta(days=a.due_offset_days),
             status=ActionItemStatus.COMPLETED if a.completed else ActionItemStatus.OPEN,
             completed_at=meeting.started_at if a.completed else None,
             source=ActionItemSource.AI,
