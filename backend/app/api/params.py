@@ -1,0 +1,50 @@
+"""Query-string parameters shared by several routes."""
+
+from datetime import date
+from typing import Annotated, Literal
+
+from fastapi import Depends, Query
+
+from app.schemas.common import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, PageParams
+from app.services.meetings import MeetingFilters, MeetingSort
+
+
+def paging(
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[
+        int, Query(ge=1, description=f"Clamped to {MAX_PAGE_SIZE}.")
+    ] = DEFAULT_PAGE_SIZE,
+) -> PageParams:
+    # A function (not a Query model) because FastAPI forbids mixing a model with other params.
+    return PageParams(page=page, page_size=page_size)
+
+
+Paging = Annotated[PageParams, Depends(paging)]
+
+
+def meeting_filters(
+    q: Annotated[
+        str | None, Query(description="Matches title, overview, people, transcript.")
+    ] = None,
+    participant: Annotated[str | None, Query(description="Participant name contains.")] = None,
+    date_from: Annotated[date | None, Query(description="Inclusive, UTC day.")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, UTC day.")] = None,
+    tag: Annotated[list[int] | None, Query(description="Tag id; repeat for any-of.")] = None,
+    channel: Annotated[int | None, Query(description="Channel id.")] = None,
+    scope: Literal["all", "hosted", "shared", "uploads"] = "all",
+    status: Literal["completed", "upcoming"] = "completed",
+) -> MeetingFilters:
+    return MeetingFilters(
+        q=q,
+        participant=participant,
+        date_from=date_from,
+        date_to=date_to,
+        tag_ids=tuple(tag or ()),
+        channel_id=channel,
+        scope=scope,
+        status=status,
+    )
+
+
+MeetingFilterParams = Annotated[MeetingFilters, Depends(meeting_filters)]
+SortParam = Annotated[MeetingSort, Query(description="Prefix `-` means descending.")]

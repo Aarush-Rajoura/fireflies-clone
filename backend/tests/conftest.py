@@ -70,3 +70,38 @@ def db_session(migrated_engine: Engine) -> Iterator[Session]:
     yield session
     session.rollback()
     session.close()
+
+
+@pytest.fixture(autouse=True)
+def _fresh_rate_limits() -> Iterator[None]:
+    from app.core.rate_limit import limiter
+
+    limiter.reset()
+    yield
+
+
+@pytest.fixture
+def api_app(app: FastAPI, settings: Settings, monkeypatch: pytest.MonkeyPatch) -> FastAPI:
+    """The app on a migrated, empty database with deterministic AI stubs."""
+    from app.ai.factory import get_action_item_extractor, get_summarizer
+    from tests.ai_stubs import StubExtractor, StubSummarizer
+
+    monkeypatch.setenv("DATABASE_URL", settings.database_url)
+    get_settings.cache_clear()
+    command.upgrade(alembic_config(), "head")
+    summarizer, extractor = StubSummarizer(), StubExtractor()
+    app.dependency_overrides[get_summarizer] = lambda: summarizer
+    app.dependency_overrides[get_action_item_extractor] = lambda: extractor
+    return app
+
+
+@pytest.fixture
+def api(api_app: FastAPI) -> Iterator[TestClient]:
+    """A client on a seeded database."""
+    from tests import factories as f
+
+    with api_app.state.session_factory() as db:
+        f.make_user(db)
+        db.commit()
+    with TestClient(api_app, raise_server_exceptions=False) as c:
+        yield c

@@ -64,3 +64,10 @@ class TranscriptPreview(BaseModel):
     duration_ms: int
     warnings: list[str]
     segments: list[SegmentIn]
+
+
+class TranscriptTextIn(InputModel):
+    """Pasted transcript text, the JSON counterpart of a file upload."""
+
+    text: str
+    filename: str | None = Field(default=None, max_length=255)

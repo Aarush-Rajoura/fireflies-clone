@@ -1,14 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 
-from app.core.deps import get_uow
-from app.core.exceptions import ServiceUnavailableError
-from app.db.unit_of_work import UnitOfWork
-from app.schemas.common import ErrorResponse
+from app.api.responses import SERVICE_UNAVAILABLE
+from app.core.deps import AppSettings, get_health_service
+from app.services.health import HealthService
 
 router = APIRouter(tags=["health"])
 
@@ -20,13 +17,11 @@ class HealthResponse(BaseModel):
     ai_provider: str
 
 
-@router.get("/health", responses={503: {"model": ErrorResponse}})
-def health(request: Request, uow: Annotated[UnitOfWork, Depends(get_uow)]) -> HealthResponse:
-    try:
-        uow.session.execute(text("SELECT 1"))
-    except SQLAlchemyError as exc:
-        raise ServiceUnavailableError("Database is unreachable") from exc
-    settings = request.app.state.settings
+@router.get("/health", responses=SERVICE_UNAVAILABLE)
+def health(
+    settings: AppSettings, service: Annotated[HealthService, Depends(get_health_service)]
+) -> HealthResponse:
+    service.check_database()
     return HealthResponse(
         status="ok", db="up", version=settings.app_version, ai_provider=settings.ai_provider
     )

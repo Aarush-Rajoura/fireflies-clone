@@ -3,10 +3,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1.routers import health
+from app.api.v1.routers import mount_routers
 from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.middleware import RequestContextMiddleware
+from app.core.rate_limit import limiter
 from app.db.session import make_engine, make_session_factory
 
 
@@ -28,7 +29,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         expose_headers=["X-Request-ID"],
     )
     register_exception_handlers(app)
-    app.include_router(health.router, prefix="/api")
+    app.state.limiter = limiter  # slowapi looks the limiter up here
+    mount_routers(app)
     return app
 
 
