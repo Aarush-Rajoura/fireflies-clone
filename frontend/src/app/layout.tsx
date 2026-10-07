@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Meeting transcripts, summaries and action items",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>{children}</body>

@@ -16,10 +16,10 @@ dev-frontend: ## Run the Next.js dev server on :3000
 	cd frontend && npm run dev
 
 migrate: ## Apply database migrations
-	@echo "not available until the database module (B1)"
+	@echo "not available until the database layer exists"
 
 seed: ## Populate demo data
-	@echo "not available until the seed module"
+	@echo "not available until the seed data exists"
 
 test: ## Run backend and frontend tests
 	cd backend && uv run pytest -q
@@ -30,4 +30,4 @@ lint: ## Lint backend and frontend
 	cd frontend && npm run lint && npm run typecheck
 
 types: ## Generate the typed API client
-	@echo "not available until the API client module"
+	@echo "not available until the API exists"
