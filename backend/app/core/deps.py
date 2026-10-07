@@ -21,7 +21,5 @@ def get_uow(request: Request) -> Iterator[UnitOfWork]:
 def get_current_user(uow: Annotated[UnitOfWork, Depends(get_uow)]) -> User:
     user = uow.users.get_default()
     if user is None:
-        error = ServiceUnavailableError("Database has not been seeded")
-        error.code = "NOT_SEEDED"
-        raise error
+        raise ServiceUnavailableError("Database has not been seeded", code="NOT_SEEDED")
     return user

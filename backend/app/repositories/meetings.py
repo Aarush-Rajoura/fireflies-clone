@@ -3,8 +3,9 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any
 
-from sqlalchemy import case, func, select
+from sqlalchemy import ColumnElement, case, func, select
 from sqlalchemy.orm import selectinload
 
 from app.models import ActionItem, Meeting
@@ -31,6 +32,18 @@ class MeetingRepository(Repository[Meeting]):
             return None
         return meeting
 
+    def get_detail(self, meeting_id: int, include_deleted: bool = False) -> Meeting | None:
+        """Like get, with host/participants/tags loaded (they are lazy="raise").
+
+        The collections are viewonly: after attaching/detaching participants or tags,
+        refresh or expire them (session.refresh(meeting, [...])) before reading.
+        """
+        stmt = select(Meeting).where(Meeting.id == meeting_id).options(*_LOAD_OPTIONS)
+        meeting = self.session.scalars(stmt).one_or_none()
+        if meeting is None or (meeting.deleted_at is not None and not include_deleted):
+            return None
+        return meeting
+
     def list(
         self,
         filters: MeetingFilters,
@@ -38,17 +51,16 @@ class MeetingRepository(Repository[Meeting]):
         sort: MeetingSort = MeetingSort.NEWEST,
         *,
         current_user_id: int,
+        now: datetime | None = None,
     ) -> tuple[list[Meeting], int]:
-        conds = build_conditions(filters, current_user_id=current_user_id, now=datetime.now(UTC))
+        conds = build_conditions(
+            filters, current_user_id=current_user_id, now=now or datetime.now(UTC)
+        )
         total = self.session.scalar(select(func.count()).select_from(Meeting).where(*conds)) or 0
         stmt = (
             select(Meeting)
             .where(*conds)
-            .options(
-                selectinload(Meeting.host),
-                selectinload(Meeting.participants),
-                selectinload(Meeting.tags),
-            )
+            .options(*_LOAD_OPTIONS)
             .order_by(*_order(sort))
             .limit(page.page_size)
             .offset(page.offset)
@@ -78,7 +90,14 @@ class MeetingRepository(Repository[Meeting]):
         self.session.flush()
 
 
-def _order(sort: MeetingSort) -> list:  # type: ignore[type-arg]
+_LOAD_OPTIONS = (
+    selectinload(Meeting.host),
+    selectinload(Meeting.participants),
+    selectinload(Meeting.tags),
+)
+
+
+def _order(sort: MeetingSort) -> list[ColumnElement[Any]]:
     # id is the tie-breaker so pagination is stable across equal sort keys.
     primary = {
         MeetingSort.NEWEST: Meeting.started_at.desc(),

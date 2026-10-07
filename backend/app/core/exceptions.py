@@ -7,7 +7,15 @@ class AppError(Exception):
     code: str = "APP_ERROR"
     default_message: str = "Application error"
 
-    def __init__(self, message: str | None = None, *, details: dict[str, Any] | None = None):
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        details: dict[str, Any] | None = None,
+        code: str | None = None,
+    ):
+        if code is not None:
+            self.code = code  # instance override of the class default
         self.message = message or self.default_message
         self.details: dict[str, Any] = details or {}
         super().__init__(self.message)

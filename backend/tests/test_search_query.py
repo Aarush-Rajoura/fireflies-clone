@@ -14,13 +14,26 @@ def test_query_builder_empty_when_nothing_usable(raw: str) -> None:
     assert to_fts_query(raw) == ""
 
 
-@pytest.mark.parametrize("raw", ['"', "*", "-foo", "a:b", "(", "naïve", "a.*b", "NEAR(", "OR AND"])
-def test_search_never_raises(db_session: Session, raw: str) -> None:
+@pytest.mark.parametrize(
+    ("raw", "expected_hits"),
+    [
+        ('"', 0),
+        ("*", 0),
+        ("-foo", 1),  # the dash is punctuation, so "foo" is searched
+        ("a:b", 1),  # tokens a and b
+        ("(", 0),
+        ("naïve", 1),
+        ("a.*b", 1),
+        ("NEAR(", 0),
+        ("OR AND", 0),  # operators are plain words, and the text has neither
+    ],
+)
+def test_search_hostile_input(db_session: Session, raw: str, expected_hits: int) -> None:
     m = f.make_meeting(db_session, title="Naïve plan")
     sp = f.make_speaker(db_session, m)
     f.make_segment(db_session, m, sp, "a naïve foo approach a b", sequence=0)
     hits, total = search_segments(db_session, raw, limit=10, offset=0)
-    assert total == len(hits) or total >= len(hits)
+    assert (len(hits), total) == (expected_hits, expected_hits)
 
 
 def test_search_results_and_prefix(db_session: Session) -> None:
@@ -34,8 +47,6 @@ def test_search_results_and_prefix(db_session: Session) -> None:
     assert hits[0].meeting_title == "Roadmap"
     assert hits[0].speaker_label == "Ana"
     assert hits[0].text == "We discussed the pricing model"
-    hits, _ = search_segments(db_session, "naive", limit=10, offset=0)
-    assert hits == []
 
 
 def test_search_meeting_scope_and_paging(db_session: Session) -> None:

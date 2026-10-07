@@ -8,6 +8,7 @@ from app.repositories.action_items import ActionItemRepository
 from app.repositories.comments import CommentRepository
 from app.repositories.highlights import HighlightRepository
 from app.repositories.meetings import MeetingRepository
+from app.repositories.participants import ParticipantRepository
 from app.repositories.summaries import SummaryRepository
 from app.repositories.tags import TagRepository
 from app.repositories.transcript import TranscriptRepository
@@ -21,6 +22,7 @@ class UnitOfWork:
         self.transcript = TranscriptRepository(session)
         self.summaries = SummaryRepository(session)
         self.action_items = ActionItemRepository(session)
+        self.participants = ParticipantRepository(session)
         self.tags = TagRepository(session)
         self.users = UserRepository(session)
         self.comments = CommentRepository(session)
