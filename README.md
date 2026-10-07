@@ -63,7 +63,12 @@ design decisions in [docs/schema.md](docs/schema.md).
 
 ## API overview
 
-_To be completed in the module that delivers it._
+REST under `/api/v1` (health at `/api/health`), 25 routes over meetings, transcripts, summaries,
+action items, search, channels and users. Every list returns
+`{items, page, page_size, total, total_pages, has_next}`; every error returns
+`{"error": {"code", "message", "details"}}` with a documented status (404, 409, 410, 422, 429, 503);
+every DELETE is `204` with no body. Conventions, the endpoint table and worked examples are in
+[docs/api.md](docs/api.md); the contract is [docs/openapi.json](docs/openapi.json) (`make types`).
 
 ## Setup
 

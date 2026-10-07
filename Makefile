@@ -26,8 +26,8 @@ test: ## Run backend and frontend tests
 	cd frontend && npm test
 
 lint: ## Lint backend and frontend
-	cd backend && uv run ruff check
+	cd backend && uv run ruff check && uv run python ../scripts/check_layering.py
 	cd frontend && npm run lint && npm run typecheck
 
-types: ## Generate the typed API client
-	@echo "not available until the API exists"
+types: ## Export docs/openapi.json (client type generation follows)
+	cd backend && uv run python -m scripts.export_openapi

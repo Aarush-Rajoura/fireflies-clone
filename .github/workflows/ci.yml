@@ -16,6 +16,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync
       - run: uv run ruff check
+      - run: uv run python ../scripts/check_layering.py
       - run: uv run pytest
 
   frontend:
