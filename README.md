@@ -44,7 +44,7 @@ services         use-case rules, one commit per use case [planned]
 repositories     queries, flush only                     [planned]
    |
    v
-models (db/)     SQLAlchemy models on a shared Base      [Base exists; models planned]
+models (db/)     SQLAlchemy models on a shared Base
 ```
 
 - `core/`: `Settings` (the only place env vars are read), domain exceptions with no HTTP knowledge, and the single mapping from exceptions to the `{error: {code, message, details}}` envelope.
@@ -54,7 +54,12 @@ models (db/)     SQLAlchemy models on a shared Base      [Base exists; models pl
 
 ## Database schema
 
-_To be completed in the module that delivers it._
+SQLite managed by Alembic migrations (never `create_all()`): meetings with their participants,
+speakers, transcript segments, summaries, action items, tags, comments, highlights, soundbites
+and channels, plus an FTS5 index over transcript text. Durations are integer milliseconds,
+meetings are soft-deleted, and delete rules are `CASCADE` for owned content, `SET NULL` for
+optional people/channel references and `RESTRICT` for a meeting's host. See the ER diagram and
+design decisions in [docs/schema.md](docs/schema.md).
 
 ## API overview
 
