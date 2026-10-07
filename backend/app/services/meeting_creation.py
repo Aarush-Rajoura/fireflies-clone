@@ -1,0 +1,202 @@
+"""Creating meetings from a form or a transcript.
+
+AI runs first with no transaction open (SQLite has a single writer, and a slow
+provider must not hold the write lock); then everything is written in one short
+transaction, so a failure part-way leaves no half-built meeting.
+"""
+
+from datetime import UTC, datetime
+
+from app.ai.interfaces import ActionItemExtractor, Summarizer
+from app.core.config import get_settings
+from app.core.exceptions import NotFoundError, ValidationFailedError
+from app.db.unit_of_work import UnitOfWork
+from app.models import ActionItem, Meeting, Participant, Speaker, TranscriptSegment
+from app.models.enums import ActionItemSource, MediaType, MeetingStatus, ParticipantRole
+from app.parsers import ParserRegistry
+from app.schemas.meeting import MeetingCreate, MeetingDetail
+from app.schemas.transcript import SegmentIn, TranscriptPreview
+from app.services import meeting_creation_mapping as mapping
+from app.services.meeting_creation_mapping import AIOutput
+from app.services.meetings import MeetingService
+from app.services.summary import SummaryService
+
+BYTES_PER_MB = 1024 * 1024
+
+
+class MeetingCreationService:
+    def __init__(
+        self,
+        uow: UnitOfWork,
+        parsers: ParserRegistry,
+        summarizer: Summarizer,
+        extractor: ActionItemExtractor,
+        summaries: SummaryService,
+        *,
+        max_upload_mb: int | None = None,
+    ) -> None:
+        self.uow = uow
+        self.parsers = parsers
+        self.summarizer = summarizer
+        self.extractor = extractor
+        self.summaries = summaries
+        self.max_upload_mb = (
+            max_upload_mb if max_upload_mb is not None else get_settings().max_upload_mb
+        )
+        self._meetings = MeetingService(uow)
+
+    def preview(self, content: str, filename: str | None) -> TranscriptPreview:
+        size = len(content.encode("utf-8"))
+        if size > self.max_upload_mb * BYTES_PER_MB:
+            raise ValidationFailedError(
+                f"Transcript is larger than {self.max_upload_mb} MB",
+                code="UPLOAD_TOO_LARGE",
+                details={"max_mb": self.max_upload_mb, "size_bytes": size},
+            )
+        return mapping.preview(self.parsers.parse(content, filename))
+
+    def create(self, data: MeetingCreate) -> MeetingDetail:
+        ai = self._run_ai(data)
+        try:
+            meeting_id = self._write(data, ai)
+            self.uow.commit()
+        except BaseException:
+            self.uow.rollback()
+            raise
+        return self._meetings.get(meeting_id)
+
+    def _run_ai(self, data: MeetingCreate) -> AIOutput | None:
+        """Step 1: touches no database state, so no transaction is open during the calls."""
+        if data.segments is None:
+            return None
+        names = mapping.resolve_speaker_names(data.participants, _labels(data.segments))
+        transcript = mapping.ai_transcript(data.title, data.segments, names)
+        return AIOutput(
+            summary=self.summarizer.summarize(transcript),
+            drafts=self.extractor.extract_action_items(transcript),
+        )
+
+    def _write(self, data: MeetingCreate, ai: AIOutput | None) -> int:
+        """Step 2: every row for the meeting; the caller commits once."""
+        host = self.uow.users.get_default()
+        if host is None:
+            raise NotFoundError("Database has not been seeded", code="NOT_SEEDED")
+        if data.channel_id is not None and self.uow.channels.get(data.channel_id) is None:
+            raise ValidationFailedError(
+                "Channel does not exist",
+                code="CHANNEL_NOT_FOUND",
+                details={"channel_id": data.channel_id},
+            )
+        segments = data.segments or []
+        meeting = self.uow.meetings.add(
+            Meeting(
+                title=data.title,
+                description=data.description,
+                started_at=_aware(data.started_at),
+                duration_ms=max((s.end_ms for s in segments), default=0),
+                host_id=host.id,
+                channel_id=data.channel_id,
+                source=data.source,
+                status=MeetingStatus.COMPLETED,
+                media_type=MediaType.NONE,
+            )
+        )
+        labels = _labels(segments)
+        names = mapping.resolve_speaker_names(data.participants, labels)
+        people = self._add_participants(meeting, data.participants, segments, names)
+        speaker_ids = self._add_speakers(meeting, labels, names, people)
+        self.uow.transcript.bulk_add_segments(
+            [
+                TranscriptSegment(
+                    meeting_id=meeting.id,
+                    speaker_id=speaker_ids[s.speaker],
+                    sequence=i,
+                    start_ms=s.start_ms,
+                    # The CHECK needs end >= start; imported timings are not ours to reject.
+                    end_ms=max(s.end_ms, s.start_ms),
+                    text=s.text,
+                    original_text=s.text,
+                )
+                for i, s in enumerate(segments)
+            ]
+        )
+        if ai is not None:
+            starts = [s.start_ms for s in segments]
+            summary = mapping.snap_summary(ai.summary, starts)
+            self.summaries.save_result(meeting, summary, summary.provider, summary.model)
+            self._add_ai_action_items(meeting, ai, starts, people)
+        return meeting.id
+
+    def _add_participants(
+        self,
+        meeting: Meeting,
+        listed: list[str],
+        segments: list[SegmentIn],
+        names: dict[str, str],
+    ) -> dict[str, Participant]:
+        talk = mapping.talk_ms_by_name(segments, names)
+        people: dict[str, Participant] = {}
+        for name in mapping.distinct([*listed, *names.values()]):
+            people[name.lower()] = self.uow.participants.add(
+                Participant(
+                    meeting_id=meeting.id,
+                    display_name=name,
+                    role=ParticipantRole.ATTENDEE,
+                    talk_ms=talk.get(name.lower(), 0),
+                )
+            )
+        return people
+
+    def _add_speakers(
+        self,
+        meeting: Meeting,
+        labels: list[str],
+        names: dict[str, str],
+        people: dict[str, Participant],
+    ) -> dict[str, int]:
+        ids: dict[str, int] = {}
+        for label in labels:
+            speaker = self.uow.transcript.add_speaker(
+                Speaker(
+                    meeting_id=meeting.id,
+                    label=label,
+                    participant_id=people[names[label].lower()].id,
+                    color_index=mapping.color_index(label),
+                )
+            )
+            ids[label] = speaker.id
+        return ids
+
+    def _add_ai_action_items(
+        self,
+        meeting: Meeting,
+        ai: AIOutput,
+        starts: list[int],
+        people: dict[str, Participant],
+    ) -> None:
+        items: list[ActionItem] = []
+        for i, draft in enumerate(ai.drafts):
+            who = people.get(draft.assignee.strip().lower()) if draft.assignee else None
+            items.append(
+                ActionItem(
+                    meeting_id=meeting.id,
+                    text=draft.text,
+                    # An unknown name is not guessed at: the item stays unassigned.
+                    assignee_participant_id=who.id if who else None,
+                    start_ms=mapping.snap(draft.start_ms, starts),
+                    source=ActionItemSource.AI,
+                    sequence=i,
+                )
+            )
+        self.uow.action_items.bulk_add(items)
+
+
+def _labels(segments: list[SegmentIn]) -> list[str]:
+    return list(dict.fromkeys(s.speaker for s in segments))
+
+
+def _aware(value: datetime | None) -> datetime:
+    if value is None:
+        return datetime.now(UTC)
+    # A naive time from a client is taken as UTC rather than rejected by the column type.
+    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
