@@ -483,6 +483,14 @@ def upgrade() -> None:
     with op.batch_alter_table("highlights", schema=None) as batch_op:
         batch_op.create_index("ix_highlights_meeting_id", ["meeting_id"], unique=False)
         batch_op.create_index("ix_highlights_segment_id", ["segment_id"], unique=False)
+    # Child-side FK indexes so SET NULL / RESTRICT checks on the parent don't scan.
+    op.create_index("ix_meetings_host_id", "meetings", ["host_id"])
+    op.create_index("ix_participants_user_id", "participants", ["user_id"])
+    op.create_index("ix_speakers_participant_id", "speakers", ["participant_id"])
+    op.create_index("ix_channels_created_by", "channels", ["created_by"])
+    op.create_index("ix_comments_author_id", "comments", ["author_id"])
+    op.create_index("ix_highlights_created_by", "highlights", ["created_by"])
+    op.create_index("ix_soundbites_created_by", "soundbites", ["created_by"])
 
 
 def downgrade() -> None:

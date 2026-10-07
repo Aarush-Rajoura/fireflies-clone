@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Text, UniqueConstraint, false
+from sqlalchemy import Boolean, ForeignKey, Index, String, Text, UniqueConstraint, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.db.types import UTCDateTime
 from app.models.enums import SectionKind
 from app.models.types import enum_check, enum_column
 
@@ -17,13 +18,11 @@ class Summary(Base):
     overview: Mapped[str] = mapped_column(Text, default="", server_default="")
     provider: Mapped[str | None] = mapped_column(String(50))
     model: Mapped[str | None] = mapped_column(String(100))
-    generated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC)
-    )
+    generated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=lambda: datetime.now(UTC))
     # Set when the transcript changed after generation.
     is_stale: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     # Non-null while a regeneration runs; lets a stuck marker be detected by age.
-    generating_since: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    generating_since: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
 
 class SummarySection(Base):

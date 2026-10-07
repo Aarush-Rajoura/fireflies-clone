@@ -11,6 +11,7 @@ class Speaker(Base):
     __table_args__ = (
         UniqueConstraint("meeting_id", "label", name="uq_speakers_meeting_id_label"),
         CheckConstraint("color_index BETWEEN 0 AND 7", name="color_index_range"),
+        Index("ix_speakers_participant_id", "participant_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

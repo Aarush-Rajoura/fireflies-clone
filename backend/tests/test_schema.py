@@ -3,7 +3,7 @@ from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import Engine, select, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, StatementError
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -227,13 +227,51 @@ def test_fts_backfill_covers_rows_present_at_migration(
     url = f"sqlite:///{tmp_path / 'bf.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
     get_settings.cache_clear()
-    command.upgrade(alembic_config(), "0001")  # schema without the FTS migration
     engine = make_engine(url)
-    with Session(engine) as s:
-        m = _meeting(s)
-        _segment(s, m)
-        s.commit()
-    command.upgrade(alembic_config(), "head")
-    with Session(engine) as s:
-        assert len(_fts(s, "roadmap")) == 1
-    get_settings.cache_clear()
+    try:
+        command.upgrade(alembic_config(), "0001")  # schema without the FTS migration
+        with Session(engine) as s:
+            m = _meeting(s)
+            _segment(s, m)
+            s.commit()
+        command.upgrade(alembic_config(), "head")
+        with Session(engine) as s:
+            assert len(_fts(s, "roadmap")) == 1
+    finally:
+        engine.dispose()
+        get_settings.cache_clear()
+
+
+def test_datetimes_round_trip_as_utc(session: Session) -> None:
+    from datetime import timedelta, timezone
+
+    ist = timezone(timedelta(hours=5, minutes=30))
+    m = _meeting(session)
+    sent = datetime(2026, 3, 1, 14, 30, tzinfo=ist)
+    m.started_at = sent
+    session.commit()
+    session.expire_all()
+    got = session.scalars(select(Meeting.started_at).where(Meeting.id == m.id)).one()
+    assert got.tzinfo is not None
+    assert got.utcoffset() == timedelta(0)
+    assert got == sent
+    assert got.hour == 9
+
+
+def test_naive_datetime_is_rejected(session: Session) -> None:
+    host = User(name="H", email="n@x.io")
+    session.add(host)
+    session.flush()
+    session.add(Meeting(title="t", started_at=datetime(2026, 1, 1), host_id=host.id))
+    with pytest.raises(StatementError, match="naive"):
+        session.flush()
+
+
+def test_fk_child_indexes_exist(migrated_engine: Engine) -> None:
+    with migrated_engine.connect() as c:
+        names = {r[0] for r in c.execute(text("SELECT name FROM sqlite_master WHERE type='index'"))}
+    assert {
+        "ix_meetings_host_id", "ix_participants_user_id", "ix_speakers_participant_id",
+        "ix_channels_created_by", "ix_comments_author_id", "ix_highlights_created_by",
+        "ix_soundbites_created_by",
+    } <= names  # fmt: skip

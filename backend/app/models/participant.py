@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -13,6 +13,7 @@ class Participant(Base):
             "meeting_id", "display_name", name="uq_participants_meeting_id_display_name"
         ),
         enum_check("role", ParticipantRole),
+        Index("ix_participants_user_id", "user_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, Text
+from sqlalchemy import CheckConstraint, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin
+from app.db.types import UTCDateTime
 
 
 class Comment(TimestampMixin, Base):
@@ -11,6 +12,7 @@ class Comment(TimestampMixin, Base):
     __table_args__ = (
         Index("ix_comments_meeting_id", "meeting_id"),
         Index("ix_comments_segment_id", "segment_id"),
+        Index("ix_comments_author_id", "author_id"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -21,7 +23,7 @@ class Comment(TimestampMixin, Base):
     )
     author_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     body: Mapped[str] = mapped_column(Text)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    deleted_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
 
 class Highlight(Base):
@@ -30,6 +32,7 @@ class Highlight(Base):
         CheckConstraint("start_offset >= 0 AND start_offset < end_offset", name="offset_range"),
         Index("ix_highlights_meeting_id", "meeting_id"),
         Index("ix_highlights_segment_id", "segment_id"),
+        Index("ix_highlights_created_by", "created_by"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -49,6 +52,7 @@ class Soundbite(Base):
     __table_args__ = (
         CheckConstraint("end_ms > start_ms", name="time_range"),
         Index("ix_soundbites_meeting_id", "meeting_id"),
+        Index("ix_soundbites_created_by", "created_by"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

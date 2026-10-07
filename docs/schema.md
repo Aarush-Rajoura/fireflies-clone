@@ -104,12 +104,14 @@ erDiagram
     }
     comments {
         int id PK
+        int meeting_id FK
         int segment_id FK
         int author_id FK
         datetime deleted_at
     }
     highlights {
         int id PK
+        int meeting_id FK
         int segment_id FK
         int start_offset
         int end_offset
@@ -133,16 +135,21 @@ segment id), so it is not drawn as an ordinary table.
 
 - **Milliseconds as integers.** Every position or length in a recording (`start_ms`, `end_ms`,
   `duration_ms`, `talk_ms`) is an INTEGER, so there is no float drift or unit conversion.
-  Wall-clock times are timezone-aware UTC (`started_at`); SQLite has no native tz type, so the
-  column is declared `DateTime(timezone=True)` and values are written as UTC.
+  Wall-clock times are UTC. SQLite has no real timezone type and returns naive values, so
+  every datetime column uses a `UTCDateTime` type: it rejects naive datetimes on write,
+  converts aware ones to UTC, and returns aware UTC datetimes on read.
 - **One home per content type.** Transcript text lives only in `transcript_segments`, summary
   prose only in `summaries` / `summary_sections`, keywords only in `keywords`, tasks only in
   `action_items`. Other tables point at them by id rather than copying their content.
 - **Soft delete.** `meetings.deleted_at` and `comments.deleted_at` hide rows instead of removing
   them. Queries use `Meeting.not_deleted()`. Hard deletes (and the cascades below) only happen
   when a row is purged.
-- **Two denormalisations, both deliberate.** `participants.talk_ms` (derivable from segments) and
-  `action_items.completed_at` (redundant with `status = 'completed'`).
+- **Denormalisations, all deliberate.**
+  - `meetings.duration_ms`: the recording length, which can exceed the last segment's `end_ms`.
+  - `participants.talk_ms`: derivable from segments; stored so analytics needs no scan.
+  - `action_items.completed_at`: redundant with `status = 'completed'`; records when.
+  - `comments.meeting_id` and `highlights.meeting_id`: derivable via the segment; stored so
+    per-meeting listing and the meeting cascade need no join.
 - **Speakers indirection.** A transcript segment references a `speakers` row (a diarised label
   such as "Speaker 1"), and a speaker optionally maps to a `participants` row. Identifying a
   speaker is one update, and an unidentified voice still has a place.
@@ -161,3 +168,13 @@ segment id), so it is not drawn as an ordinary table.
   `transcript_segments` and then to `meetings`, where `deleted_at` and other filters apply.
   Insert/update/delete triggers keep it in sync. A future migration that recreates
   `transcript_segments` must re-create those triggers.
+
+## Invariants enforced in the service layer
+
+Composite foreign keys are not used, so the database does not stop a row pointing at another
+meeting's data. Services must check each of these on write:
+
+- `transcript_segments.speaker_id` refers to a speaker of the same `meeting_id`.
+- `speakers.participant_id` refers to a participant of the same `meeting_id`.
+- `action_items.assignee_participant_id` refers to a participant of the same `meeting_id`.
+- `comments` and `highlights`: `(meeting_id, segment_id)` must match the segment's meeting.

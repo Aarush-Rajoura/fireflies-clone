@@ -1,9 +1,10 @@
 from datetime import date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, Index, Text
+from sqlalchemy import Date, ForeignKey, Index, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin
+from app.db.types import UTCDateTime
 from app.models.enums import ActionItemSource, ActionItemStatus
 from app.models.types import enum_check, enum_column
 
@@ -27,7 +28,7 @@ class ActionItem(TimestampMixin, Base):
     status: Mapped[ActionItemStatus] = mapped_column(
         enum_column(ActionItemStatus), default=ActionItemStatus.OPEN
     )
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
     source: Mapped[ActionItemSource] = mapped_column(
         enum_column(ActionItemSource), default=ActionItemSource.MANUAL
     )

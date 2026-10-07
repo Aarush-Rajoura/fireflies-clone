@@ -2,8 +2,10 @@
 
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, MetaData
+from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from app.db.types import UTCDateTime
 
 # Stable constraint names let Alembic batch mode drop/alter constraints on SQLite.
 NAMING_CONVENTION = {
@@ -24,7 +26,5 @@ class Base(DeclarativeBase):
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=_now, onupdate=_now
-    )
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=_now)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=_now, onupdate=_now)

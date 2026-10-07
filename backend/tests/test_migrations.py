@@ -75,10 +75,12 @@ def test_percent_in_database_url_is_escaped(
     url = f"sqlite:///{tmp_path / 'we%ird.db'}"
     monkeypatch.setenv("DATABASE_URL", url)
     get_settings.cache_clear()
+    engine = make_engine(url)
     try:
         command.upgrade(alembic_config(), "head")
-        assert "meetings" in _tables(make_engine(url))
+        assert "meetings" in _tables(engine)
     finally:
+        engine.dispose()
         get_settings.cache_clear()
 
 
