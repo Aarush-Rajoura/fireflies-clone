@@ -13,6 +13,22 @@ from app.core.config import Settings, get_settings
 from app.db.session import make_engine, make_session_factory
 from app.main import create_app
 
+_SETTINGS_ENV_VARS = (
+    "DATABASE_URL", "CORS_ORIGINS", "AI_PROVIDER", "AI_API_KEY", "AI_MODEL",
+    "AI_RATE_LIMIT", "MEDIA_DIR", "MAX_UPLOAD_MB", "SEED_ANCHOR_DATE", "APP_VERSION",
+)  # fmt: skip
+
+
+@pytest.fixture(autouse=True)
+def _hermetic_settings(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Tests never read backend/.env or the developer's real environment."""
+    for name in _SETTINGS_ENV_VARS:
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setitem(Settings.model_config, "env_file", None)
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
 
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
