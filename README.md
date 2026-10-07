@@ -16,11 +16,41 @@ _To be completed in the module that delivers it._
 
 ## Tech stack
 
-_To be completed in the module that delivers it._
+**Backend**
+- Python 3.12, FastAPI, Pydantic v2 and pydantic-settings
+- SQLAlchemy 2.0 with Alembic migrations on SQLite (WAL, foreign keys on)
+- `uv` for dependencies; `pytest`, `ruff` and `mypy --strict` for checks
+
+**Frontend**
+- Next.js with TypeScript (strict) and Tailwind CSS v3 (scaffolded; features are planned)
 
 ## Architecture
 
-_To be completed in the module that delivers it._
+### Backend
+
+```
+HTTP request
+   |
+   v
+core/middleware  (request id, logging)  ->  core/errors  (error envelope)
+   |
+   v
+api/v1/routers   translate HTTP only                    [health exists; rest planned]
+   |
+   v
+services         use-case rules, one commit per use case [planned]
+   |
+   v
+repositories     queries, flush only                     [planned]
+   |
+   v
+models (db/)     SQLAlchemy models on a shared Base      [Base exists; models planned]
+```
+
+- `core/`: `Settings` (the only place env vars are read), domain exceptions with no HTTP knowledge, and the single mapping from exceptions to the `{error: {code, message, details}}` envelope.
+- `db/`: engine and session factory built from settings, and a `UnitOfWork` that owns the transaction boundary. Services will receive a `UnitOfWork`, never a raw engine.
+- `main.py`: `create_app(settings)` wires CORS, middleware, handlers and routers, so tests can build an app against their own database.
+- Schema changes go through Alembic only; the app never calls `create_all()`.
 
 ## Database schema
 
