@@ -1,0 +1,192 @@
+/*
+ * Marketing-site token set. Kept separate from the app tokens on purpose:
+ * the landing pages follow the public site's navy/violet palette, not the app UI.
+ * Every colour used by features/landing lives here.
+ */
+.mk-root {
+  /* surfaces */
+  --mk-navy: #10082e;
+  --mk-navy-deep: #0b0522;
+  --mk-navy-raised: #1a1140;
+  --mk-black: #05030d;
+  --mk-white: #ffffff;
+  --mk-surface: #f8f7fc;
+  --mk-surface-2: #f1eff8;
+  --mk-line: #e6e3f0;
+  --mk-line-dark: #2c2452;
+
+  /* brand + actions */
+  --mk-violet: #7a5eef;
+  --mk-violet-hover: #6847e6;
+  --mk-violet-soft: #ae9cff;
+  --mk-violet-tint: #efebff;
+  --mk-secondary: #30294b;
+  --mk-secondary-hover: #3d3560;
+  --mk-pill: #211a3c;
+  --mk-magenta: #e0368c;
+  --mk-plum: #9b3fd6;
+
+  /* text */
+  --mk-ink: #17112e;
+  --mk-body: #4a4562;
+  --mk-muted: #6c6786;
+  --mk-on-dark: #ffffff;
+  --mk-on-dark-muted: #c3bedb;
+  --mk-on-dark-faint: #8f88ad;
+  --mk-link: #5b3fe0;
+
+  /* accents */
+  --mk-star: #f5a524;
+  --mk-star-off: #6b6386;
+  --mk-green: #22c55e;
+  --mk-green-tint: #dcfce7;
+  --mk-green-ink: #166534;
+  --mk-red: #ef4444;
+  --mk-rec: #2cc79a;
+  --mk-rec-tint: #d5f6ea;
+
+  /* soft card tints (capture / search sections) */
+  --mk-tint-lilac: #f3efff;
+  --mk-tint-cream: #fff8ea;
+  --mk-tint-pink: #fbf0ff;
+  --mk-tint-mint: #ecfbf4;
+  --mk-tint-sky: #eaf4ff;
+
+  /* placeholder mark + avatar palette */
+  --mk-tone-1: #7a5eef;
+  --mk-tone-2: #e0368c;
+  --mk-tone-3: #f59e0b;
+  --mk-tone-4: #10b981;
+  --mk-tone-5: #3b82f6;
+  --mk-tone-6: #ef6f4a;
+  --mk-tone-7: #14b8a6;
+  --mk-tone-8: #a855f7;
+
+  /* overlays */
+  --mk-scrim: rgba(8, 4, 24, 0.66);
+  --mk-glow: rgba(122, 94, 239, 0.35);
+  --mk-shadow: rgba(16, 8, 46, 0.12);
+  --mk-shadow-strong: rgba(16, 8, 46, 0.28);
+  --mk-star-dot: rgba(255, 255, 255, 0.55);
+  --mk-white-08: rgba(255, 255, 255, 0.08);
+  --mk-white-14: rgba(255, 255, 255, 0.14);
+
+  --mk-font: "Inter", "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --mk-font-display: "DM Sans", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  font-family: var(--mk-font);
+  color: var(--mk-ink);
+  background: var(--mk-white);
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mk-display {
+  font-family: var(--mk-font-display);
+  letter-spacing: -0.015em;
+}
+
+/* Focus ring that reads on both navy and white sections. */
+.mk-root :focus-visible {
+  outline: 2px solid var(--mk-violet-soft);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Sparse star field behind the hero, drawn with gradients instead of an image. */
+.mk-starfield {
+  background-color: var(--mk-navy);
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(1px 1px at 28% 68%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(1.5px 1.5px at 44% 38%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(1px 1px at 61% 81%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(1px 1px at 73% 18%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(1.5px 1.5px at 86% 56%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(1px 1px at 93% 88%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(1px 1px at 5% 84%, var(--mk-star-dot), transparent 60%),
+    radial-gradient(60% 45% at 50% 100%, var(--mk-glow), transparent 70%);
+  background-size: 640px 520px, 640px 520px, 640px 520px, 640px 520px, 640px 520px, 640px 520px,
+    640px 520px, 640px 520px, 100% 100%;
+}
+
+/* Painted "landscape" for the Live Assist banner (no image assets). */
+.mk-dusk {
+  background:
+    radial-gradient(120% 70% at 20% 110%, var(--mk-tone-8), transparent 60%),
+    radial-gradient(90% 60% at 85% 105%, var(--mk-tone-5), transparent 60%),
+    radial-gradient(70% 50% at 50% 0%, var(--mk-violet-soft), transparent 70%),
+    linear-gradient(180deg, var(--mk-secondary) 0%, var(--mk-navy) 100%);
+}
+
+/* Scroll reveal: elements start slightly lowered and fade in once observed. */
+.mk-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 600ms ease,
+    transform 600ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.mk-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes mk-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.mk-pop {
+  animation: mk-pop 220ms ease-out;
+}
+
+@keyframes mk-rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.mk-rise {
+  animation: mk-rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes mk-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--mk-glow);
+  }
+  50% {
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+.mk-pulse {
+  animation: mk-pulse 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .mk-pop,
+  .mk-rise,
+  .mk-pulse {
+    animation: none;
+  }
+  .mk-root * {
+    scroll-behavior: auto !important;
+  }
+}
