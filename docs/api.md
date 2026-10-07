@@ -27,12 +27,22 @@ Interactive docs: `/docs` on a running server.
   items are top-level (`/action-items/{id}`).
 - **Times:** UTC ISO-8601. Recording positions are integer milliseconds (`start_ms`, `end_ms`,
   `duration_ms`).
-- **Transcript parsing is two routes**, not one content-negotiated route, so each has a precise
-  OpenAPI schema: `POST /transcripts/parse` (multipart `file`) and `POST /transcripts/parse-text`
-  (JSON `{text, filename?}`). Uploads are read at most `MAX_UPLOAD_MB + 1` bytes; larger is
-  `422 UPLOAD_TOO_LARGE`.
+- **Transcript previews are a noun resource, nothing is stored:** `POST /transcript-previews`
+  (JSON `{text, filename?}`) and `POST /transcript-previews/files` (multipart `file`), each with a
+  precise OpenAPI schema. For uploads, a declared `Content-Length` above `MAX_UPLOAD_MB` (plus a
+  small multipart allowance) is rejected up front with `422 UPLOAD_TOO_LARGE`; otherwise the file
+  is read at most `MAX_UPLOAD_MB + 1` bytes and rejected if it exceeds the limit. Pasted text is
+  measured by the service with the same limit and code.
 - **Rate limiting:** only `POST /meetings/{id}/summary/regenerate` (an AI call) is limited, per
-  client address, by `AI_RATE_LIMIT` (default `10/minute`).
+  client address, by `AI_RATE_LIMIT` (default `10/minute`, read from the app's settings). The
+  429 carries `Retry-After`. The client address is the first `X-Forwarded-For` hop when present,
+  else the socket peer; that header is only trustworthy behind a proxy that sets it (Vercel does),
+  and counters are in memory, per process.
+- **AI failures:** a provider error that escapes the fallback wrapper is `503 AI_UNAVAILABLE`.
+- **Unseeded database:** every route that needs the default user answers `503 NOT_SEEDED`,
+  including `POST /meetings`.
+- **Operation ids** are the handler names (`list_meetings`, `create_action_item`, ...), and tags
+  are plural kebab-case (`action-items`, `summaries`).
 - **Media:** `GET /meetings/{id}/media` streams the file and honours `Range` (206).
 
 ## Endpoints
@@ -40,19 +50,19 @@ Interactive docs: `/docs` on a running server.
 | Method | Path | Success | Declared errors |
 |---|---|---|---|
 | GET | `/meetings` | 200 Page of meetings | 422, 503 |
-| POST | `/meetings` | 201 meeting | 404, 422 |
+| POST | `/meetings` | 201 meeting | 422, 503 |
 | GET | `/meetings/{id}` | 200 meeting | 404, 410, 422 |
-| PATCH | `/meetings/{id}` | 200 meeting | 404, 410, 422 |
+| PATCH | `/meetings/{id}` | 200 meeting | 404, 409, 410, 422 |
 | DELETE | `/meetings/{id}` | 204 | 404, 410, 422 |
 | POST | `/meetings/{id}/restore` | 200 meeting | 404, 422 |
-| POST | `/transcripts/parse` | 200 preview (multipart) | 422 |
-| POST | `/transcripts/parse-text` | 200 preview (JSON) | 422 |
+| POST | `/transcript-previews` | 200 preview (JSON) | 422 |
+| POST | `/transcript-previews/files` | 200 preview (multipart) | 422 |
 | GET | `/meetings/{id}/transcript` | 200 speakers + segments | 404, 410, 422 |
 | PATCH | `/segments/{id}` | 200 segment | 404, 410, 422 |
 | PATCH | `/speakers/{id}` | 200 speaker | 404, 410, 422 |
 | GET | `/meetings/{id}/media` | 200 / 206 audio bytes | 404, 410, 422 |
 | GET | `/meetings/{id}/summary` | 200 summary | 404, 410, 422 |
-| POST | `/meetings/{id}/summary/regenerate` | 200 summary | 404, 409, 410, 422, 429 |
+| POST | `/meetings/{id}/summary/regenerate` | 200 summary | 404, 409, 410, 422, 429, 503 |
 | GET | `/meetings/{id}/action-items` | 200 Page of items | 404, 410, 422 |
 | POST | `/meetings/{id}/action-items` | 201 item | 404, 410, 422 |
 | PATCH | `/action-items/{id}` | 200 item | 404, 410, 422 |
@@ -72,7 +82,7 @@ Interactive docs: `/docs` on a running server.
 **1. Preview, then create from pasted text**
 
 ```
-POST /api/v1/transcripts/parse-text
+POST /api/v1/transcript-previews
 {"text": "WEBVTT\n\n00:00.000 --> 00:03.000\n<v Alice>Plan the launch\n", "filename": "a.vtt"}
 
 200 {"format": "vtt", "timings_estimated": false, "speakers": ["Alice"], "segment_count": 1,

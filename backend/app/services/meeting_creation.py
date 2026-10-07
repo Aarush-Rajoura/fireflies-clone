@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.ai.interfaces import ActionItemExtractor, Summarizer
-from app.core.config import get_settings
-from app.core.exceptions import NotFoundError, ValidationFailedError
+from app.core.config import BYTES_PER_MB, get_settings
+from app.core.exceptions import ServiceUnavailableError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
 from app.models import ActionItem, Meeting, Participant, Speaker, TranscriptSegment
 from app.models.enums import ActionItemSource, MediaType, MeetingStatus, ParticipantRole
@@ -22,8 +22,6 @@ from app.services import timeline
 from app.services.meeting_creation_mapping import AIOutput
 from app.services.meetings import MeetingService
 from app.services.summary import SummaryService
-
-BYTES_PER_MB = 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -86,7 +84,7 @@ class MeetingCreationService:
         try:
             user = self.uow.users.get_default()
             if user is None:
-                raise NotFoundError("Database has not been seeded", code="NOT_SEEDED")
+                raise ServiceUnavailableError("Database has not been seeded", code="NOT_SEEDED")
             if data.channel_id is not None and self.uow.channels.get(data.channel_id) is None:
                 raise ValidationFailedError(
                     "Channel does not exist",

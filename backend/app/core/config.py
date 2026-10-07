@@ -8,6 +8,8 @@ from typing import Annotated, Literal
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+BYTES_PER_MB = 1024 * 1024
+
 # Anchored to the package so `backend/.env` is found regardless of the cwd.
 _ENV_FILE = Path(__file__).resolve().parents[2] / ".env"
 

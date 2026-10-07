@@ -238,7 +238,7 @@
         "title": "AssigneeRead",
         "type": "object"
       },
-      "Body_parse_transcript_file_api_v1_transcripts_parse_post": {
+      "Body_create_transcript_preview_from_file": {
         "properties": {
           "file": {
             "contentMediaType": "application/octet-stream",
@@ -250,7 +250,7 @@
         "required": [
           "file"
         ],
-        "title": "Body_parse_transcript_file_api_v1_transcripts_parse_post",
+        "title": "Body_create_transcript_preview_from_file",
         "type": "object"
       },
       "ChannelCreate": {
@@ -1653,7 +1653,7 @@
   "paths": {
     "/api/health": {
       "get": {
-        "operationId": "health_api_health_get",
+        "operationId": "health",
         "responses": {
           "200": {
             "content": {
@@ -1684,7 +1684,7 @@
     },
     "/api/v1/action-items/{item_id}": {
       "delete": {
-        "operationId": "delete_action_item_api_v1_action_items__item_id__delete",
+        "operationId": "delete_action_item",
         "parameters": [
           {
             "in": "path",
@@ -1733,11 +1733,11 @@
         },
         "summary": "Delete an action item",
         "tags": [
-          "action items"
+          "action-items"
         ]
       },
       "patch": {
-        "operationId": "update_action_item_api_v1_action_items__item_id__patch",
+        "operationId": "update_action_item",
         "parameters": [
           {
             "in": "path",
@@ -1803,13 +1803,13 @@
         },
         "summary": "Update an action item",
         "tags": [
-          "action items"
+          "action-items"
         ]
       }
     },
     "/api/v1/channels": {
       "get": {
-        "operationId": "list_channels_api_v1_channels_get",
+        "operationId": "list_channels",
         "parameters": [
           {
             "in": "query",
@@ -1864,7 +1864,7 @@
         ]
       },
       "post": {
-        "operationId": "create_channel_api_v1_channels_post",
+        "operationId": "create_channel",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1915,7 +1915,7 @@
     },
     "/api/v1/channels/{channel_id}": {
       "delete": {
-        "operationId": "delete_channel_api_v1_channels__channel_id__delete",
+        "operationId": "delete_channel",
         "parameters": [
           {
             "in": "path",
@@ -1958,7 +1958,7 @@
         ]
       },
       "patch": {
-        "operationId": "rename_channel_api_v1_channels__channel_id__patch",
+        "operationId": "rename_channel",
         "parameters": [
           {
             "in": "path",
@@ -2030,7 +2030,7 @@
     },
     "/api/v1/me": {
       "get": {
-        "operationId": "get_me_api_v1_me_get",
+        "operationId": "get_me",
         "responses": {
           "200": {
             "content": {
@@ -2061,7 +2061,7 @@
     },
     "/api/v1/meetings": {
       "get": {
-        "operationId": "list_meetings_api_v1_meetings_get",
+        "operationId": "list_meetings",
         "parameters": [
           {
             "description": "Prefix `-` means descending.",
@@ -2280,7 +2280,7 @@
         ]
       },
       "post": {
-        "operationId": "create_meeting_api_v1_meetings_post",
+        "operationId": "create_meeting",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2302,16 +2302,6 @@
             },
             "description": "Successful Response"
           },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "The resource does not exist."
-          },
           "422": {
             "content": {
               "application/json": {
@@ -2321,6 +2311,16 @@
               }
             },
             "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
           }
         },
         "summary": "Create a meeting",
@@ -2331,7 +2331,7 @@
     },
     "/api/v1/meetings/{meeting_id}": {
       "delete": {
-        "operationId": "delete_meeting_api_v1_meetings__meeting_id__delete",
+        "operationId": "delete_meeting",
         "parameters": [
           {
             "in": "path",
@@ -2384,7 +2384,7 @@
         ]
       },
       "get": {
-        "operationId": "get_meeting_api_v1_meetings__meeting_id__get",
+        "operationId": "get_meeting",
         "parameters": [
           {
             "in": "path",
@@ -2444,7 +2444,7 @@
         ]
       },
       "patch": {
-        "operationId": "update_meeting_api_v1_meetings__meeting_id__patch",
+        "operationId": "update_meeting",
         "parameters": [
           {
             "in": "path",
@@ -2487,6 +2487,16 @@
             },
             "description": "The resource does not exist."
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request conflicts with current state, e.g. a duplicate name."
+          },
           "410": {
             "content": {
               "application/json": {
@@ -2516,7 +2526,7 @@
     },
     "/api/v1/meetings/{meeting_id}/action-items": {
       "get": {
-        "operationId": "list_action_items_api_v1_meetings__meeting_id__action_items_get",
+        "operationId": "list_action_items",
         "parameters": [
           {
             "in": "path",
@@ -2596,11 +2606,11 @@
         },
         "summary": "List a meeting's action items",
         "tags": [
-          "action items"
+          "action-items"
         ]
       },
       "post": {
-        "operationId": "create_action_item_api_v1_meetings__meeting_id__action_items_post",
+        "operationId": "create_action_item",
         "parameters": [
           {
             "in": "path",
@@ -2666,13 +2676,13 @@
         },
         "summary": "Add an action item",
         "tags": [
-          "action items"
+          "action-items"
         ]
       }
     },
     "/api/v1/meetings/{meeting_id}/media": {
       "get": {
-        "operationId": "get_media_api_v1_meetings__meeting_id__media_get",
+        "operationId": "get_media",
         "parameters": [
           {
             "in": "path",
@@ -2736,7 +2746,7 @@
     },
     "/api/v1/meetings/{meeting_id}/restore": {
       "post": {
-        "operationId": "restore_meeting_api_v1_meetings__meeting_id__restore_post",
+        "operationId": "restore_meeting",
         "parameters": [
           {
             "in": "path",
@@ -2788,7 +2798,7 @@
     },
     "/api/v1/meetings/{meeting_id}/summary": {
       "get": {
-        "operationId": "get_summary_api_v1_meetings__meeting_id__summary_get",
+        "operationId": "get_summary",
         "parameters": [
           {
             "in": "path",
@@ -2844,13 +2854,13 @@
         },
         "summary": "Get a meeting's summary",
         "tags": [
-          "summary"
+          "summaries"
         ]
       }
     },
     "/api/v1/meetings/{meeting_id}/summary/regenerate": {
       "post": {
-        "operationId": "regenerate_summary_api_v1_meetings__meeting_id__summary_regenerate_post",
+        "operationId": "regenerate_summary",
         "parameters": [
           {
             "in": "path",
@@ -2922,17 +2932,27 @@
               }
             },
             "description": "AI rate limit exceeded; retry later."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The AI provider failed; `code` is AI_UNAVAILABLE."
           }
         },
         "summary": "Regenerate the summary with AI",
         "tags": [
-          "summary"
+          "summaries"
         ]
       }
     },
     "/api/v1/meetings/{meeting_id}/transcript": {
       "get": {
-        "operationId": "get_transcript_api_v1_meetings__meeting_id__transcript_get",
+        "operationId": "get_transcript",
         "parameters": [
           {
             "in": "path",
@@ -2994,7 +3014,7 @@
     },
     "/api/v1/search": {
       "get": {
-        "operationId": "search_api_v1_search_get",
+        "operationId": "search",
         "parameters": [
           {
             "description": "Words to find; matches are ranked by relevance.",
@@ -3062,7 +3082,7 @@
     },
     "/api/v1/segments/{segment_id}": {
       "patch": {
-        "operationId": "update_segment_api_v1_segments__segment_id__patch",
+        "operationId": "update_segment",
         "parameters": [
           {
             "in": "path",
@@ -3134,7 +3154,7 @@
     },
     "/api/v1/speakers/{speaker_id}": {
       "patch": {
-        "operationId": "rename_speaker_api_v1_speakers__speaker_id__patch",
+        "operationId": "rename_speaker",
         "parameters": [
           {
             "in": "path",
@@ -3204,50 +3224,9 @@
         ]
       }
     },
-    "/api/v1/transcripts/parse": {
+    "/api/v1/transcript-previews": {
       "post": {
-        "operationId": "parse_transcript_file_api_v1_transcripts_parse_post",
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/Body_parse_transcript_file_api_v1_transcripts_parse_post"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TranscriptPreview"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid input; `details.errors[].loc` is the field path."
-          }
-        },
-        "summary": "Preview a transcript file (multipart)",
-        "tags": [
-          "transcripts"
-        ]
-      }
-    },
-    "/api/v1/transcripts/parse-text": {
-      "post": {
-        "operationId": "parse_transcript_text_api_v1_transcripts_parse_text_post",
+        "operationId": "create_transcript_preview",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3280,7 +3259,48 @@
             "description": "Invalid input; `details.errors[].loc` is the field path."
           }
         },
-        "summary": "Preview pasted transcript text (JSON)",
+        "summary": "Preview pasted transcript text (JSON, nothing is stored)",
+        "tags": [
+          "transcripts"
+        ]
+      }
+    },
+    "/api/v1/transcript-previews/files": {
+      "post": {
+        "operationId": "create_transcript_preview_from_file",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_transcript_preview_from_file"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Preview an uploaded transcript file (multipart, nothing is stored)",
         "tags": [
           "transcripts"
         ]
@@ -3288,7 +3308,7 @@
     },
     "/api/v1/users": {
       "get": {
-        "operationId": "list_users_api_v1_users_get",
+        "operationId": "list_users",
         "parameters": [
           {
             "in": "query",

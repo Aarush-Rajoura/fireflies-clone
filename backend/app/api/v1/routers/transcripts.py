@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import FileResponse
 
 from app.api.responses import GONE, NOT_FOUND, VALIDATION
-from app.api.uploads import read_text_upload
+from app.api.uploads import BoundedUploadRoute, read_text_upload
 from app.core.deps import (
     AppSettings,
     get_media_service,
@@ -33,12 +33,25 @@ Creation = Annotated[MeetingCreationService, Depends(get_meeting_creation_servic
 
 
 @router.post(
-    "/transcripts/parse",
+    "/transcript-previews",
     response_model=TranscriptPreview,
-    summary="Preview a transcript file (multipart)",
+    summary="Preview pasted transcript text (JSON, nothing is stored)",
     responses=VALIDATION,
 )
-def parse_transcript_file(
+def create_transcript_preview(body: TranscriptTextIn, service: Creation) -> TranscriptPreview:
+    return service.preview(body.text, body.filename)
+
+
+uploads = APIRouter(route_class=BoundedUploadRoute)
+
+
+@uploads.post(
+    "/transcript-previews/files",
+    response_model=TranscriptPreview,
+    summary="Preview an uploaded transcript file (multipart, nothing is stored)",
+    responses=VALIDATION,
+)
+def create_transcript_preview_from_file(
     file: Annotated[UploadFile, File(description="VTT, SRT, JSON or plain text.")],
     settings: AppSettings,
     service: Creation,
@@ -46,14 +59,7 @@ def parse_transcript_file(
     return service.preview(read_text_upload(file, settings.max_upload_mb), file.filename)
 
 
-@router.post(
-    "/transcripts/parse-text",
-    response_model=TranscriptPreview,
-    summary="Preview pasted transcript text (JSON)",
-    responses=VALIDATION,
-)
-def parse_transcript_text(body: TranscriptTextIn, service: Creation) -> TranscriptPreview:
-    return service.preview(body.text, body.filename)
+router.include_router(uploads)
 
 
 @router.get(

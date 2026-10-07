@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.ai.interfaces import ProviderError
 from app.core.exceptions import (
     AppError,
     ConflictError,
@@ -88,6 +89,12 @@ async def _validation_error(_: Request, exc: Exception) -> JSONResponse:
     return error_response(422, "VALIDATION_ERROR", "Request validation failed", {"errors": errors})
 
 
+async def _provider_error(_: Request, exc: Exception) -> JSONResponse:
+    # A bare provider (no fallback wrapper) failing is an outage of a dependency, not our bug.
+    logger.warning("ai provider failed: %s", exc)
+    return error_response(503, "AI_UNAVAILABLE", "The AI provider is unavailable")
+
+
 async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
     request_id = _request_id(request)
     logger.error("unhandled error request_id=%s", request_id, exc_info=exc)
@@ -98,4 +105,5 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(AppError, _app_error)
     app.add_exception_handler(StarletteHTTPException, _http_error)
     app.add_exception_handler(RequestValidationError, _validation_error)
+    app.add_exception_handler(ProviderError, _provider_error)
     app.add_exception_handler(Exception, _unhandled)

@@ -11,7 +11,7 @@ from app.schemas.action_item import ActionItemCreate, ActionItemRead, ActionItem
 from app.schemas.common import Page
 from app.services.action_items import ActionItemService
 
-router = APIRouter(tags=["action items"])
+router = APIRouter(tags=["action-items"])
 
 Items = Annotated[ActionItemService, Depends(get_action_item_service)]
 

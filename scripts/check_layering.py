@@ -16,13 +16,22 @@ RULES: dict[str, tuple[str, ...]] = {
 }
 
 
-def _imported_modules(tree: ast.AST) -> list[tuple[str, int]]:
+def _package_of(path: Path, app_dir: Path) -> list[str]:
+    return [app_dir.name, *path.relative_to(app_dir).parts[:-1]]
+
+
+def _imported_modules(tree: ast.AST, package: list[str]) -> list[tuple[str, int]]:
+    """Absolute dotted names for every import, resolving relative ones against `package`."""
     found: list[tuple[str, int]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             found += [(alias.name, node.lineno) for alias in node.names]
-        elif isinstance(node, ast.ImportFrom) and node.module and node.level == 0:
-            found.append((node.module, node.lineno))
+        elif isinstance(node, ast.ImportFrom):
+            base = package[: len(package) - (node.level - 1)] if node.level else []
+            parts = [*base, *(node.module.split(".") if node.module else [])]
+            # `from app import models` imports the submodule app.models, so name it.
+            found += [(".".join([*parts, a.name]), node.lineno) for a in node.names]
+            found.append((".".join(parts), node.lineno))
     return found
 
 
@@ -35,7 +44,7 @@ def violations(app_dir: Path = APP) -> list[str]:
     for layer, banned in RULES.items():
         for path in sorted((app_dir / layer).rglob("*.py")):
             tree = ast.parse(path.read_text(), filename=str(path))
-            for module, line in _imported_modules(tree):
+            for module, line in _imported_modules(tree, _package_of(path, app_dir)):
                 if _forbidden(module, banned):
                     problems.append(f"{path.relative_to(app_dir.parent)}:{line} imports {module}")
     return problems

@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response
 
 from app.api.params import MeetingFilterParams, Paging, SortParam
-from app.api.responses import GONE, NOT_FOUND, SERVICE_UNAVAILABLE, VALIDATION
+from app.api.responses import CONFLICT, GONE, NOT_FOUND, SERVICE_UNAVAILABLE, VALIDATION
 from app.core.deps import get_meeting_creation_service, get_meeting_service
 from app.schemas.common import Page
 from app.schemas.meeting import MeetingCreate, MeetingDetail, MeetingListItem, MeetingUpdate
@@ -37,7 +37,7 @@ def list_meetings(
     status_code=201,
     response_model=MeetingDetail,
     summary="Create a meeting",
-    responses={**VALIDATION, **NOT_FOUND},
+    responses={**VALIDATION, **SERVICE_UNAVAILABLE},
 )
 def create_meeting(
     body: MeetingCreate,
@@ -60,7 +60,7 @@ def get_meeting(meeting_id: int, service: Meetings) -> MeetingDetail:
     "/{meeting_id}",
     response_model=MeetingDetail,
     summary="Update a meeting",
-    responses={**NOT_FOUND, **GONE, **VALIDATION},
+    responses={**NOT_FOUND, **GONE, **VALIDATION, **CONFLICT},
 )
 def update_meeting(meeting_id: int, body: MeetingUpdate, service: Meetings) -> MeetingDetail:
     return service.update(meeting_id, body)

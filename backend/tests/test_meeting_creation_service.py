@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.ai.types import ActionItemDraft, TranscriptForAI
-from app.core.exceptions import NotFoundError, ValidationFailedError
+from app.core.exceptions import ServiceUnavailableError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
 from app.models import ActionItem, Meeting, Participant, Speaker, Summary, TranscriptSegment
 from app.models.enums import ActionItemSource, MeetingSource, MeetingStatus, ParticipantRole
@@ -168,8 +168,9 @@ def test_unknown_channel_is_422_and_rolls_back(db_session: Session) -> None:
 
 
 def test_create_requires_seeded_user(db_session: Session) -> None:
-    with pytest.raises(NotFoundError):
+    with pytest.raises(ServiceUnavailableError) as err:
         _service(UnitOfWork(db_session)).create(_data(segments=None))
+    assert err.value.code == "NOT_SEEDED"
 
 
 def test_provenance_from_result(db_session: Session) -> None:

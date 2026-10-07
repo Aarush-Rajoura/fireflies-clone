@@ -72,14 +72,6 @@ def db_session(migrated_engine: Engine) -> Iterator[Session]:
     session.close()
 
 
-@pytest.fixture(autouse=True)
-def _fresh_rate_limits() -> Iterator[None]:
-    from app.core.rate_limit import limiter
-
-    limiter.reset()
-    yield
-
-
 @pytest.fixture
 def api_app(app: FastAPI, settings: Settings, monkeypatch: pytest.MonkeyPatch) -> FastAPI:
     """The app on a migrated, empty database with deterministic AI stubs."""

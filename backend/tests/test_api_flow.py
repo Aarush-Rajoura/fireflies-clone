@@ -15,7 +15,7 @@ VTT = (
 
 
 def test_full_flow_parse_create_read_complete_delete_restore(api: TestClient) -> None:
-    preview = api.post(f"{V1}/transcripts/parse", files={"file": ("m.vtt", VTT)}).json()
+    preview = api.post(f"{V1}/transcript-previews/files", files={"file": ("m.vtt", VTT)}).json()
     assert preview["speakers"] == ["Alice", "Bob"]
 
     created = api.post(

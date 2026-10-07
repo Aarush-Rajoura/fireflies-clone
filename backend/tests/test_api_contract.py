@@ -97,6 +97,10 @@ def test_unseeded_database_is_503_envelope(api_app: FastAPI) -> None:
     r = TestClient(api_app, raise_server_exceptions=False).get("/api/v1/me")
     assert r.status_code == 503
     assert r.json()["error"]["code"] == "NOT_SEEDED"
+    create = TestClient(api_app, raise_server_exceptions=False).post(
+        "/api/v1/meetings", json={"title": "x"}
+    )
+    assert create.status_code == 503 and create.json()["error"]["code"] == "NOT_SEEDED"
 
 
 def test_meeting_filters_are_query_params(api: TestClient) -> None:
@@ -109,17 +113,19 @@ def test_meeting_filters_are_query_params(api: TestClient) -> None:
 
 def test_parse_multipart_and_text(api: TestClient) -> None:
     vtt = "WEBVTT\n\n00:00.000 --> 00:02.000\n<v Alice>Hello there\n"
-    r = api.post("/api/v1/transcripts/parse", files={"file": ("a.vtt", vtt, "text/vtt")})
+    r = api.post("/api/v1/transcript-previews/files", files={"file": ("a.vtt", vtt, "text/vtt")})
     assert r.status_code == 200 and r.json()["segment_count"] == 1
-    r = api.post("/api/v1/transcripts/parse-text", json={"text": vtt, "filename": "a.vtt"})
+    r = api.post("/api/v1/transcript-previews", json={"text": vtt, "filename": "a.vtt"})
     assert r.status_code == 200 and r.json()["format"] == "vtt"
-    assert api.post("/api/v1/transcripts/parse-text", json={"text": "  "}).status_code == 422
+    assert api.post("/api/v1/transcript-previews", json={"text": "  "}).status_code == 422
 
 
 def test_oversized_upload_is_rejected_while_reading(app: FastAPI, api: TestClient) -> None:
     limit = app.state.settings.max_upload_mb * 1024 * 1024
     big = b"a" * (limit + 1)
-    r = api.post("/api/v1/transcripts/parse", files={"file": ("big.txt", big, "text/plain")})
+    r = api.post(
+        "/api/v1/transcript-previews/files", files={"file": ("big.txt", big, "text/plain")}
+    )
     assert r.status_code == 422
     assert r.json()["error"]["code"] == "UPLOAD_TOO_LARGE"
 
@@ -133,3 +139,59 @@ def test_ai_route_is_rate_limited_with_envelope(api: TestClient) -> None:
     assert r.json()["error"]["code"] == "RATE_LIMITED"
     # Non-AI routes are never limited.
     assert all(api.get("/api/v1/meetings").status_code == 200 for _ in range(15))
+
+
+def test_ai_limit_sets_retry_after_and_follows_forwarded_ip(api: TestClient, app: FastAPI) -> None:
+    app.state.settings.ai_rate_limit = "2/minute"
+    mid = _meeting_id(api)
+    url = f"/api/v1/meetings/{mid}/summary/regenerate"
+    assert [api.post(url).status_code for _ in range(2)] == [200, 200]
+    limited = api.post(url)
+    assert limited.status_code == 429
+    assert int(limited.headers["retry-after"]) >= 1
+    other = api.post(url, headers={"X-Forwarded-For": "203.0.113.9, 10.0.0.1"})
+    assert other.status_code == 200
+
+
+def test_declared_conflict_on_patch_meeting(api: TestClient) -> None:
+    mid = _meeting_id(api)
+    body = {"participants": [{"display_name": "Zed"}, {"display_name": "zed"}]}
+    r = api.patch(f"/api/v1/meetings/{mid}", json=body)
+    assert r.status_code in (409, 422)
+    assert (
+        "409"
+        in api.get("/openapi.json").json()["paths"]["/api/v1/meetings/{meeting_id}"]["patch"][
+            "responses"
+        ]
+    )
+
+
+def test_content_length_over_limit_is_rejected_before_reading(
+    app: FastAPI, api: TestClient
+) -> None:
+    app.state.settings.max_upload_mb = 1
+    r = api.post(
+        "/api/v1/transcript-previews/files",
+        content=b"x",
+        headers={"content-type": "multipart/form-data; boundary=b", "content-length": "5000000"},
+    )
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "UPLOAD_TOO_LARGE"
+
+
+def test_provider_error_maps_to_declared_503(api_app: FastAPI) -> None:
+    from app.ai.factory import get_summarizer
+    from tests import factories as f
+    from tests.ai_stubs import StubSummarizer
+
+    with api_app.state.session_factory() as db:
+        f.make_user(db)
+        db.commit()
+    with TestClient(api_app, raise_server_exceptions=False) as c:
+        mid = _meeting_id(c)
+        api_app.dependency_overrides[get_summarizer] = lambda: StubSummarizer(fail=True)
+        r = c.post(f"/api/v1/meetings/{mid}/summary/regenerate")
+    assert r.status_code == 503
+    assert r.json()["error"]["code"] == "AI_UNAVAILABLE"
+    declared = api_app.openapi()["paths"]["/api/v1/meetings/{meeting_id}/summary/regenerate"]
+    assert "503" in declared["post"]["responses"]
