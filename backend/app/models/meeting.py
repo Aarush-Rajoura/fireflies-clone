@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
@@ -10,12 +11,17 @@ from sqlalchemy import (
     Text,
     false,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
 from app.db.types import UTCDateTime
 from app.models.enums import MediaType, MeetingSource, MeetingStatus, Platform
 from app.models.types import enum_check, enum_column
+
+if TYPE_CHECKING:
+    from app.models.participant import Participant
+    from app.models.tag import Tag
+    from app.models.user import User
 
 
 class Meeting(TimestampMixin, Base):
@@ -54,6 +60,15 @@ class Meeting(TimestampMixin, Base):
     language: Mapped[str] = mapped_column(String(16), default="en", server_default="en")
     auto_join: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
     deleted_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
+
+    # Read-side relationships for eager loading; writes go through repositories.
+    host: Mapped["User"] = relationship(lazy="raise")
+    participants: Mapped[list["Participant"]] = relationship(
+        order_by="Participant.id", lazy="raise", viewonly=True
+    )
+    tags: Mapped[list["Tag"]] = relationship(
+        secondary="meeting_tags", order_by="Tag.name", lazy="raise", viewonly=True
+    )
 
     @classmethod
     def not_deleted(cls) -> ColumnElement[bool]:

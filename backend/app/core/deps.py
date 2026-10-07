@@ -1,11 +1,14 @@
 """FastAPI dependencies."""
 
 from collections.abc import Iterator
+from typing import Annotated
 
-from fastapi import Request
+from fastapi import Depends, Request
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core.exceptions import ServiceUnavailableError
 from app.db.unit_of_work import UnitOfWork
+from app.models import User
 
 
 def get_uow(request: Request) -> Iterator[UnitOfWork]:
@@ -13,3 +16,12 @@ def get_uow(request: Request) -> Iterator[UnitOfWork]:
     factory: sessionmaker[Session] = request.app.state.session_factory
     with UnitOfWork(factory()) as uow:
         yield uow
+
+
+def get_current_user(uow: Annotated[UnitOfWork, Depends(get_uow)]) -> User:
+    user = uow.users.get_default()
+    if user is None:
+        error = ServiceUnavailableError("Database has not been seeded")
+        error.code = "NOT_SEEDED"
+        raise error
+    return user
