@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# One-time (and repeatable) deploy of the FastAPI backend on a PythonAnywhere free account.
+# Run inside a PythonAnywhere Bash console:
+#   bash <(curl -fsSL https://raw.githubusercontent.com/Aarush-Rajoura/fireflies-clone/build/deploy/pythonanywhere/setup.sh)
+set -euo pipefail
+
+BRANCH="${BRANCH:-build}"
+FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-https://fireflies-clone.vercel.app}"
+USER_NAME="$(whoami)"
+DOMAIN="$(echo "$USER_NAME" | tr '[:upper:]' '[:lower:]').pythonanywhere.com"
+REPO="$HOME/fireflies-clone"
+DATA="$HOME/fireflies-data"          # SQLite lives here: outside the repo, survives redeploys
+VENV="$HOME/.virtualenvs/fireflies"
+PY="$(command -v python3.13 || command -v python3.12)"
+
+echo "==> Code ($BRANCH)"
+if [ -d "$REPO/.git" ]; then git -C "$REPO" fetch -q origin && git -C "$REPO" checkout -q "$BRANCH" && git -C "$REPO" reset -q --hard "origin/$BRANCH"
+else git clone -q -b "$BRANCH" https://github.com/Aarush-Rajoura/fireflies-clone.git "$REPO"; fi
+
+echo "==> Virtualenv ($PY)"
+[ -d "$VENV" ] || "$PY" -m venv "$VENV"
+"$VENV/bin/pip" install -q --upgrade pip
+"$VENV/bin/pip" install -q -r "$REPO/backend/requirements.txt"
+
+echo "==> Settings"
+mkdir -p "$DATA"
+ENV_FILE="$REPO/backend/.env"
+if [ ! -f "$ENV_FILE" ]; then
+  cat > "$ENV_FILE" <<ENVEOF
+DATABASE_URL=sqlite:///$DATA/fireflies.db
+CORS_ORIGINS=$FRONTEND_ORIGIN
+AI_PROVIDER=mock
+AI_API_KEY=
+MEDIA_DIR=$REPO/backend/media
+ENVEOF
+  echo "   wrote $ENV_FILE (edit it to set AI_PROVIDER=gemini and AI_API_KEY)"
+fi
+
+echo "==> Database"
+(cd "$REPO/backend" && "$VENV/bin/alembic" upgrade head)
+if [ -f "$REPO/backend/app/seed/seed.py" ]; then (cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --if-empty) || true; fi
+
+echo "==> Website ($DOMAIN)"
+CMD="$VENV/bin/uvicorn --app-dir $REPO/backend --uds \${DOMAIN_SOCKET} app.main:app"
+if pa website get --domain "$DOMAIN" >/dev/null 2>&1; then
+  pa website reload --domain "$DOMAIN"
+else
+  pa website create --domain "$DOMAIN" --command "$CMD"
+fi
+echo "==> Done: https://$DOMAIN/api/health"
