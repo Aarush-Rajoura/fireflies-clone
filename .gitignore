@@ -1,0 +1,41 @@
+# Secrets & local config
+.env
+.env.*
+!.env.example
+
+# Databases
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Test output
+test-results/
+playwright-report/
+
+# Local-only planning, reference material and agent workspaces
+FireFlies-Clone/
+CLAUDE.md
+PLAN.md
+CHECKLIST.md
+design-ref/
+.superpowers/
+.claude/
