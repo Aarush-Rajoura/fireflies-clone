@@ -1,9 +1,7 @@
 """Transcript search with snippets and match ranges (offsets, never markup)."""
 
-import re
-
 from app.core.exceptions import ValidationFailedError
-from app.db.search import SegmentHit, query_tokens, search_segments
+from app.db.search import MARK_END, MARK_START, SegmentHit, query_tokens, search_segments
 from app.db.unit_of_work import UnitOfWork
 from app.schemas.common import Page, PageParams
 from app.schemas.search import MatchRange, SearchHit
@@ -13,23 +11,27 @@ _LEAD_CHARS = 60  # context kept before the first match
 _ELLIPSIS = "…"
 
 
-def _ranges(text: str, tokens: list[str]) -> list[MatchRange]:
-    """Whole-word matches, with the last token also matching as a prefix (mirrors the FTS query)."""
-    spans: list[tuple[int, int]] = []
-    for i, token in enumerate(tokens):
-        tail = r"\w*" if i == len(tokens) - 1 else r"\b"
-        spans += [m.span() for m in re.finditer(rf"\b{re.escape(token)}{tail}", text, re.I)]
-    merged: list[MatchRange] = []
-    for start, end in sorted(spans):
-        if merged and start <= merged[-1].end:
-            merged[-1].end = max(merged[-1].end, end)
+def _unmark(marked: str) -> tuple[str, list[MatchRange]]:
+    """Split FTS5 highlight() output into plain text and match offsets."""
+    plain: list[str] = []
+    ranges: list[MatchRange] = []
+    open_at: int | None = None
+    length = 0
+    for ch in marked:
+        if ch == MARK_START:
+            open_at = length
+        elif ch == MARK_END:
+            if open_at is not None and length > open_at:
+                ranges.append(MatchRange(start=open_at, end=length))
+            open_at = None
         else:
-            merged.append(MatchRange(start=start, end=end))
-    return merged
+            plain.append(ch)
+            length += 1
+    return "".join(plain), ranges
 
 
-def make_snippet(text: str, tokens: list[str]) -> tuple[str, list[MatchRange]]:
-    found = _ranges(text, tokens)
+def make_snippet(marked: str) -> tuple[str, list[MatchRange]]:
+    text, found = _unmark(marked)
     if len(text) <= SNIPPET_CHARS:
         return text, found
     first = found[0].start if found else 0
@@ -37,14 +39,13 @@ def make_snippet(text: str, tokens: list[str]) -> tuple[str, list[MatchRange]]:
     end = min(len(text), start + SNIPPET_CHARS)
     prefix = _ELLIPSIS if start > 0 else ""
     suffix = _ELLIPSIS if end < len(text) else ""
-    snippet = prefix + text[start:end] + suffix
     shift = len(prefix) - start
     ranges = [
         MatchRange(start=r.start + shift, end=min(r.end, end) + shift)
         for r in found
-        if r.start >= start and r.start < end
+        if start <= r.start < end
     ]
-    return snippet, ranges
+    return prefix + text[start:end] + suffix, ranges
 
 
 class SearchService:
@@ -52,20 +53,20 @@ class SearchService:
         self.uow = uow
 
     def search(self, q: str, page: PageParams) -> Page[SearchHit]:
-        tokens = query_tokens(q)
-        if not tokens:
+        """Flat bm25-ranked hits; grouping by meeting is the client's job."""
+        if not query_tokens(q):
             raise ValidationFailedError("Search query cannot be blank", code="QUERY_REQUIRED")
         hits, total = search_segments(self.uow.session, q, limit=page.page_size, offset=page.offset)
         return Page(
-            items=[_to_hit(h, tokens) for h in hits],
+            items=[_to_hit(h) for h in hits],
             page=page.page,
             page_size=page.page_size,
             total=total,
         )
 
 
-def _to_hit(hit: SegmentHit, tokens: list[str]) -> SearchHit:
-    snippet, ranges = make_snippet(hit.text, tokens)
+def _to_hit(hit: SegmentHit) -> SearchHit:
+    snippet, ranges = make_snippet(hit.marked)
     return SearchHit(
         meeting_id=hit.meeting_id,
         meeting_title=hit.meeting_title,

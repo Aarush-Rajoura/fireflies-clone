@@ -43,6 +43,9 @@ class UnitOfWork:
         self.session.rollback()
         self.session.close()
 
+    def flush(self) -> None:
+        self.session.flush()
+
     def commit(self) -> None:
         self.session.commit()
 

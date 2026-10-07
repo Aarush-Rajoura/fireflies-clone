@@ -1,23 +1,31 @@
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+
+from app.schemas.common import InputModel
 
 Speaker = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 LineText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=5000)]
 
 
-class SegmentIn(BaseModel):
+class SegmentIn(InputModel):
     speaker: Speaker
     start_ms: int = Field(ge=0)
     end_ms: int = Field(ge=0)
     text: LineText
 
+    @model_validator(mode="after")
+    def _ordered(self) -> "SegmentIn":
+        if self.end_ms < self.start_ms:
+            raise ValueError("end_ms must not be before start_ms")
+        return self
 
-class SegmentUpdate(BaseModel):
+
+class SegmentUpdate(InputModel):
     text: LineText
 
 
-class SpeakerRename(BaseModel):
+class SpeakerRename(InputModel):
     name: Speaker
 
 

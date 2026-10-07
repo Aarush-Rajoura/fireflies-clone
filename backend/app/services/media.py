@@ -7,7 +7,7 @@ from pathlib import Path
 from app.core.exceptions import NotFoundError
 from app.db.unit_of_work import UnitOfWork
 from app.models.enums import MediaType
-from app.services.meetings import MeetingService
+from app.services.guards import require_active_meeting
 
 _MEDIA_PREFIX = "media/"
 
@@ -28,7 +28,7 @@ class MediaService:
         self.media_dir = media_dir
 
     def resolve(self, meeting_id: int) -> MediaFile:
-        meeting = MeetingService(self.uow).get_active_or_raise(meeting_id)
+        meeting = require_active_meeting(self.uow, meeting_id)
         if not meeting.media_url or meeting.media_type == MediaType.NONE:
             raise _not_found()
         relative = meeting.media_url.lstrip("/")

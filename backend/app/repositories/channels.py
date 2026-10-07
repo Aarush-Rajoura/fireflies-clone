@@ -32,5 +32,4 @@ class ChannelRepository(Repository[Channel]):
         self.session.execute(
             update(Meeting).where(Meeting.channel_id == entity.id).values(channel_id=None)
         )
-        self.session.expire_all()
         super().delete(entity)

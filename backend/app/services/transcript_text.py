@@ -40,7 +40,7 @@ def build_transcript_for_ai(
     meeting: Meeting,
     segments: Sequence[TranscriptSegment],
     speakers: Sequence[Speaker],
-    participants: Sequence[Participant] = (),
+    participants: Sequence[Participant],
 ) -> TranscriptForAI:
     """The single place a stored transcript becomes AI input."""
     by_participant = {p.id: p for p in participants}

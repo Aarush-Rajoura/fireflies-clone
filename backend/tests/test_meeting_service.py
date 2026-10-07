@@ -154,3 +154,30 @@ def test_unknown_participant_id_is_422(db_session: Session) -> None:
             MeetingUpdate(participants=[{"id": 777, "display_name": "Z"}]),  # type: ignore[list-item]
         )
     assert err.value.code == "PARTICIPANT_NOT_FOUND"
+
+
+def test_participant_swap_and_name_collision(db_session: Session) -> None:
+    uow, _, m = seeded(db_session)
+    ann = f.make_participant(db_session, m, "Ann")
+    bob = f.make_participant(db_session, m, "Bob")
+    db_session.commit()
+    svc = MeetingService(uow)
+    out = svc.update(
+        m.id,
+        MeetingUpdate(
+            participants=[
+                {"id": ann.id, "display_name": "Bob"},  # type: ignore[list-item]
+                {"id": bob.id, "display_name": "Ann"},  # type: ignore[list-item]
+            ]
+        ),
+    )
+    assert {p.id: p.display_name for p in out.participants} == {ann.id: "Bob", bob.id: "Ann"}
+
+
+def test_list_without_users_is_503(db_session: Session) -> None:
+    from app.core.exceptions import ServiceUnavailableError
+    from app.db.unit_of_work import UnitOfWork
+
+    with pytest.raises(ServiceUnavailableError) as err:
+        _list(MeetingService(UnitOfWork(db_session)))
+    assert err.value.code == "NOT_SEEDED"

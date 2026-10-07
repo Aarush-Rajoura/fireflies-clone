@@ -4,8 +4,8 @@ from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
 from app.models import Participant
 from app.models.enums import ParticipantRole
-from app.schemas.transcript import SegmentRead, SpeakerRead, TranscriptRead
-from app.services.meetings import MeetingService
+from app.schemas.transcript import SegmentRead, SegmentUpdate, SpeakerRead, TranscriptRead
+from app.services.guards import require_active_meeting
 from app.services.transcript_text import segment_read, speaker_read
 
 
@@ -19,10 +19,9 @@ def _clean(value: str, what: str) -> str:
 class TranscriptService:
     def __init__(self, uow: UnitOfWork) -> None:
         self.uow = uow
-        self._meetings = MeetingService(uow)
 
     def get(self, meeting_id: int) -> TranscriptRead:
-        self._meetings.get_active_or_raise(meeting_id)
+        require_active_meeting(self.uow, meeting_id)
         participants = {p.id: p for p in self.uow.participants.list_for_meeting(meeting_id)}
         return TranscriptRead(
             speakers=[
@@ -31,13 +30,13 @@ class TranscriptService:
             segments=[segment_read(s) for s in self.uow.transcript.segments(meeting_id)],
         )
 
-    def update_segment(self, segment_id: int, text: str) -> SegmentRead:
+    def update_segment(self, segment_id: int, data: SegmentUpdate) -> SegmentRead:
         segment = self.uow.transcript.get_segment(segment_id)
         if segment is None:
             raise NotFoundError("Segment not found", code="SEGMENT_NOT_FOUND")
-        self._meetings.get_active_or_raise(segment.meeting_id)
+        require_active_meeting(self.uow, segment.meeting_id)
         # original_text is written at insert time, so the first edit's baseline is preserved.
-        segment.text = _clean(text, "Text")
+        segment.text = data.text
         summary = self.uow.summaries.get_by_meeting(segment.meeting_id)
         if summary is not None:
             summary.is_stale = True
@@ -49,11 +48,14 @@ class TranscriptService:
         speaker = self.uow.transcript.get_speaker(speaker_id)
         if speaker is None:
             raise NotFoundError("Speaker not found", code="SPEAKER_NOT_FOUND")
-        self._meetings.get_active_or_raise(speaker.meeting_id)
+        require_active_meeting(self.uow, speaker.meeting_id)
         name = _clean(name, "Name")
         repo = self.uow.participants
         match = repo.find_by_name(speaker.meeting_id, name)
-        if match is not None:
+        if match is not None and match.id == speaker.participant_id:
+            if match.display_name != name:  # case-only rename of its own participant
+                repo.rename(match, name)
+        elif match is not None:
             speaker.participant_id = match.id
         elif speaker.participant_id is not None:
             linked = repo.get(speaker.participant_id)

@@ -2,7 +2,13 @@
 
 from collections.abc import Sequence
 
-from app.core.exceptions import NotFoundError, ValidationFailedError
+from sqlalchemy.exc import IntegrityError
+
+from app.core.exceptions import (
+    ConflictError,
+    ServiceUnavailableError,
+    ValidationFailedError,
+)
 from app.db.unit_of_work import UnitOfWork
 from app.models import Meeting, Participant
 from app.models.enums import ParticipantRole
@@ -10,7 +16,7 @@ from app.repositories.meeting_filters import MeetingFilters, MeetingSort
 from app.schemas.common import Page, PageParams
 from app.schemas.meeting import MeetingDetail, MeetingListItem, MeetingUpdate, ParticipantInput
 from app.services import meeting_mapping
-from app.services.guards import meeting_deleted, meeting_not_found
+from app.services.guards import meeting_not_found, require_active_meeting
 
 __all__ = ["MeetingFilters", "MeetingService", "MeetingSort"]
 
@@ -24,7 +30,7 @@ class MeetingService:
     ) -> Page[MeetingListItem]:
         user = self.uow.users.get_default()
         if user is None:
-            raise NotFoundError("Database has not been seeded", code="NOT_SEEDED")
+            raise ServiceUnavailableError("Database has not been seeded", code="NOT_SEEDED")
         meetings, total = self.uow.meetings.list(filters, page, sort, current_user_id=user.id)
         return Page(
             items=meeting_mapping.list_items(self.uow, meetings),
@@ -38,12 +44,7 @@ class MeetingService:
         return self._detail(meeting_id)
 
     def get_active_or_raise(self, meeting_id: int) -> Meeting:
-        meeting = self.uow.meetings.get(meeting_id, include_deleted=True)
-        if meeting is None:
-            raise meeting_not_found()
-        if meeting.deleted_at is not None:
-            raise meeting_deleted()
-        return meeting
+        return require_active_meeting(self.uow, meeting_id)
 
     def update(self, meeting_id: int, data: MeetingUpdate) -> MeetingDetail:
         meeting = self.get_active_or_raise(meeting_id)
@@ -56,10 +57,15 @@ class MeetingService:
             meeting.started_at = data.started_at
         if "channel_id" in fields:
             self._set_channel(meeting, data.channel_id)
-        if data.participants is not None:
-            self._sync_participants(meeting, data.participants)
-        self.uow.session.flush()
-        self.uow.commit()
+        try:
+            if data.participants is not None:
+                self._sync_participants(meeting, data.participants)
+            self.uow.commit()
+        except IntegrityError as exc:
+            self.uow.rollback()
+            raise ConflictError(
+                "Two participants would share a name", code="PARTICIPANT_NAME_TAKEN"
+            ) from exc
         return self._detail(meeting_id)
 
     def delete(self, meeting_id: int) -> None:
@@ -115,9 +121,12 @@ class MeetingService:
             if pid not in kept:
                 self.uow.transcript.unlink_participant(pid)
                 repo.delete(row)
-        for row, name in plan:
-            if row is not None and row.display_name != name:
-                repo.rename(row, name)
+        renames = [(row, name) for row, name in plan if row and row.display_name != name]
+        # Names are unique per meeting, so a swap (A<->B) must pass through placeholders.
+        for row, _ in renames:
+            repo.rename(row, f"\x00{row.id}")
+        for row, name in renames:
+            repo.rename(row, name)
         for row, name in plan:
             if row is None:
                 repo.add(

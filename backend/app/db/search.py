@@ -29,7 +29,8 @@ _ROWS = text(
     f"""
     SELECT s.id AS segment_id, s.meeting_id AS meeting_id, m.title AS meeting_title,
            COALESCE(p.display_name, sp.label) AS speaker_label,
-           s.start_ms AS start_ms, s.text AS text, bm25(transcript_fts) AS rank
+           s.start_ms AS start_ms, s.text AS text, bm25(transcript_fts) AS rank,
+           highlight(transcript_fts, 0, char(2), char(3)) AS marked
     {_FROM}
     ORDER BY rank, s.id
     LIMIT :limit OFFSET :offset
@@ -47,6 +48,12 @@ class SegmentHit:
     start_ms: int
     text: str
     rank: float  # bm25: lower (more negative) is more relevant
+    # text with STX/ETX around each match, so stemmed and accent-folded hits are located by FTS5
+    marked: str
+
+
+MARK_START = "\x02"
+MARK_END = "\x03"
 
 
 def query_tokens(raw: str) -> list[str]:

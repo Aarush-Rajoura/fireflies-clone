@@ -3,10 +3,16 @@
 import math
 from typing import Any
 
-from pydantic import BaseModel, Field, computed_field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
 
 MAX_PAGE_SIZE = 100
 DEFAULT_PAGE_SIZE = 20
+
+
+class InputModel(BaseModel):
+    """Base for request bodies: typos are errors, not silently ignored fields."""
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class PageParams(BaseModel):

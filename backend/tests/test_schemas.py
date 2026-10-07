@@ -4,12 +4,14 @@ import pytest
 from pydantic import ValidationError
 
 from app.models import Meeting
+from app.schemas.action_item import ActionItemCreate
 from app.schemas.meeting import (
     ActionItemCountsRead,
     MeetingCreate,
     MeetingListItem,
     MeetingUpdate,
 )
+from app.schemas.transcript import SegmentIn
 from app.schemas.user import UserRef
 
 
@@ -65,3 +67,23 @@ def test_list_item_serialises_without_transcript() -> None:
     )
     assert "segments" not in item.model_dump()
     assert "segments" not in Meeting.__mapper__.relationships.keys()
+
+
+def test_input_schemas_forbid_extras_and_null_required_fields() -> None:
+    with pytest.raises(ValidationError):
+        MeetingUpdate(titel="typo")  # type: ignore[call-arg]
+    with pytest.raises(ValidationError):
+        MeetingUpdate(title=None)
+    with pytest.raises(ValidationError):
+        MeetingUpdate(started_at=None)
+    with pytest.raises(ValidationError):
+        MeetingCreate(title="x", bogus=1)  # type: ignore[call-arg]
+
+
+def test_segment_and_datetime_rules() -> None:
+    with pytest.raises(ValidationError):
+        SegmentIn(speaker="A", start_ms=10, end_ms=5, text="x")
+    with pytest.raises(ValidationError):
+        ActionItemCreate(text="x", start_ms=-1)
+    with pytest.raises(ValidationError):
+        MeetingUpdate(started_at=datetime(2026, 1, 1))  # naive

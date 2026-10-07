@@ -1,9 +1,16 @@
-from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    StringConstraints,
+    field_validator,
+)
 
 from app.models.enums import MediaType, MeetingSource, MeetingStatus, ParticipantRole
+from app.schemas.common import InputModel
 from app.schemas.transcript import SegmentIn, SpeakerRead
 from app.schemas.user import UserRef
 
@@ -13,7 +20,7 @@ PersonName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=
 SummaryStatus = Literal["none", "ready", "stale", "generating"]
 
 
-class ParticipantInput(BaseModel):
+class ParticipantInput(InputModel):
     """A participant in an edit; `id` set means "this existing row, possibly renamed"."""
 
     id: int | None = None
@@ -26,10 +33,10 @@ def _distinct_names(names: list[str]) -> None:
         raise ValueError("Participant names must be unique within a meeting")
 
 
-class MeetingCreate(BaseModel):
+class MeetingCreate(InputModel):
     title: Title
     description: str | None = None
-    started_at: datetime | None = None
+    started_at: AwareDatetime | None = None
     participants: list[PersonName] = Field(default_factory=list)
     # None = a form meeting with no transcript; an empty list is a client mistake.
     segments: list[SegmentIn] | None = Field(default=None, min_length=1)
@@ -37,14 +44,23 @@ class MeetingCreate(BaseModel):
     channel_id: int | None = None
 
 
-class MeetingUpdate(BaseModel):
+class MeetingUpdate(InputModel):
     """Partial update; unset fields are untouched, so null can clear description/channel."""
 
     title: Title | None = None
     description: str | None = None
-    started_at: datetime | None = None
+    started_at: AwareDatetime | None = None
+    # Merge-patch semantics: when sent, this list REPLACES the participants; omit it to keep them.
     participants: list[ParticipantInput] | None = None
     channel_id: int | None = None
+
+    @field_validator("title", "started_at", mode="before")
+    @classmethod
+    def _not_null(cls, value: Any) -> Any:
+        # These columns are NOT NULL, so an explicit null can only be a client mistake.
+        if value is None:
+            raise ValueError("must not be null")
+        return value
 
     @field_validator("participants", mode="before")
     @classmethod
@@ -91,7 +107,7 @@ class ActionItemCountsRead(BaseModel):
 class _MeetingBase(BaseModel):
     id: int
     title: str
-    started_at: datetime
+    started_at: AwareDatetime
     duration_ms: int
     host: UserRef
     participant_count: int

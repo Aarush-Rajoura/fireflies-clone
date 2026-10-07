@@ -1,6 +1,10 @@
 """Channel use cases. Deleting a channel never deletes its meetings."""
 
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
+
+from sqlalchemy.exc import IntegrityError
 
 from app.core.exceptions import ConflictError, NotFoundError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
@@ -33,18 +37,19 @@ class ChannelService:
     def create(self, data: ChannelCreate) -> ChannelRead:
         slug = self._unique_slug(data.name, exclude_id=None)
         user = self.uow.users.get_default()
-        channel = self.uow.channels.add(
-            Channel(name=data.name, slug=slug, created_by=user.id if user else None)
-        )
-        self.uow.commit()
+        with self._slug_guard():
+            channel = self.uow.channels.add(
+                Channel(name=data.name, slug=slug, created_by=user.id if user else None)
+            )
+            self.uow.commit()
         return _read(channel, 0)
 
     def rename(self, channel_id: int, data: ChannelUpdate) -> ChannelRead:
         channel = self._get(channel_id)
         channel.slug = self._unique_slug(data.name, exclude_id=channel.id)
         channel.name = data.name
-        self.uow.channels.flush()
-        self.uow.commit()
+        with self._slug_guard():
+            self.uow.commit()
         return _read(channel, self.uow.channels.count_meetings(channel.id))
 
     def delete(self, channel_id: int) -> None:
@@ -54,6 +59,15 @@ class ChannelService:
     def move_meeting(self, meeting_id: int, channel_id: int | None) -> None:
         """Same rules as MeetingUpdate.channel_id, for callers that only move."""
         MeetingService(self.uow).update(meeting_id, MeetingUpdate(channel_id=channel_id))
+
+    @contextmanager
+    def _slug_guard(self) -> Iterator[None]:
+        # A concurrent create can pass the slug pre-check; the unique index is the real guard.
+        try:
+            yield
+        except IntegrityError as exc:
+            self.uow.rollback()
+            raise ConflictError("A channel with this name exists", code="CHANNEL_EXISTS") from exc
 
     def _get(self, channel_id: int) -> Channel:
         channel = self.uow.channels.get(channel_id)

@@ -7,6 +7,7 @@ from app.core.exceptions import GoneError, NotFoundError
 from app.models import Summary
 from app.models.enums import MediaType
 from app.schemas.common import PageParams
+from app.schemas.transcript import SegmentUpdate
 from app.services.media import MediaService
 from app.services.search import SearchService
 from app.services.transcript import TranscriptService
@@ -47,18 +48,18 @@ def test_edit_keeps_original_and_marks_stale(db_session: Session) -> None:
     db_session.add(Summary(meeting_id=m.id, overview="o"))
     db_session.commit()
     svc = TranscriptService(uow)
-    out = svc.update_segment(s1.id, "  edited ")
+    out = svc.update_segment(s1.id, SegmentUpdate(text="  edited "))
     assert out.text == "edited" and out.original_text == "first line" and out.is_edited
-    again = svc.update_segment(s1.id, "twice")
+    again = svc.update_segment(s1.id, SegmentUpdate(text="twice"))
     assert again.original_text == "first line"
     assert db_session.query(Summary).one().is_stale is True
 
 
 def test_edit_without_summary_and_missing_segment(db_session: Session) -> None:
     uow, _, _, _, s1, _ = _with_segments(db_session)
-    TranscriptService(uow).update_segment(s1.id, "x")
+    TranscriptService(uow).update_segment(s1.id, SegmentUpdate(text="x"))
     with pytest.raises(NotFoundError) as err:
-        TranscriptService(uow).update_segment(12345, "x")
+        TranscriptService(uow).update_segment(12345, SegmentUpdate(text="x"))
     assert err.value.code == "SEGMENT_NOT_FOUND"
 
 
@@ -66,7 +67,7 @@ def test_edit_on_deleted_meeting_is_gone(db_session: Session) -> None:
     uow, m, _, _, s1, _ = _with_segments(db_session)
     uow.meetings.soft_delete(m)
     with pytest.raises(GoneError):
-        TranscriptService(uow).update_segment(s1.id, "x")
+        TranscriptService(uow).update_segment(s1.id, SegmentUpdate(text="x"))
 
 
 def test_rename_speaker_creates_then_renames_participant(db_session: Session) -> None:
@@ -160,3 +161,10 @@ def test_search(db_session: Session) -> None:
     assert hit.snippet[hit.ranges[0].start : hit.ranges[0].end].lower() == "first"
     uow.meetings.soft_delete(m)
     assert SearchService(uow).search("first", PageParams()).total == 0
+
+
+def test_rename_speaker_case_only(db_session: Session) -> None:
+    uow, _, a, *_ = _with_segments(db_session)
+    svc = TranscriptService(uow)
+    svc.rename_speaker(a.id, "ann")
+    assert svc.rename_speaker(a.id, "Ann").name == "Ann"

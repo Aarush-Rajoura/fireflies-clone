@@ -42,4 +42,3 @@ class TranscriptRepository(Repository[TranscriptSegment]):
             .where(Speaker.participant_id == participant_id)
             .values(participant_id=None)
         )
-        self.session.expire_all()
