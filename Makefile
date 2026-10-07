@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev-backend dev-frontend migrate seed test lint types
+.PHONY: help install dev-backend dev-frontend migrate seed seed-reset test lint types
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -19,7 +19,10 @@ migrate: ## Apply database migrations
 	cd backend && uv run alembic upgrade head
 
 seed: ## Populate demo data
-	@echo "not available until the seed data exists"
+	cd backend && uv run python -m app.seed.seed
+
+seed-reset: ## Wipe and re-seed demo data
+	cd backend && uv run python -m app.seed.seed --reset
 
 test: ## Run backend and frontend tests
 	cd backend && uv run pytest -q
