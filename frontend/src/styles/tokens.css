@@ -1,0 +1,262 @@
+/* Design tokens: the only file in the app that may contain a hex code.
+
+   Two layers. PRIMITIVES are raw values named by what they are; SEMANTICS are
+   roles named by job. Components consume semantics only, so a theme is just a
+   re-pointing of semantics and never needs a component change.
+
+   Dark is the default theme because that is what the product ships with.
+   `[data-theme='dark']` is repeated on the default block so a subtree can be
+   forced dark inside a light page (and vice versa).
+   Dark values marked [S] were pixel-sampled from design-ref/08..14; [D] are
+   derived where no screenshot shows the surface. */
+
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* ── Primitives: dark neutrals ─────────────────────────────────────────── */
+  --ff-ink-950: #131314; /* [S] app background                          */
+  --ff-ink-925: #151618; /* [S] empty-state skeleton card                */
+  --ff-ink-900: #19191a; /* [S] inputs, search, outline chips            */
+  --ff-ink-850: #1e1e1f; /* [S] rail, top bar, cards, menus, banners     */
+  --ff-ink-800: #292929; /* [S] borders, segmented track, rail active    */
+  --ff-ink-750: #2f3033; /* [S] skeleton bars                            */
+  --ff-ink-700: #3a3a3d; /* [D] strong border / input hover              */
+  --ff-ink-650: #48494c; /* [S] segmented active pill                    */
+  --ff-ink-400: #868686; /* [S] placeholders, dates, "Ctrl + K"          */
+  --ff-ink-300: #aeaeb2; /* [S] nav labels, body copy, chip text         */
+  --ff-ink-200: #d1d1d5; /* [S] row titles, active tab label             */
+  --ff-ink-50: #fafafb; /* [S] headings ("Looks like you haven't…")      */
+
+  /* ── Primitives: light neutrals (reference design.md) ───────────────────── */
+  --ff-paper-0: #ffffff;
+  --ff-paper-25: #fcfcfd;
+  --ff-paper-50: #f9fafb;
+  --ff-paper-100: #f4f5f7;
+  --ff-paper-200: #ecedf1;
+  --ff-paper-300: #dde0e7;
+  --ff-paper-400: #e4e6eb;
+  --ff-slate-500: #667085;
+  --ff-slate-700: #4d566a;
+  --ff-slate-900: #0b1424;
+
+  /* ── Primitives: violet ─────────────────────────────────────────────────── */
+  --ff-violet-950: #18152c; /* [S] BETA badge / capture quick-start tint   */
+  --ff-violet-900: #201c3d; /* [S] selected nav, active filter chip        */
+  --ff-violet-700: #5a32d1; /* [D] pressed                                 */
+  --ff-violet-600: #683fe5; /* [S] Capture / New / send                    */
+  --ff-violet-500: #7650ec; /* [D] hover                                   */
+  --ff-violet-400: #8375e8; /* [S] accent text: active nav, links, tab     */
+  --ff-violet-100: #f4f3ff;
+  --ff-violet-200: #d5ccfb;
+  --ff-violet-800: #541ddc;
+
+  /* ── Primitives: status ─────────────────────────────────────────────────── */
+  --ff-green-950: #18281c; /* [S] NEW badge bg                            */
+  --ff-green-900: #29352e; /* [S] Upgrade button bg                       */
+  --ff-green-700: #426549; /* [S] free-meetings count, progress fill      */
+  --ff-green-600: #55835c; /* [S] Upgrade button text                     */
+  --ff-green-400: #4ade80; /* [D] success icon                            */
+  --ff-green-300: #9ee0a3; /* [S] NEW badge text                          */
+  --ff-green-50: #d7fbe3;
+  --ff-green-650: #0e9f6e;
+  --ff-green-800: #036c60;
+
+  --ff-amber-950: #2a2010;
+  --ff-amber-500: #f5a524;
+  --ff-amber-300: #fbbf4a;
+  --ff-amber-50: #fffaec;
+  --ff-amber-600: #f79009;
+  --ff-amber-700: #b54708;
+  --ff-amber-mark: #5c4a12; /* [D] search match wash on dark             */
+  --ff-amber-mark-active: #8a6a0f;
+  --ff-amber-mark-light: #ffe9a8;
+  --ff-amber-mark-light-active: #ffc933;
+
+  --ff-red-950: #2d1512;
+  --ff-red-500: #ef4444; /* [S] notification dot                          */
+  --ff-red-400: #f87171;
+  --ff-red-50: #fef3f2;
+  --ff-red-600: #d92d20;
+  --ff-red-700: #b4261a;
+
+  /* Quick-start card tints [S] */
+  --ff-rose-950: #331623;
+  --ff-teal-950: #162522;
+
+  --ff-magenta-500: #c43990; /* brand glyph */
+  --ff-white: #ffffff;
+
+  /* Speaker hues: lifted for legibility on the dark ground. */
+  --ff-speaker-0: #9b7bff;
+  --ff-speaker-1: #34d399;
+  --ff-speaker-2: #fbbf4a;
+  --ff-speaker-3: #e879b8;
+  --ff-speaker-4: #f87171;
+  --ff-speaker-5: #38bdf8;
+  --ff-speaker-6: #8b9dff;
+  --ff-speaker-7: #b0aaa4;
+
+  /* Avatar fills sit under white initials, so they stay mid-tone on dark
+     rather than using the lifted speaker text hues. [D] */
+  --ff-avatar-0: #6a4fd8;
+  --ff-avatar-1: #1f8a62;
+  --ff-avatar-2: #a86b12;
+  --ff-avatar-3: #b13f84;
+  --ff-avatar-4: #bf3f35;
+  --ff-avatar-5: #1a7fa3;
+  --ff-avatar-6: #4a5fd0;
+  --ff-avatar-7: #6f6862;
+
+  /* ── Semantics ──────────────────────────────────────────────────────────── */
+  --ff-surface-0: var(--ff-ink-950); /* page                        */
+  --ff-surface-1: var(--ff-ink-850); /* rail, top bar, cards, menus */
+  --ff-surface-2: var(--ff-ink-900); /* inputs, outline chips       */
+  --ff-surface-3: var(--ff-ink-800); /* segmented track, hover      */
+  --ff-surface-hover: var(--ff-ink-800);
+  --ff-surface-selected: var(--ff-ink-650); /* active segment         */
+  --ff-surface-sunken: var(--ff-ink-925);
+  --ff-skeleton: var(--ff-ink-750);
+
+  --ff-border-subtle: var(--ff-ink-800);
+  --ff-border-strong: var(--ff-ink-700);
+
+  --ff-text-strong: var(--ff-ink-50);
+  --ff-text-primary: var(--ff-ink-200);
+  --ff-text-secondary: var(--ff-ink-300);
+  --ff-text-muted: var(--ff-ink-400);
+  --ff-text-inverse: var(--ff-white);
+  --ff-text-on-accent: var(--ff-white);
+
+  --ff-accent: var(--ff-violet-600);
+  --ff-accent-hover: var(--ff-violet-500);
+  --ff-accent-pressed: var(--ff-violet-700);
+  --ff-accent-subtle: var(--ff-violet-900);
+  --ff-accent-faint: var(--ff-violet-950);
+  --ff-accent-text: var(--ff-violet-400);
+  --ff-accent-border: var(--ff-violet-400);
+
+  --ff-success: var(--ff-green-400);
+  --ff-success-subtle: var(--ff-green-950);
+  --ff-success-strong: var(--ff-green-300);
+  --ff-upgrade: var(--ff-green-900);
+  --ff-upgrade-text: var(--ff-green-600);
+  --ff-count: var(--ff-green-700);
+
+  --ff-warning: var(--ff-amber-500);
+  --ff-warning-subtle: var(--ff-amber-950);
+  --ff-warning-strong: var(--ff-amber-300);
+
+  --ff-danger: var(--ff-red-500);
+  --ff-danger-hover: var(--ff-red-400);
+  --ff-danger-subtle: var(--ff-red-950);
+  --ff-danger-strong: var(--ff-red-400);
+
+  --ff-highlight: var(--ff-amber-mark);
+  --ff-highlight-active: var(--ff-amber-mark-active);
+
+  --ff-tint-rose: var(--ff-rose-950);
+  --ff-tint-teal: var(--ff-teal-950);
+  --ff-tint-violet: var(--ff-violet-950);
+
+  --ff-brand-mark: var(--ff-magenta-500);
+
+  --ff-scrim: rgba(0, 0, 0, 0.6);
+
+  /* ── Type, shape, elevation, motion ─────────────────────────────────────── */
+  --ff-font-sans: var(--font-inter), Inter, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ff-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ff-radius-xs: 3px;
+  --ff-radius-control: 4px; /* [S] buttons, inputs, Capture: sharper than sm */
+  --ff-radius-sm: 6px;
+  --ff-radius-md: 8px;
+  --ff-radius-lg: 12px;
+  --ff-radius-full: 999px;
+
+  --ff-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --ff-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.32);
+  --ff-shadow-md: 0 6px 16px -4px rgba(0, 0, 0, 0.5);
+  --ff-shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.6);
+  --ff-shadow-focus: 0 0 0 2px rgba(131, 117, 232, 0.6);
+
+  --ff-dur-fast: 120ms;
+  --ff-dur-base: 200ms;
+  --ff-dur-slow: 320ms;
+  --ff-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Light theme: re-points semantics only. Values from the reference design.md. */
+[data-theme='light'] {
+  color-scheme: light;
+
+  --ff-surface-0: var(--ff-paper-0);
+  --ff-surface-1: var(--ff-paper-25);
+  --ff-surface-2: var(--ff-paper-50);
+  --ff-surface-3: var(--ff-paper-100);
+  --ff-surface-hover: var(--ff-paper-100);
+  --ff-surface-selected: var(--ff-paper-0);
+  --ff-surface-sunken: var(--ff-paper-50);
+  --ff-skeleton: var(--ff-paper-400);
+
+  --ff-border-subtle: var(--ff-paper-200);
+  --ff-border-strong: var(--ff-paper-300);
+
+  --ff-text-strong: var(--ff-slate-900);
+  --ff-text-primary: var(--ff-slate-900);
+  --ff-text-secondary: var(--ff-slate-700);
+  --ff-text-muted: var(--ff-slate-500);
+
+  --ff-accent-subtle: var(--ff-violet-100);
+  --ff-accent-faint: var(--ff-violet-100);
+  --ff-accent-text: var(--ff-violet-800);
+  --ff-accent-border: var(--ff-violet-200);
+
+  --ff-success: var(--ff-green-650);
+  --ff-success-subtle: var(--ff-green-50);
+  --ff-success-strong: var(--ff-green-800);
+  --ff-upgrade: var(--ff-green-50);
+  --ff-upgrade-text: var(--ff-green-800);
+  --ff-count: var(--ff-green-50);
+
+  --ff-warning: var(--ff-amber-600);
+  --ff-warning-subtle: var(--ff-amber-50);
+  --ff-warning-strong: var(--ff-amber-700);
+
+  --ff-danger: var(--ff-red-600);
+  --ff-danger-hover: var(--ff-red-700);
+  --ff-danger-subtle: var(--ff-red-50);
+  --ff-danger-strong: var(--ff-red-700);
+
+  --ff-highlight: var(--ff-amber-mark-light);
+  --ff-highlight-active: var(--ff-amber-mark-light-active);
+
+  --ff-tint-rose: var(--ff-red-50);
+  --ff-tint-teal: var(--ff-green-50);
+  --ff-tint-violet: var(--ff-violet-100);
+
+  --ff-speaker-0: #6a39ef;
+  --ff-speaker-1: #0a7d57;
+  --ff-speaker-2: #a15c07;
+  --ff-speaker-3: #b23383;
+  --ff-speaker-4: #c62a1e;
+  --ff-speaker-5: #0e7490;
+  --ff-speaker-6: #1d4ed8;
+  --ff-speaker-7: #57534e;
+  --ff-avatar-0: var(--ff-speaker-0);
+  --ff-avatar-1: var(--ff-speaker-1);
+  --ff-avatar-2: var(--ff-speaker-2);
+  --ff-avatar-3: var(--ff-speaker-3);
+  --ff-avatar-4: var(--ff-speaker-4);
+  --ff-avatar-5: var(--ff-speaker-5);
+  --ff-avatar-6: var(--ff-speaker-6);
+  --ff-avatar-7: var(--ff-speaker-7);
+
+  --ff-scrim: rgba(11, 20, 36, 0.4);
+
+  --ff-shadow-xs: 0 1px 2px rgba(11, 20, 36, 0.05);
+  --ff-shadow-sm: 0 1px 3px rgba(11, 20, 36, 0.1), 0 1px 2px rgba(11, 20, 36, 0.06);
+  --ff-shadow-md: 0 4px 8px -2px rgba(11, 20, 36, 0.1), 0 2px 4px -2px rgba(11, 20, 36, 0.06);
+  --ff-shadow-lg: 0 12px 16px -4px rgba(11, 20, 36, 0.08), 0 4px 6px -2px rgba(11, 20, 36, 0.03);
+  --ff-shadow-focus: 0 0 0 2px rgba(104, 63, 229, 0.45);
+}

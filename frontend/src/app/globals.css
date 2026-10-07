@@ -1,3 +1,69 @@
+@import "../styles/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    font-family: var(--ff-font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-surface-0 text-body text-primary;
+  }
+
+  ::placeholder {
+    color: var(--ff-text-muted);
+    opacity: 1;
+  }
+
+  /* One focus treatment everywhere, keyboard only, so mouse clicks stay quiet. */
+  :focus-visible {
+    outline: none;
+    box-shadow: var(--ff-shadow-focus);
+  }
+
+  ::selection {
+    background: var(--ff-accent-subtle);
+    color: var(--ff-text-strong);
+  }
+
+  /* Thin, low-contrast scrollbars to match the app's dense panels. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ff-border-strong) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--ff-border-strong);
+    border-radius: var(--ff-radius-full);
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Timestamps and counters must not jitter as digits change. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
