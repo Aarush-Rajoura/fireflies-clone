@@ -41,6 +41,9 @@ class SummaryResult:
     outline: list[OutlineEntry]
     notes: list[NoteGroup]
     keywords: list[KeywordResult]
+    # Provenance travels with the result so callers can record who produced it.
+    provider: str = "mock"
+    model: str | None = None
 
 
 @dataclass(frozen=True)
@@ -61,6 +64,8 @@ class Citation:
 class Answer:
     text: str
     citations: list[Citation]
+    provider: str = "mock"
+    model: str | None = None
 
 
 @dataclass(frozen=True)

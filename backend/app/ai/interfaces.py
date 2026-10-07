@@ -4,14 +4,11 @@ Services depend on the one capability they use (`Summarizer`,
 `ActionItemExtractor`, `QuestionAnswerer`); `AIProvider` is only the union a
 concrete provider implements.
 
-Provenance: results carry no provider field, so each provider exposes
-`last_provider_label` - the label of whoever produced the result of the
-caller's most recent call ("mock", "gemini" or "mock (llm fallback)"). Wrappers
-keep it per thread because one provider instance serves FastAPI's threadpool.
-Read it with `provenance_label(provider)` right after the call.
+Provenance (who produced a result) is carried on `SummaryResult.provider`
+and `Answer.provider`; action items carry none.
 """
 
-from typing import Protocol, runtime_checkable
+from typing import Protocol
 
 from app.ai.types import ActionItemDraft, Answer, Passage, SummaryResult, TranscriptForAI
 
@@ -37,16 +34,3 @@ class QuestionAnswerer(Protocol):
 class AIProvider(Summarizer, ActionItemExtractor, QuestionAnswerer, Protocol):
     name: str
     model: str | None
-
-
-@runtime_checkable
-class ProvenanceAware(Protocol):
-    @property
-    def last_provider_label(self) -> str: ...
-
-
-def provenance_label(provider: object) -> str:
-    """Who produced the caller's latest result; plain providers report their name."""
-    if isinstance(provider, ProvenanceAware):
-        return provider.last_provider_label
-    return str(getattr(provider, "name", "unknown"))

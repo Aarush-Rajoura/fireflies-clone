@@ -7,6 +7,9 @@ Four patterns, tried in order on each sentence:
 3. team need with a deadline - "We need to update the copy by Friday" -> nobody
 4. explicit marker - "Action item: instrument the funnel" -> nobody
 
+Two commitments in one breath ("I'll deploy it by Monday, and I'll run a load
+test after") are split first, so each becomes its own item.
+
 Ownership is only assigned when the phrasing makes it unambiguous; a wrong
 assignee is worse than none.
 """
@@ -35,6 +38,8 @@ _NOT_A_TASK = frozenset(
     defer need want walk recap restate summarize summarise take start repeat play push""".split()
 )
 _MIN_TASK_WORDS = 3
+# Lookahead keeps "I'll" in the second piece so it matches as first person.
+_SECOND_COMMITMENT = re.compile(r",?\s+and\s+(?=I'll\b|I will\b)")
 
 
 def _resolve(name: str | None, roster: dict[str, str]) -> str | None:
@@ -85,8 +90,9 @@ def extract_action_items(t: TranscriptForAI) -> list[ActionItemDraft]:
     seen: set[str] = set()
     drafts: list[ActionItemDraft] = []
     for line in sorted(t.lines, key=lambda x: (x.start_ms, x.segment_id)):
-        for sentence in sentences(line.text):
-            found = _match(sentence, line.speaker, roster)
+        pieces = [p for s in sentences(line.text) for p in _SECOND_COMMITMENT.split(s)]
+        for piece in pieces:
+            found = _match(piece, line.speaker, roster)
             if found is None or found[0].lower() in seen:
                 continue
             seen.add(found[0].lower())

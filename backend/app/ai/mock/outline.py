@@ -1,16 +1,16 @@
 """Chapters from topic shifts.
 
-Every gap between two lines gets a boundary score:
-
-- pause: how much longer than the typical gap it is (log scale), because
-  people pause when they change subject;
-- drift: how different the vocabulary of the three lines before and after is;
-- speaker change: a small nudge, since a new topic is often introduced by
-  someone new.
-
-The highest-scoring gaps become chapter starts (3-6 chapters, never too close
-together), and each chapter is titled by the term most distinctive of it
-compared with the other chapters.
+1. Decide how many chapters the meeting deserves: about one per 10 lines,
+   3 to 6, and never shorter than 5 lines when there is room for that.
+2. Score every gap between lines: TF-IDF cosine *dissimilarity* of the 6
+   lines before vs the 6 after (vocabulary changes when the topic does), plus
+   a bonus for an unusually long pause.
+3. Place boundaries at the evenly spaced points, each moved to the strongest
+   topic shift within half a chapter of it. Strong shifts win; when the scores
+   are flat this degrades to a near-even partition instead of piling every
+   chapter into one corner of the meeting.
+4. Title each chapter with its most distinctive phrase (TF-IDF across
+   chapters), preferring a two-word phrase; speaker names are never topics.
 """
 
 import math
@@ -18,15 +18,26 @@ import statistics
 from collections import Counter
 from dataclasses import dataclass
 
-from app.ai.mock.keywords import terms, tfidf
-from app.ai.mock.text_utils import content_words, fmt_ms, speaker_name_tokens, words
+from app.ai.mock.keywords import terms
+from app.ai.mock.text_utils import (
+    content_words,
+    fmt_ms,
+    is_content,
+    sentences,
+    speaker_name_tokens,
+    words,
+)
 from app.ai.types import TranscriptForAI, TranscriptLine
 
 MIN_CHAPTERS = 3
 MAX_CHAPTERS = 6
-_LINES_PER_CHAPTER = 6
-_WINDOW = 3
-_SPEAKER_CHANGE_BONUS = 0.25
+_LINES_PER_CHAPTER = 10
+_MIN_CHAPTER_LINES = 5
+_WINDOW = 6
+_PAUSE_WEIGHT = 0.5
+# How much a boundary loses per chapter-length of distance from its even point;
+# small, so a clear shift nearby still wins.
+_DISTANCE_PENALTY = 0.3
 
 
 @dataclass(frozen=True)
@@ -36,62 +47,124 @@ class Chapter:
     lines: list[TranscriptLine]
 
 
+def _cosine(a: dict[str, float], b: dict[str, float]) -> float:
+    dot = sum(a[w] * b[w] for w in sorted(a.keys() & b.keys()))
+    norm = math.sqrt(sum(v * v for _, v in sorted(a.items())))
+    norm *= math.sqrt(sum(v * v for _, v in sorted(b.items())))
+    return dot / norm if norm else 0.0
+
+
 def _boundary_scores(lines: list[TranscriptLine], exclude: frozenset[str]) -> list[float]:
+    n = len(lines)
+    docs = [Counter(content_words(line.text, exclude)) for line in lines]
+    df: Counter[str] = Counter(w for doc in docs for w in doc)
+    idf = {w: math.log((n + 1) / (c + 0.5)) + 1 for w, c in df.items()}
+
+    def window(a: int, b: int) -> dict[str, float]:
+        total: Counter[str] = Counter()
+        for doc in docs[max(a, 0) : b]:
+            total.update(doc)
+        return {w: c * idf[w] for w, c in total.items()}
+
     gaps = [b.start_ms - a.start_ms for a, b in zip(lines, lines[1:], strict=False)]
     typical = max(statistics.median(gaps), 1.0) if gaps else 1.0
-    bags = [set(content_words(line.text, exclude)) for line in lines]
     scores = [0.0]  # line 0 always starts the first chapter
-    for i in range(1, len(lines)):
-        pause = max(0.0, math.log2(max(gaps[i - 1], 1) / typical))
-        before = set().union(*bags[max(0, i - _WINDOW) : i])
-        after = set().union(*bags[i : i + _WINDOW])
-        union = before | after
-        drift = 1 - len(before & after) / len(union) if union else 0.0
-        turn = _SPEAKER_CHANGE_BONUS if lines[i].speaker != lines[i - 1].speaker else 0.0
-        scores.append(pause + drift + turn)
+    for i in range(1, n):
+        shift = 1 - _cosine(window(i - _WINDOW, i), window(i, i + _WINDOW))
+        pause = max(0.0, min(math.log2(max(gaps[i - 1], 1) / typical), 3.0))
+        scores.append(shift + _PAUSE_WEIGHT * pause)
     return scores
 
 
 def _chapter_starts(lines: list[TranscriptLine], exclude: frozenset[str]) -> list[int]:
     n = len(lines)
-    distinct_starts = len({line.start_ms for line in lines})
-    target = min(max(MIN_CHAPTERS, round(n / _LINES_PER_CHAPTER)), MAX_CHAPTERS, distinct_starts)
-    min_len = max(1, n // (target * 2))
+    distinct = len({line.start_ms for line in lines})
+    target = min(max(MIN_CHAPTERS, n // _LINES_PER_CHAPTER), MAX_CHAPTERS, distinct)
+    if target <= 1:
+        return [0]
+    fits = n >= _MIN_CHAPTER_LINES * target
+    min_len = _MIN_CHAPTER_LINES if fits else max(1, n // (2 * target))
     scores = _boundary_scores(lines, exclude)
-    # Beyond the minimum, a chapter must be earned by a clearly unusual gap
-    # (one standard deviation above the mean), not just fill a quota.
-    gaps = scores[1:]
-    strong = statistics.fmean(gaps) + statistics.pstdev(gaps) if gaps else 0.0
-    # Highest score first; index as tie-break keeps the choice deterministic.
-    candidates = sorted(range(1, n), key=lambda i: (-scores[i], i))
+    span = n / target
+    radius = max(1, int(span / 2))
     starts = [0]
-    for i in candidates:
-        if len(starts) == target:
-            break
-        if len(starts) >= MIN_CHAPTERS and scores[i] < strong:
-            break
-        if n - i < min_len or any(abs(i - s) < min_len for s in starts):
+    for k in range(1, target):
+        ideal = round(k * span)
+        lo = max(starts[-1] + min_len, ideal - radius)
+        hi = min(n - (target - k) * min_len, ideal + radius)
+        # Chapters seek the player, so each must start strictly later in time.
+        options = [i for i in range(lo, hi + 1) if lines[i].start_ms > lines[starts[-1]].start_ms]
+        if not options:
             continue
-        # Chapters seek the player, so two starting at the same instant is useless.
-        if any(lines[i].start_ms == lines[s].start_ms for s in starts):
-            continue
-        starts.append(i)
-    return sorted(starts)
+        best = max(
+            options,
+            key=lambda i: (
+                scores[i] - _DISTANCE_PENALTY * abs(i - ideal) / span,
+                -abs(i - ideal),
+                -i,
+            ),
+        )
+        starts.append(best)
+    return starts
+
+
+def _trigrams(text: str, exclude: frozenset[str]) -> Counter[str]:
+    grams: Counter[str] = Counter()
+    for sentence in sentences(text):
+        toks = [w if is_content(w, exclude) else None for w in words(sentence)]
+        grams.update(
+            f"{a} {b} {c}"
+            for a, b, c in zip(toks, toks[1:], toks[2:], strict=False)
+            if a and b and c
+        )
+    return grams
+
+
+def _extend(bigram: str, count: int, tri: Counter[str]) -> str:
+    """ "center articles" -> "help center articles" when the longer phrase is
+    always what was said."""
+    parts = bigram.split()
+    for gram in sorted(tri):
+        g = gram.split()
+        if tri[gram] == count >= 2 and (g[:2] == parts or g[1:] == parts):
+            return gram
+    return bigram
+
+
+def _title(
+    tf: Counter[str], tri: Counter[str], df: Counter[str], n_docs: int, taken: set[str]
+) -> str | None:
+    def score(term: str) -> float:
+        return tf[term] * (math.log((n_docs + 1) / (df[term] + 0.5)) + 1)
+
+    # Sorted before ranking so equal scores resolve by the term, not set order.
+    unigrams = sorted((t for t in tf if " " not in t), key=lambda t: (-score(t), t))
+    bigrams = sorted((t for t in tf if " " in t), key=lambda t: (-score(t), t))
+    top = unigrams[0] if unigrams else None
+    candidates: list[str] = []
+    # A recurring phrase names the topic best; else the best phrase around the
+    # chapter's key word ("replay" -> "replay tool"); else the word alone.
+    candidates += [b for b in bigrams if tf[b] >= 2]
+    if top is not None:
+        candidates += [b for b in bigrams if top in b.split()]
+    candidates += unigrams
+    for term in candidates:
+        if " " in term:
+            term = _extend(term, tf[term], tri)
+        title = " ".join(w.capitalize() for w in term.split())
+        if title not in taken:
+            return title
+    return None
 
 
 def _titles(groups: list[list[TranscriptLine]], exclude: frozenset[str]) -> list[str]:
-    texts = [" ".join(" ".join(words(line.text)) for line in group) for group in groups]
-    docs = [terms(text, exclude) for text in texts]
-    df: Counter[str] = Counter(term for doc in docs for term in set(doc))
+    texts = [" ".join(line.text for line in group) for group in groups]
+    docs = [Counter(terms(text, exclude)) for text in texts]
+    df: Counter[str] = Counter(term for doc in docs for term in doc)
     titles: list[str] = []
     for doc, text, group in zip(docs, texts, groups, strict=True):
-        scores = tfidf(Counter(doc), df, len(docs))
-        # Ties go to the term mentioned first: that is usually how a topic is
-        # introduced. (A bigram absent verbatim, e.g. across a stopword, sorts last.)
-        first_seen = {term: text.find(term) % (len(text) + 1) for term in scores}
-        ranked = sorted(scores.items(), key=lambda kv: (-kv[1], first_seen[kv[0]], kv[0]))
-        options = [term.title() for term, _ in ranked if term.title() not in titles]
-        titles.append(options[0] if options else f"Discussion at {fmt_ms(group[0].start_ms)}")
+        title = _title(doc, _trigrams(text, exclude), df, len(docs), set(titles))
+        titles.append(title or f"Discussion at {fmt_ms(group[0].start_ms)}")
     return titles
 
 
@@ -101,7 +174,7 @@ def build_chapters(t: TranscriptForAI) -> list[Chapter]:
         return []
     exclude = speaker_name_tokens(t)
     starts = _chapter_starts(lines, exclude)
-    bounds = list(zip(starts, [*starts[1:], len(lines)], strict=True))
+    bounds = zip(starts, [*starts[1:], len(lines)], strict=True)
     groups = [lines[a:b] for a, b in bounds]
     titles = _titles(groups, exclude)
     return [

@@ -32,7 +32,7 @@ def rank_passages(question: str, passages: list[Passage]) -> list[tuple[float, P
         shared = query & bag
         if not shared:
             continue
-        score = sum(math.log((n + 1) / df[term]) + 1 for term in shared)
+        score = sum(math.log((n + 1) / df[term]) + 1 for term in sorted(shared))
         # Mild length normalisation: a long passage matches more by chance.
         score /= math.sqrt(1 + len(bag) / 12)
         scored.append((score, index, passage))

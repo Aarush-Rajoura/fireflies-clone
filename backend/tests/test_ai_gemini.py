@@ -74,7 +74,7 @@ def test_valid_json_is_parsed_into_summary() -> None:
     body = json.loads(request.content)
     assert body["generationConfig"]["responseMimeType"] == "application/json"
     assert "responseSchema" in body["generationConfig"]
-    assert provider.last_provider_label == "gemini"
+    assert (result.provider, result.model) == ("gemini", "gemini-test")
 
 
 def test_action_items_map_segment_to_start_ms() -> None:
@@ -108,6 +108,7 @@ def test_answer_maps_passage_citations() -> None:
     answer = provider.answer("What confuses?", passages)
     assert answer.text.startswith("Ben said")
     assert answer.citations == [Citation(2, 4000, "Three tiers confuse.")]
+    assert (answer.provider, answer.model) == ("gemini", "gemini-test")
 
 
 def test_invalid_json_raises_provider_error() -> None:
@@ -137,11 +138,26 @@ def test_server_error_retries_once_then_raises() -> None:
     assert "secret-key" not in str(info.value)
 
 
-def test_retry_recovers_from_one_rate_limit() -> None:
-    responses = iter([httpx.Response(429), httpx.Response(200, json=_gemini_body(_SUMMARY))])
-    provider, seen = _provider(lambda r: next(responses))
+def test_rate_limit_with_short_retry_after_is_retried_and_honoured() -> None:
+    responses = iter(
+        [
+            httpx.Response(429, headers={"Retry-After": "2"}),
+            httpx.Response(200, json=_gemini_body(_SUMMARY)),
+        ]
+    )
+    slept: list[float] = []
+    provider, seen = _provider(lambda r: next(responses), sleep=slept.append)
     assert provider.summarize(_T).overview
     assert len(seen) == 2
+    assert slept == [2.0]
+
+
+@pytest.mark.parametrize("headers", [{}, {"Retry-After": "30"}, {"Retry-After": "Wed, 21 Oct"}])
+def test_rate_limit_without_short_retry_after_fails_fast(headers: dict[str, str]) -> None:
+    provider, seen = _provider(lambda r: httpx.Response(429, headers=headers))
+    with pytest.raises(ProviderError):
+        provider.summarize(_T)
+    assert len(seen) == 1
 
 
 def test_client_error_is_not_retried() -> None:
@@ -151,14 +167,50 @@ def test_client_error_is_not_retried() -> None:
     assert len(seen) == 1
 
 
-def test_timeout_raises_provider_error() -> None:
+def test_timeout_is_not_retried() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("slow", request=request)
 
     provider, seen = _provider(handler)
     with pytest.raises(ProviderError):
         provider.summarize(_T)
+    assert len(seen) == 1
+
+
+class _Clock:
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+def test_retry_gets_only_the_remaining_budget() -> None:
+    clock = _Clock()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        clock.now += 10  # the first attempt burns 10s of the 25s budget
+        return httpx.Response(503)
+
+    provider, seen = _provider(handler, clock=clock)
+    with pytest.raises(ProviderError):
+        provider.summarize(_T)
     assert len(seen) == 2
+    assert seen[0].extensions["timeout"]["read"] == 20.0
+    assert seen[1].extensions["timeout"]["read"] == 15.0
+
+
+def test_no_retry_when_budget_is_spent() -> None:
+    clock = _Clock()
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        clock.now += 24.5
+        return httpx.Response(500)
+
+    provider, seen = _provider(handler, clock=clock)
+    with pytest.raises(ProviderError):
+        provider.summarize(_T)
+    assert len(seen) == 1
 
 
 def test_long_transcript_is_chunked_and_merged() -> None:
@@ -174,5 +226,24 @@ def test_long_transcript_is_chunked_and_merged() -> None:
     result = provider.summarize(_T)
     assert len(seen) == 2
     assert [e.start_ms for e in result.outline] == [0, 9000]
+    # Each chunk's notes follow its chapter.
+    assert [n.title for n in result.notes] == ["Start", "Later"]
     assert len(result.keywords) <= 6
     assert result.overview
+
+
+def test_downsampled_chapters_keep_their_notes() -> None:
+    long = TranscriptForAI(
+        meeting_title="Long",
+        lines=[TranscriptLine(i, "Ana", i * 1000, f"line {i}") for i in range(10)],
+    )
+    payload = {
+        **_SUMMARY,
+        "outline": [{"title": f"C{i}", "start_ms": i * 1000} for i in range(8)],
+        "notes": [{"title": f"C{i}", "bullets": [f"n{i}"]} for i in range(8)],
+    }
+    provider, _ = _provider(lambda r: httpx.Response(200, json=_gemini_body(payload)))
+    result = provider.summarize(long)
+    assert len(result.outline) == 6
+    assert [n.title for n in result.notes] == [e.title for e in result.outline]
+    assert sorted(b for n in result.notes for b in n.bullets) == [f"n{i}" for i in range(8)]

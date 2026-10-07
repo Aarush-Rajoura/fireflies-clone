@@ -1,15 +1,20 @@
 """AI layer: deterministic mock, fallback, cache, prompts and factory."""
 
+import dataclasses
 import json
+import os
 import re
+import subprocess
+import sys
 from dataclasses import asdict
+from pathlib import Path
 
 import pytest
 
 from app.ai.cache import CachingProvider
 from app.ai.factory import build_ai_provider
 from app.ai.fallback import FALLBACK_LABEL, FallbackProvider
-from app.ai.interfaces import AIProvider, ProviderError, provenance_label
+from app.ai.interfaces import AIProvider, ProviderError
 from app.ai.mock import MockProvider
 from app.ai.prompts import load_prompt
 from app.ai.types import (
@@ -173,6 +178,101 @@ def test_mock_qa_without_match_has_no_citations() -> None:
     assert answer.text
 
 
+_TOPICS = [
+    ["database", "migration", "schema", "postgres", "rollback", "indexes"],
+    ["candidate", "interview", "offer", "recruiter", "salary", "onsite"],
+    ["campaign", "webinar", "newsletter", "signup", "audience", "budget"],
+    ["security", "audit", "vulnerability", "penetration", "firewall", "compliance"],
+]
+_PEOPLE = ["Priya Shah", "Marcus Lee", "Dana Ortiz"]
+
+
+# A rambling opening: every line brings new words, like a real status round.
+_RAMBLE = (
+    "laptop coffee parking badge elevator printer weather traffic holiday lunch "
+    "keyboard monitor chair desk plant window heating lighting carpet kitchen fridge "
+    "microwave kettle mugs posters whiteboard markers stapler envelopes stamps courier "
+    "reception visitors umbrella bicycle shower lockers garden terrace rooftop lobby signage"
+).split()
+
+
+def _four_topics() -> TranscriptForAI:
+    """55 evenly paced lines (no pauses to lean on), 4 topics, names said aloud.
+
+    The first topic's vocabulary churns line to line while the others repeat
+    themselves, so a purely "where does the vocabulary change most" picker
+    would pile every boundary into the opening.
+    """
+    lines: list[TranscriptLine] = []
+    sizes = [14, 14, 14, 13]
+    for t_index, (topic, size) in enumerate(zip(_TOPICS, sizes, strict=True)):
+        for k in range(size):
+            i = len(lines)
+            if t_index == 0:
+                a, b = _RAMBLE[3 * k], _RAMBLE[3 * k + 1]
+                c = topic[k % len(topic)]
+            else:
+                a, b, c = (topic[(k + j) % len(topic)] for j in range(3))
+            other = _PEOPLE[(i + 1) % 3].split()[0]
+            text = f"{other}, the {a} {b} work is moving, and the {c} question is open."
+            lines.append(TranscriptLine(i, _PEOPLE[i % 3], i * 8000, text))
+    return TranscriptForAI(meeting_title="Weekly sync", lines=lines)
+
+
+def _chapter_sizes(t: TranscriptForAI, starts: list[int]) -> list[int]:
+    line_starts = [line.start_ms for line in t.lines]
+    idx = [line_starts.index(ms) for ms in starts]
+    return [b - a for a, b in zip(idx, [*idx[1:], len(line_starts)], strict=True)]
+
+
+def test_mock_outline_spreads_chapters_over_a_long_meeting() -> None:
+    t = _four_topics()
+    outline = MockProvider().summarize(t).outline
+    sizes = _chapter_sizes(t, [e.start_ms for e in outline])
+    assert len(outline) >= 4
+    assert max(sizes) <= len(t.lines) / 2
+    assert min(sizes) >= 5
+
+
+def test_mock_titles_are_never_speaker_names() -> None:
+    names = {p.lower() for p in _PEOPLE} | {p.split()[0].lower() for p in _PEOPLE}
+    for t in (_four_topics(), _sample()):
+        titles = [e.title.lower() for e in MockProvider().summarize(t).outline]
+        assert not any(word in names for title in titles for word in [title, *title.split()])
+
+
+def test_mock_is_stable_across_hash_seeds() -> None:
+    # Set iteration order changes with PYTHONHASHSEED; output must not.
+    code = (
+        "import json,sys; from dataclasses import asdict; sys.path.insert(0,'tests');"
+        "from test_ai import _four_topics, _sample; from app.ai.mock import MockProvider;"
+        "m=MockProvider(); print(json.dumps([asdict(m.summarize(_four_topics())),"
+        "asdict(m.summarize(_sample()))]))"
+    )
+    backend = Path(__file__).resolve().parents[1]
+    outputs = {
+        subprocess.run(
+            [sys.executable, "-c", code],
+            cwd=backend,
+            env={**os.environ, "PYTHONHASHSEED": seed},
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+        for seed in ("1", "2", "3")
+    }
+    assert len(outputs) == 1
+
+
+def test_mock_splits_two_commitments_in_one_sentence() -> None:
+    line = "I'll deploy the rate limits by Monday, and I'll run a load test the day after."
+    t = TranscriptForAI("Ops", [TranscriptLine(1, "Arjun Rao", 5000, line)])
+    assert MockProvider().extract_action_items(t) == [
+        ActionItemDraft("Deploy the rate limits by Monday", "Arjun Rao", 5000),
+        ActionItemDraft("Run a load test the day after", "Arjun Rao", 5000),
+    ]
+
+
 # ── Fallback ────────────────────────────────────────────────────────────────
 
 
@@ -191,34 +291,49 @@ class _Failing:
 
 
 class _Counting(MockProvider):
+    """The mock, counting calls and stamping its own name like a real provider."""
+
     def __init__(self, name: str = "mock") -> None:
         self.name = name
         self.calls = 0
 
     def summarize(self, t: TranscriptForAI) -> SummaryResult:
         self.calls += 1
-        return super().summarize(t)
+        return dataclasses.replace(super().summarize(t), provider=self.name)
+
+    def extract_action_items(self, t: TranscriptForAI) -> list[ActionItemDraft]:
+        self.calls += 1
+        return super().extract_action_items(t)
 
     def answer(self, question: str, passages: list[Passage]) -> Answer:
         self.calls += 1
-        return super().answer(question, passages)
+        return dataclasses.replace(super().answer(question, passages), provider=self.name)
+
+
+def test_mock_results_are_stamped_mock() -> None:
+    assert MockProvider().summarize(_sample()).provider == "mock"
+    assert MockProvider().answer("pricing?", []).provider == "mock"
+    assert MockProvider().summarize(_sample()).model is None
 
 
 def test_fallback_uses_backup_on_provider_error() -> None:
     provider: AIProvider = FallbackProvider(_Failing(), MockProvider())
     result = provider.summarize(_sample())
-    assert result == MockProvider().summarize(_sample())
-    assert provenance_label(provider) == FALLBACK_LABEL == "mock (llm fallback)"
+    expected = MockProvider().summarize(_sample())
+    assert result == dataclasses.replace(expected, provider=FALLBACK_LABEL, model=None)
+    assert result.provider == FALLBACK_LABEL == "mock (llm fallback)"
     assert provider.extract_action_items(_sample()) == MockProvider().extract_action_items(
         _sample()
     )
-    assert provider.answer("pricing?", []) == MockProvider().answer("pricing?", [])
+    answer = provider.answer("pricing?", [])
+    assert answer.provider == FALLBACK_LABEL and answer.model is None
+    assert answer.text == MockProvider().answer("pricing?", []).text
 
 
-def test_fallback_keeps_primary_label_on_success() -> None:
+def test_fallback_keeps_primary_result_on_success() -> None:
     provider = FallbackProvider(_Counting(name="gemini"), MockProvider())
-    provider.summarize(_sample())
-    assert provider.last_provider_label == "gemini"
+    assert provider.summarize(_sample()).provider == "gemini"
+    assert provider.answer("pricing?", _passages(_sample())).provider == "gemini"
     assert provider.name == "gemini"
 
 
@@ -240,7 +355,7 @@ def test_cache_serves_identical_call_without_hitting_inner() -> None:
     first = cached.summarize(_sample())
     second = cached.summarize(_sample())
     assert first == second and inner.calls == 1
-    assert provenance_label(cached) == "gemini"
+    assert second.provider == "gemini"
     cached.answer("pricing?", _passages(_sample()))
     cached.answer("pricing?", _passages(_sample()))
     assert inner.calls == 2
@@ -260,10 +375,22 @@ def test_cache_key_changes_with_transcript() -> None:
 def test_cache_does_not_store_fallback_results() -> None:
     backup = _Counting()
     cached = CachingProvider(FallbackProvider(_Failing(), backup))
-    cached.summarize(_sample())
-    assert provenance_label(cached) == FALLBACK_LABEL
-    cached.summarize(_sample())
+    assert cached.summarize(_sample()).provider == FALLBACK_LABEL
+    assert cached.summarize(_sample()).provider == FALLBACK_LABEL
     assert backup.calls == 2
+    cached.answer("pricing?", [])
+    cached.answer("pricing?", [])
+    assert backup.calls == 4
+
+
+def test_cache_passes_action_items_through() -> None:
+    # A list of drafts carries no provenance, so a fallback list could not be
+    # told apart from a real one; they are deliberately never cached.
+    inner = _Counting()
+    cached = CachingProvider(inner)
+    cached.extract_action_items(_sample())
+    cached.extract_action_items(_sample())
+    assert inner.calls == 2
 
 
 def test_cache_hit_is_isolated_from_caller_mutation() -> None:

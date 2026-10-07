@@ -41,7 +41,7 @@ def _score_sentences(
             n_words = len(words(sentence))
             if n_words < _MIN_SENTENCE_WORDS or sentence.endswith("?"):
                 continue
-            topic = set(content_words(sentence, exclude))
+            topic = sorted(set(content_words(sentence, exclude)))
             score = sum(weights.get(w, 0.0) for w in topic) / math.sqrt(n_words)
             order = (line.start_ms, line.segment_id, k)
             scored.append(_Scored(order, line.speaker, sentence, score))

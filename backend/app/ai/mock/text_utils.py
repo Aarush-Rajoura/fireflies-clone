@@ -30,7 +30,7 @@ STOPWORDS = frozenset(
     pretty quick quickly little bit around across roughly exactly enough though since whether
     every another someone anyone something anything everything nothing people folks guys part
     point question idea without safe sense honest fine plan plans case saw seen write new
-    confirm
+    confirm per goes going via
     four five six seven eight nine ten twenty thirty forty fifty hundred thousand million
     percent second seconds minute minutes hour hours day days week weeks month months year years
     yesterday tomorrow tonight morning afternoon monday tuesday wednesday thursday friday
@@ -47,8 +47,12 @@ def words(text: str) -> list[str]:
     return _WORD.findall(text.lower().replace("’", "'"))
 
 
+def is_content(word: str, exclude: frozenset[str] = frozenset()) -> bool:
+    return word not in STOPWORDS and word not in exclude and len(word) > 2
+
+
 def content_words(text: str, exclude: frozenset[str] = frozenset()) -> list[str]:
-    return [w for w in words(text) if w not in STOPWORDS and w not in exclude and len(w) > 2]
+    return [w for w in words(text) if is_content(w, exclude)]
 
 
 def stem(word: str) -> str:

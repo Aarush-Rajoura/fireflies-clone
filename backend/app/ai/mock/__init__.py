@@ -14,10 +14,6 @@ class MockProvider:
     name: str = MOCK_LABEL
     model: str | None = None
 
-    @property
-    def last_provider_label(self) -> str:
-        return self.name
-
     def summarize(self, t: TranscriptForAI) -> SummaryResult:
         return summary.summarize(t)
 

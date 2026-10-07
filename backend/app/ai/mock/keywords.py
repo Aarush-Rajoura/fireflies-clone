@@ -10,7 +10,7 @@ import math
 from collections import Counter
 from collections.abc import Sequence
 
-from app.ai.mock.text_utils import content_words
+from app.ai.mock.text_utils import is_content, sentences, words
 from app.ai.types import KeywordResult
 
 MAX_KEYWORDS = 6
@@ -20,10 +20,19 @@ _BIGRAM_BOOST = 1.5
 
 
 def terms(text: str, exclude: frozenset[str] = frozenset()) -> list[str]:
-    """Content unigrams followed by adjacent-pair bigrams."""
-    tokens = content_words(text, exclude)
-    pairs = zip(tokens, tokens[1:], strict=False)
-    return tokens + [f"{a} {b}" for a, b in pairs if a != b]  # "hire hire" is not a phrase
+    """Content unigrams, then bigrams of content words that are adjacent in a sentence.
+
+    Adjacent in the original text (no stopword between), so a bigram is a
+    phrase someone actually said - "replay tool", not "send deck".
+    """
+    unigrams: list[str] = []
+    bigrams: list[str] = []
+    for sentence in sentences(text):
+        tokens = [w if is_content(w, exclude) else None for w in words(sentence)]
+        unigrams += [w for w in tokens if w]
+        pairs = zip(tokens, tokens[1:], strict=False)
+        bigrams += [f"{a} {b}" for a, b in pairs if a and b and a != b]
+    return unigrams + bigrams
 
 
 def tfidf(tf: Counter[str], df: Counter[str], n_docs: int) -> dict[str, float]:
