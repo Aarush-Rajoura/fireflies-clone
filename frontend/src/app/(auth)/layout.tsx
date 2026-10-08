@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import { AppProviders } from "@/components/ui";
+import { ThemeProvider } from "@/features/theme";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return <AppProviders>{children}</AppProviders>;
+  return <ThemeProvider>{children}</ThemeProvider>;
 }

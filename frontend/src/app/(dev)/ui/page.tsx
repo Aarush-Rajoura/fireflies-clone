@@ -14,12 +14,12 @@ export default function UiGalleryPage() {
   return (
     <main className="grid min-h-screen grid-cols-1 xl:grid-cols-2">
       {/* Each column is its own ThemeRoot so its overlays portal into the matching theme. */}
-      <ThemeRoot defaultTheme="dark">
+      <ThemeRoot theme="dark">
         <section aria-label="Dark theme">
           <Gallery theme="Dark" />
         </section>
       </ThemeRoot>
-      <ThemeRoot defaultTheme="light">
+      <ThemeRoot theme="light">
         <section aria-label="Light theme">
           <Gallery theme="Light" />
         </section>

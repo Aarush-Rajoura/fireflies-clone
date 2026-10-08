@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-import { Avatar, SegmentedControl, Skeleton, SoonBadge, useTheme } from "@/components/ui";
+import { Avatar, SegmentedControl, Skeleton } from "@/components/ui";
+import { useTheme } from "@/features/theme";
 import { useMe } from "@/features/user";
 
 type Tab = "profile" | "appearance";
@@ -26,26 +27,27 @@ function ProfileTab() {
   );
 }
 
+const THEME_OPTIONS = [
+  { value: "dark", label: "Dark" },
+  { value: "light", label: "Light" },
+  { value: "system", label: "System" },
+] as const;
+
 function AppearanceTab() {
-  const { theme } = useTheme();
+  const { preference, setPreference } = useTheme();
   return (
     <div className="flex flex-col gap-3 rounded-card border border-subtle bg-surface-1 p-5">
-      <div className="flex items-center gap-2">
-        <p className="text-body-strong text-primary">Theme</p>
-        <SoonBadge />
-      </div>
-      {/* Light is listed but disabled until the light theme is wired. */}
+      <p className="text-body-strong text-primary">Theme</p>
       <SegmentedControl
         label="Theme"
-        value={theme}
-        onChange={() => undefined}
-        options={[
-          { value: "dark", label: "Dark" },
-          { value: "light", label: "Light", disabled: true },
-        ]}
+        value={preference}
+        onChange={setPreference}
+        options={THEME_OPTIONS}
         className="self-start"
       />
-      <p className="text-meta text-muted">Dark is the default. A light theme is coming soon.</p>
+      <p className="text-meta text-muted">
+        Dark is the default. System follows your operating system&apos;s light or dark setting.
+      </p>
     </div>
   );
 }

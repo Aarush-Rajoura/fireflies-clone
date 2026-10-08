@@ -1,11 +1,12 @@
 import Link from "next/link";
 
-import { AppProviders, EmptyState } from "@/components/ui";
+import { EmptyState } from "@/components/ui";
+import { ThemeProvider } from "@/features/theme";
 
 /** Unmatched URLs anywhere on the site: themed like the app, with a way back. */
 export default function NotFound() {
   return (
-    <AppProviders>
+    <ThemeProvider>
       <EmptyState
         title="Page not found"
         description="This page doesn't exist or has moved."
@@ -16,6 +17,6 @@ export default function NotFound() {
         }
         className="py-32"
       />
-    </AppProviders>
+    </ThemeProvider>
   );
 }

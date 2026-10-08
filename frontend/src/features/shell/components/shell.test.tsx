@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AppProviders } from "@/components/ui";
+import { ThemeProvider } from "@/features/theme";
 
 import { NAV_FOOTER, NAV_GROUPS } from "../nav";
 
@@ -18,7 +18,7 @@ vi.mock("@/features/user", () => ({
   }),
 }));
 
-const renderInApp = (ui: React.ReactElement) => render(<AppProviders>{ui}</AppProviders>);
+const renderInApp = (ui: React.ReactElement) => render(<ThemeProvider>{ui}</ThemeProvider>);
 
 describe("IconRail", () => {
   beforeEach(() => window.localStorage.clear());
@@ -65,5 +65,21 @@ describe("ProfileMenu", () => {
       expect(screen.getByText(row)).toBeTruthy();
     }
     expect(screen.getByText("Chrome Extension")).toBeTruthy();
+  });
+
+  it("cycles the app theme Dark → Light → System from the Theme row", () => {
+    window.localStorage.clear();
+    const { container } = renderInApp(<ProfileMenu />);
+    const root = container.querySelector(".ff-app");
+    fireEvent.click(screen.getByRole("button", { name: "Open profile menu" }));
+
+    const row = () => screen.getByRole("button", { name: /^Theme:/ });
+    expect(row().textContent).toContain("dark");
+    fireEvent.click(row());
+    expect(row().textContent).toContain("light");
+    expect(root?.getAttribute("data-theme")).toBe("light");
+    fireEvent.click(row());
+    expect(row().textContent).toContain("system");
+    expect(window.localStorage.getItem("ff-theme")).toBe("system");
   });
 });

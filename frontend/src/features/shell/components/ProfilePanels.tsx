@@ -4,7 +4,8 @@ import { ArrowRight, Globe, Smartphone, Zap } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Badge, Button, toast, useTheme } from "@/components/ui";
+import { Badge, Button, toast } from "@/components/ui";
+import { nextPreference, useTheme } from "@/features/theme";
 import { cn } from "@/lib/utils/cn";
 
 import { FREE_MEETINGS, STORAGE_MINUTES as STORAGE } from "../plan";
@@ -42,7 +43,7 @@ export function AccountPanel({
   email: string;
   onNavigate: () => void;
 }) {
-  const { theme } = useTheme();
+  const { preference, setPreference } = useTheme();
   return (
     <div className="w-[320px] overflow-hidden rounded-panel border border-subtle bg-surface-2">
       <Section>
@@ -91,16 +92,16 @@ export function AccountPanel({
         <button type="button" className={rowClass} onClick={soon("Platform rules")}>
           Platform Rules
         </button>
-        {/* Switching is wired with the light theme; until then the row reports the current theme. */}
+        {/* Cycles Dark → Light → System; Settings → Appearance has the explicit choice. */}
         <button
           type="button"
-          aria-label={`Theme: ${theme} (Light theme coming soon)`}
+          aria-label={`Theme: ${preference}. Switch to ${nextPreference(preference)}`}
           className={rowClass}
-          onClick={soon("Light theme")}
+          onClick={() => setPreference(nextPreference(preference))}
         >
           <span>Theme</span>
           <Badge tone="accent">Beta</Badge>
-          <span className="ml-auto capitalize text-muted">{theme}</span>
+          <span className="ml-auto capitalize text-muted">{preference}</span>
         </button>
         <Link href="/" className={rowClass} onClick={onNavigate}>
           Logout
