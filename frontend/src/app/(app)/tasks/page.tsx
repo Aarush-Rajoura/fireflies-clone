@@ -1,7 +1,14 @@
-import { PagePlaceholder } from "@/features/shell";
+import { Suspense } from "react";
+
+import { TasksView } from "@/features/tasks";
 
 export const metadata = { title: "Tasks · Fireflies.ai Clone" };
 
+/* The view reads its scope and filters from the URL, which only exists in the browser; Suspense marks that boundary. */
 export default function TasksPage() {
-  return <PagePlaceholder title="Tasks" message="All your meeting action items in one place." />;
+  return (
+    <Suspense>
+      <TasksView />
+    </Suspense>
+  );
 }

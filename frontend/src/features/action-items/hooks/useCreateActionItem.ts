@@ -15,6 +15,9 @@ export function useCreateActionItem(meetingId: number) {
     onSuccess: (item) => {
       client.setQueryData<ActionItem[]>(key, (old) => (old ? [...old, item] : [item]));
     },
-    onSettled: () => client.invalidateQueries({ queryKey: key }),
+    onSettled: () => {
+      void client.invalidateQueries({ queryKey: qk.tasks.all });
+      return client.invalidateQueries({ queryKey: key });
+    },
   });
 }

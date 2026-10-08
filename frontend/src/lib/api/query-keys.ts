@@ -1,4 +1,9 @@
-import type { IntegrationListParams, MeetingListParams, SearchParams } from "./types";
+import type {
+  IntegrationListParams,
+  MeetingListParams,
+  SearchParams,
+  TaskListParams,
+} from "./types";
 
 /*
  * Every TanStack Query key in the app comes from here, so invalidation can
@@ -21,6 +26,12 @@ export const qk = {
   comments: (id: number) => ["meetings", id, "comments"] as const,
   highlights: (id: number) => ["meetings", id, "highlights"] as const,
   soundbites: (id: number) => ["meetings", id, "soundbites"] as const,
+  // Spans meetings, so meeting-scoped edits invalidate it explicitly.
+  tasks: {
+    all: ["tasks"] as const,
+    lists: () => ["tasks", "list"] as const,
+    list: (params: TaskListParams = {}) => ["tasks", "list", params] as const,
+  },
   channels: () => ["channels"] as const,
   tags: () => ["tags"] as const,
   users: () => ["users"] as const,

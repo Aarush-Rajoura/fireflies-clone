@@ -12,5 +12,7 @@ export const actionItemMutationScope = (meetingId: number) => ["action-items", m
  */
 export function settleActionItems(client: QueryClient, meetingId: number) {
   if (client.isMutating({ mutationKey: actionItemMutationScope(meetingId) }) > 1) return;
+  // The Tasks page lists these same rows across meetings.
+  void client.invalidateQueries({ queryKey: qk.tasks.all });
   return client.invalidateQueries({ queryKey: qk.actionItems(meetingId) });
 }

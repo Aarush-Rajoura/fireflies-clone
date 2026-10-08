@@ -42,6 +42,9 @@ export type ActionItem = Schemas["ActionItemRead"];
 export type ActionItemCreate = Schemas["ActionItemCreate"];
 export type ActionItemUpdate = Schemas["ActionItemUpdate"];
 export type ActionItemStatus = Schemas["ActionItemStatus"];
+export type TaskCreate = Schemas["TaskCreate"];
+/** Query parameters of GET /api/v1/action-items (the cross-meeting task list). */
+export type TaskListParams = NonNullable<operations["list_tasks"]["parameters"]["query"]>;
 
 // Not `Comment`: that name is the DOM comment-node type.
 export type MeetingComment = Schemas["CommentRead"];
