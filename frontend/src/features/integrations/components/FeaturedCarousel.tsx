@@ -1,9 +1,19 @@
 "use client";
 
-import { ArrowRight, Check, Plus, Sheet, Sparkles, Workflow, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Sheet,
+  Sparkles,
+  Workflow,
+  type LucideIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
-import { Badge, Button, PagerDots } from "@/components/ui";
+import { Badge, Button, IconButton, PagerDots } from "@/components/ui";
 import type { Integration, IntegrationCategory } from "@/lib/api";
 
 import { useCarousel } from "../hooks/useCarousel";
@@ -122,12 +132,26 @@ export function FeaturedCarousel({ byKey, onConnect, onBrowse }: FeaturedCarouse
           </div>
           <div className="hidden justify-end md:flex">{slide.mock}</div>
         </div>
-        <PagerDots
-          count={SLIDES.length}
-          index={index}
-          onSelect={goTo}
-          itemLabel={(i) => `Show featured integration ${i + 1}: ${SLIDES[i]?.title ?? ""}`}
-        />
+        <div className="flex items-center justify-center gap-2">
+          <IconButton
+            size="sm"
+            label="Previous featured integration"
+            icon={<ChevronLeft strokeWidth={1.75} />}
+            onClick={() => goTo(index - 1)}
+          />
+          <PagerDots
+            count={SLIDES.length}
+            index={index}
+            onSelect={goTo}
+            itemLabel={(i) => `Show featured integration ${i + 1}: ${SLIDES[i]?.title ?? ""}`}
+          />
+          <IconButton
+            size="sm"
+            label="Next featured integration"
+            icon={<ChevronRight strokeWidth={1.75} />}
+            onClick={() => goTo(index + 1)}
+          />
+        </div>
       </div>
     </section>
   );
