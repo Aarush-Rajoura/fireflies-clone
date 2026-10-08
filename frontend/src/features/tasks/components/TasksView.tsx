@@ -20,7 +20,7 @@ export function TasksView() {
   const tasks = useTasks(url.query);
   const [creating, setCreating] = useState(false);
   const openNew = () => setCreating(true);
-  // The reference's empty view has no filter row; keep it once filters are in play.
+  // Fireflies' empty view has no filter row; keep it once filters are in play.
   const showFilters = url.filtered || (tasks.data?.length ?? 0) > 0;
 
   return (

@@ -6,7 +6,7 @@ import { firstName, formatHomeDate } from "./format";
 import { parseHomeTab } from "./tabs";
 
 describe("formatHomeDate", () => {
-  it("matches the reference format", () => {
+  it("matches the Fireflies date format", () => {
     expect(formatHomeDate("2024-08-08T15:52:00Z", "UTC")).toBe("Thu, Aug 8 2024, 3:52 PM");
   });
 });

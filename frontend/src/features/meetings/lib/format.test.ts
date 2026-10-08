@@ -24,7 +24,7 @@ describe("formatDuration", () => {
 });
 
 describe("formatMeetingMeta", () => {
-  it("reads like the reference: date · time · duration · host", () => {
+  it("reads like Fireflies: date · time · duration · host", () => {
     const meta = formatMeetingMeta(
       { started_at: "2026-10-07T09:00:00Z", duration_ms: 32 * MIN, host: { name: "Ada Lovelace" } },
       "UTC",

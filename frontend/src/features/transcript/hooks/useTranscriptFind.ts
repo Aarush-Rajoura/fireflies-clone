@@ -9,8 +9,8 @@ import { findMatches, matchesBySegment, stepMatch, type Match } from "../lib/fin
  *
  * It never touches the player. `next`/`prev` RETURN the match they land on, and
  * the caller seeks to it inside the same event handler. Seeking from an effect
- * that watches the current match is what froze playback in the reference app:
- * every re-render that recreated the match re-seeked the player.
+ * that watches the current match would freeze playback: every re-render that
+ * recreated the match would re-seek the player.
  */
 export function useTranscriptFind(segments: readonly { text: string }[]) {
   const [query, setQuery] = useState("");

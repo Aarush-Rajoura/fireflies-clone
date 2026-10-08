@@ -6,8 +6,8 @@
 
    Everything is scoped to `[data-theme]`, which only the app's ThemeRoot sets,
    so the marketing site (its own `.mk-root` tokens) never sees these values.
-   Dark is the default theme. Dark values marked [S] were pixel-sampled from
-   design-ref/08..14; [D] are derived where no screenshot shows the surface. */
+   Dark is the default theme. Dark values marked [S] were sampled from the
+   Fireflies web app; [D] are derived where the app shows no such surface. */
 
 /* Tailwind's stock preflight colours. The theme config replaces the palette,
    so un-themed pages fall back to these and look exactly as they did before. */
@@ -35,7 +35,7 @@
   --ff-ink-200: #d1d1d5; /* [S] row titles, active tab label             */
   --ff-ink-50: #fafafb; /* [S] headings                                  */
 
-  /* Light neutrals (reference design.md) */
+  /* Light neutrals (Fireflies' light theme) */
   --ff-paper-0: #ffffff;
   --ff-paper-25: #fcfcfd;
   --ff-paper-50: #f9fafb;
@@ -321,7 +321,7 @@
   --ff-shadow-focus: 0 0 0 2px rgba(131, 117, 232, 0.6);
 }
 
-/* ── Light semantics: values from the reference design.md ─────────────────── */
+/* ── Light semantics: values from Fireflies' light theme ──────────────────── */
 [data-theme="light"] {
   color-scheme: light;
 

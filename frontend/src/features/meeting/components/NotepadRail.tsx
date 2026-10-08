@@ -34,7 +34,7 @@ function Counted({ count, children }: { count: number; children: ReactNode }) {
   );
 }
 
-/** The slim icon rail on the summary's left edge (design-ref 03), toggling the flyouts. */
+/** The slim icon rail on the summary's left edge, toggling the flyouts. */
 export function NotepadRail({
   open,
   onToggle,

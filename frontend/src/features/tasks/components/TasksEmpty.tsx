@@ -8,7 +8,7 @@ export type TasksEmptyProps = {
   onClearFilters?: () => void;
 };
 
-/** The empty Tasks view, worded exactly as in the reference. */
+/** The empty Tasks view, worded as in Fireflies. */
 export function TasksEmpty({ onNew, onClearFilters }: TasksEmptyProps) {
   return (
     <EmptyState

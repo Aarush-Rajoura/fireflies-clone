@@ -12,7 +12,7 @@ export type MeetingsEmptyProps = {
   onClearFilters: () => void;
 };
 
-/** The empty library, as in the reference, worded for the view that is empty. */
+/** The empty library, as in Fireflies, worded for the view that is empty. */
 export function MeetingsEmpty({ copy, onClearFilters }: MeetingsEmptyProps) {
   const capture = copy.kind === "first-run" || copy.kind === "hosted" || copy.kind === "uploads";
 

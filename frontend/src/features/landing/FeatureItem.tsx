@@ -1,7 +1,7 @@
 import type { Feature } from "./content";
 import { Icon } from "./icons";
 
-/** Plain line icon + title + body, as in the reference feature grids. */
+/** Plain line icon + title + body, as in Fireflies' feature grids. */
 export function FeatureItem({ feature, dark = false }: { feature: Feature; dark?: boolean }) {
   return (
     <div>

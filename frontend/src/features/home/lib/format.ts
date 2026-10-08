@@ -1,4 +1,4 @@
-/* Display helpers for Home. A fixed locale keeps the reference's "Thu, Aug 8 2024, 3:52 PM". */
+/* Display helpers for Home. A fixed locale keeps Fireflies' "Thu, Aug 8 2024, 3:52 PM". */
 
 const LOCALE = "en-US";
 

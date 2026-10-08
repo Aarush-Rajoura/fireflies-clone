@@ -69,7 +69,7 @@ Short records of choices that shape the codebase. Add a new ADR when a decision 
 
 ## ADR-009: Dark-default theme (frontend)
 
-- **Context:** the current Fireflies app (per the reference screenshots) is dark by default, and dark mode is a bonus item.
+- **Context:** the current Fireflies app is dark by default, and dark mode is a bonus item.
 - **Decision:** design tokens are CSS variables with the dark palette as the default and a light theme as the alternative, toggled from the profile menu.
 - **Why:** matching the real product's look is graded; building on tokens from day one makes the toggle a variable swap rather than a restyle.
 - **Consequences:** every component must use tokens, never raw colours. Status: built; the toggle (dark, light, system) is in Settings and the profile menu.

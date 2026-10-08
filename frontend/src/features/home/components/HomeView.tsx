@@ -22,7 +22,7 @@ export function HomeView() {
   const close = (open: boolean) => !open && setFlow(null);
 
   return (
-    // Cool and warm washes at the top corners, as in the reference.
+    // Cool and warm washes at the top corners, as on Fireflies' Home.
     <div className="min-h-full bg-[radial-gradient(ellipse_70%_55%_at_0%_0%,var(--ff-glow-cool),transparent),radial-gradient(ellipse_45%_35%_at_100%_0%,var(--ff-glow-warm),transparent)]">
       <div className="mx-auto flex w-full max-w-[1056px] flex-col gap-14 px-4 pb-16 pt-10 sm:px-6 md:pt-20">
         <WelcomeBanner />

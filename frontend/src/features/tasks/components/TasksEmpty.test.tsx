@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { TasksEmpty } from "./TasksEmpty";
 
 describe("TasksEmpty", () => {
-  it("shows the reference copy and opens a new task", () => {
+  it("shows the empty-state copy and opens a new task", () => {
     const onNew = vi.fn();
     render(<TasksEmpty onNew={onNew} />);
     expect(screen.getByText("All your meeting tasks in one place")).toBeTruthy();

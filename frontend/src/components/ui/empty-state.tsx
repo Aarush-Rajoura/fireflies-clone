@@ -30,7 +30,7 @@ export function EmptyState({
     >
       {illustration && <div className="mb-10 w-full">{illustration}</div>}
       {icon && <div className="mb-4 text-secondary [&_svg]:size-8">{icon}</div>}
-      {/* The two screenshot variants differ in emphasis: illustrated is bold and bright, icon-led is quieter. */}
+      {/* Fireflies' two empty-state styles differ in emphasis: illustrated is bold and bright, icon-led is quieter. */}
       <h2 className={cn("text-h3", illustration ? "text-strong" : "font-medium text-secondary")}>
         {title}
       </h2>

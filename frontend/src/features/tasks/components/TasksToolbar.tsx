@@ -36,7 +36,7 @@ export type TasksToolbarProps = {
   onChange: (patch: Partial<TasksParams>) => void;
 };
 
-/** "My Tasks | All Tasks" and the feedback link, as in the reference. */
+/** "My Tasks | All Tasks" and the feedback link, as in Fireflies. */
 export function TasksToolbar({ params, onChange }: TasksToolbarProps) {
   const soon = useComingSoon();
   return (

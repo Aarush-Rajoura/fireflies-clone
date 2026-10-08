@@ -1,6 +1,6 @@
 /*
  * Display formatting for meeting rows. A fixed locale keeps the meta line
- * identical to the reference ("Oct 7 · 9:00 AM · 32 min") and tests stable;
+ * identical to Fireflies ("Oct 7 · 9:00 AM · 32 min") and tests stable;
  * the time zone defaults to the viewer's, injectable for tests.
  */
 

@@ -26,7 +26,7 @@ function oneOf<T extends string>(raw: string | null, allowed: readonly T[]): T |
 export function parseTasksParams(search: URLSearchParams): TasksParams {
   const q = search.get("q")?.trim();
   return {
-    // "My Tasks" first, as in the reference.
+    // "My Tasks" first, as in Fireflies.
     scope: oneOf(search.get("scope"), SCOPES) ?? DEFAULT_PARAMS.scope,
     status: oneOf(search.get("status"), STATUSES) ?? DEFAULT_PARAMS.status,
     due: oneOf(search.get("due"), DUE_BUCKETS),
