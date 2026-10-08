@@ -1,5 +1,5 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, createEvent, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TooltipProvider } from "@/components/ui";
@@ -103,6 +103,19 @@ describe("TranscriptPanel", () => {
     expect(document.querySelectorAll("mark")).toHaveLength(0);
   });
 
+  it("choosing a match resumes auto-follow, hiding the Jump to current pill", async () => {
+    renderPanel(transcriptOk);
+    await screen.findByText(transcript.segments[0]!.text);
+    fireEvent.wheel(screen.getByLabelText("Transcript lines"));
+    expect(screen.getByRole("button", { name: "Jump to current" })).toBeTruthy();
+
+    const input = screen.getByRole("searchbox", { name: "Search transcript" });
+    fireEvent.change(input, { target: { value: "pricing" } });
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("2 results"));
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(screen.queryByRole("button", { name: "Jump to current" })).toBeNull();
+  });
+
   it("focuses the search on Ctrl/Cmd+F from inside the panel", async () => {
     renderPanel(transcriptOk);
     await screen.findByText(transcript.segments[0]!.text);
@@ -110,6 +123,19 @@ describe("TranscriptPanel", () => {
     list.focus();
     fireEvent.keyDown(list, { key: "f", ctrlKey: true });
     expect(document.activeElement).toBe(screen.getByRole("searchbox", { name: "Search transcript" }));
+  });
+
+  it("leaves Ctrl/Cmd+F alone inside the portalled rename dialog", async () => {
+    renderPanel(transcriptOk);
+    await screen.findByText(transcript.segments[0]!.text);
+    fireEvent.keyDown(screen.getAllByRole("button", { name: "Janice" })[0]!, { key: "Enter" });
+    fireEvent.click(await screen.findByRole("menuitem", { name: "Rename speaker" }));
+    const field = within(await screen.findByRole("dialog")).getByLabelText("Speaker name");
+    field.focus();
+    const event = createEvent.keyDown(field, { key: "f", ctrlKey: true });
+    fireEvent(field, event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.activeElement).toBe(field);
   });
 
   it("renames a speaker optimistically and rolls back with a toast on failure", async () => {

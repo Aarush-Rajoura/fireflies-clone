@@ -56,7 +56,8 @@ export const SegmentRow = memo(function SegmentRow({
       aria-current={isActive ? "true" : undefined}
       onClick={onClick}
       className={cn(
-        "group relative cursor-pointer border-l-[3px] py-1 pl-3 pr-4 transition-colors duration-fast",
+        // Off-screen rows skip layout/paint; the intrinsic size keeps the scrollbar honest.
+        "group relative cursor-pointer border-l-[3px] py-1 pl-3 pr-4 transition-colors duration-fast [contain-intrinsic-size:auto_64px] [content-visibility:auto]",
         showHeader && "mt-3 pt-2",
         isActive ? "border-accent bg-accent-subtle" : "border-transparent hover:bg-surface-hover",
       )}

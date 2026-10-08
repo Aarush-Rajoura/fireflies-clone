@@ -14,7 +14,7 @@ import type { Match } from "../lib/find-matches";
 import { scrollRowIntoView } from "../lib/scroll";
 import { FindBar } from "./FindBar";
 import { RenameSpeakerModal } from "./RenameSpeakerModal";
-import { TranscriptList } from "./TranscriptList";
+import { TranscriptList, type TranscriptListHandle } from "./TranscriptList";
 
 export type TranscriptPanelProps = { meetingId: number };
 
@@ -83,17 +83,21 @@ function LoadedTranscript({
   const rename = useRenameSpeaker(meetingId);
   const [renamingId, setRenamingId] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const listHandle = useRef<TranscriptListHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Seek exactly once, here in the event handler that chose the match.
   const goTo = (match: Match | undefined) => {
     if (!match) return;
     const segment = segments[match.segmentIndex];
+    listHandle.current?.followFrom(match.segmentIndex);
     if (segment) seek(segment.start_ms);
     scrollRowIntoView(listRef.current, match.segmentIndex);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    // The rename modal is portalled: its keys bubble here through React but are not "in the panel".
+    if (!e.currentTarget.contains(e.target as Node)) return;
     if (e.key.toLowerCase() === "f" && (e.ctrlKey || e.metaKey) && !e.altKey) {
       e.preventDefault();
       inputRef.current?.focus();
@@ -120,6 +124,7 @@ function LoadedTranscript({
         />
       </div>
       <TranscriptList
+        handleRef={listHandle}
         segments={segments}
         speakers={speakers}
         scrollRef={listRef}

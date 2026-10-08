@@ -52,6 +52,13 @@ describe("findMatches", () => {
     expect(covered(seg("Señor José y Jose"), "jose")).toEqual(["José", "Jose"]);
   });
 
+  it("folds ß and compatibility forms on both sides", () => {
+    expect(covered(seg("Die Straße ist lang"), "strasse")).toEqual(["Straße"]);
+    expect(covered(seg("Die Strasse ist lang"), "Straße")).toEqual(["Strasse"]);
+    expect(covered(seg("Open the ﬁle now"), "file")).toEqual(["ﬁle"]);
+    expect(covered(seg("Open the file now"), "ﬁle")).toEqual(["file"]);
+  });
+
   it("counts non-overlapping matches", () => {
     expect(findMatches(seg("aaaa"), "aa")).toHaveLength(2);
   });

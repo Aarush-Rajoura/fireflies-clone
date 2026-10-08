@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
-import { isRowVisible, rowElement, scrollRowIntoView } from "../lib/scroll";
+import { isNearEdge, isRowVisible, rowElement, scrollRowIntoView } from "../lib/scroll";
 
 const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End"]);
 
@@ -20,6 +20,11 @@ type Options = {
  * fires those too and would switch following off. Once the user scrolls away,
  * following pauses until they press "Jump to current" or click a line.
  *
+ * It only scrolls when it has to: while playing, when the active line is
+ * off-screen or close to an edge; while paused, only when it is off-screen.
+ * A line the user just chose (click, search match) is never re-centred, so it
+ * doesn't jump away under the cursor.
+ *
  * This scrolls, it never seeks: the player stays the single source of time.
  */
 export function useFollowPlayhead({ containerRef, activeIndex, isPlaying }: Options) {
@@ -31,6 +36,8 @@ export function useFollowPlayhead({ containerRef, activeIndex, isPlaying }: Opti
     followingRef.current = value;
     setFollowingState(value);
   }, []);
+  // The line the user just chose; the follow-scroll its activation triggers is skipped.
+  const chosenRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -38,7 +45,7 @@ export function useFollowPlayhead({ containerRef, activeIndex, isPlaying }: Opti
     const stop = () => setFollowing(false);
     const onKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (target?.closest("input, textarea, button, [role='menuitem']")) return;
+      if (target?.closest("input, textarea, [role='menuitem']")) return;
       if (SCROLL_KEYS.has(e.key)) stop();
     };
     // A press on the container itself (not a row) is a scrollbar drag.
@@ -57,15 +64,16 @@ export function useFollowPlayhead({ containerRef, activeIndex, isPlaying }: Opti
     };
   }, [containerRef, setFollowing]);
 
-  // Reacts to the active line to SCROLL only. While paused it scrolls just when
-  // the line is off-screen (a deep link or chapter seek), so clicking a visible
-  // line doesn't yank the list around.
+  // Reacts to the active line to SCROLL only (deep links and chapter seeks while
+  // paused land here too, which is why off-screen rows are always brought in).
   useEffect(() => {
+    const chosen = chosenRef.current;
+    chosenRef.current = null;
     const el = containerRef.current;
-    if (!followingRef.current || activeIndex < 0 || !el) return;
+    if (chosen === activeIndex || !followingRef.current || activeIndex < 0 || !el) return;
     const row = rowElement(el, activeIndex);
     if (!row) return;
-    if (isPlaying || !isRowVisible(el, row)) {
+    if (isPlaying ? isNearEdge(el, row) : !isRowVisible(el, row)) {
       row.scrollIntoView?.({ behavior: "smooth", block: "center" });
     }
   }, [containerRef, activeIndex, isPlaying]);
@@ -75,8 +83,17 @@ export function useFollowPlayhead({ containerRef, activeIndex, isPlaying }: Opti
     scrollRowIntoView(containerRef.current, activeIndex);
   }, [containerRef, activeIndex, setFollowing]);
 
-  /** Re-enables following without scrolling, e.g. after the user clicks a line. */
-  const resume = useCallback(() => setFollowing(true), [setFollowing]);
+  /**
+   * Re-enables following after the user chose line `index` (a click, a search
+   * match), without re-centring that line: the caller already put it where the user is looking.
+   */
+  const followFrom = useCallback(
+    (index: number) => {
+      chosenRef.current = index;
+      setFollowing(true);
+    },
+    [setFollowing],
+  );
 
-  return { following, jumpToCurrent, resume };
+  return { following, jumpToCurrent, followFrom };
 }

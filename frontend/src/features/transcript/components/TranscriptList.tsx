@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, type RefObject } from "react";
+import { useCallback, useImperativeHandle, useMemo, type Ref, type RefObject } from "react";
 
 import type { HighlightRange } from "@/components/ui";
 import { usePlayerClockSelector, usePlayerControls } from "@/features/player";
@@ -24,7 +24,13 @@ const UNKNOWN_SPEAKER: Speaker = {
   participant_id: null,
 };
 
+export type TranscriptListHandle = {
+  /** The user chose line `index` (e.g. a search match): follow from it without re-centring it. */
+  followFrom(index: number): void;
+};
+
 export type TranscriptListProps = {
+  handleRef?: Ref<TranscriptListHandle>;
   segments: readonly Segment[];
   speakers: readonly Speaker[];
   /** The scroll container; the panel also uses it to bring a search match into view. */
@@ -37,14 +43,16 @@ export type TranscriptListProps = {
 };
 
 /**
- * The scrolling list of lines. Not virtualised: a meeting here has at most a
- * few hundred lines, and memoised rows make a tick cost two row renders, so
- * plain DOM keeps native find, selection and scroll behaviour for free.
+ * The scrolling list of lines. Deliberately not virtualised: meetings here run
+ * to a couple of hundred lines at most, memoised rows make a tick cost two row
+ * renders, and rows use `content-visibility: auto` so off-screen lines skip
+ * layout and paint. Plain DOM keeps native find, selection and scrollIntoView.
  *
  * This is the only transcript component that reads the clock, and it reads
  * just the active index and isPlaying through selectors.
  */
 export function TranscriptList({
+  handleRef,
   segments,
   speakers,
   scrollRef,
@@ -57,7 +65,8 @@ export function TranscriptList({
   const activeIndex = usePlayerClockSelector((c) => findActiveSegmentIndex(segments, c.currentMs));
   const isPlaying = usePlayerClockSelector((c) => c.isPlaying);
   const follow = useFollowPlayhead({ containerRef: scrollRef, activeIndex, isPlaying });
-  const { resume } = follow;
+  const { followFrom } = follow;
+  useImperativeHandle(handleRef, () => ({ followFrom }), [followFrom]);
 
   const turnStarts = useMemo(() => speakerTurnStarts(segments), [segments]);
   const speakerById = useMemo(() => new Map(speakers.map((s) => [s.id, s])), [speakers]);
@@ -65,10 +74,10 @@ export function TranscriptList({
   // Seeking keeps the current play state, as Fireflies does; a click also means "follow from here".
   const onSeek = useCallback(
     (ms: number) => {
+      followFrom(findActiveSegmentIndex(segments, ms));
       seek(ms);
-      resume();
     },
-    [seek, resume],
+    [seek, followFrom, segments],
   );
 
   return (

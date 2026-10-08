@@ -127,22 +127,70 @@ describe("TranscriptList", () => {
     expect(rowRenders()).toEqual([0, 1, 0, 0, 1]);
   });
 
-  it("follows the playhead, pauses on manual scroll and resumes from the pill", () => {
+  /** A 200px viewport with 50px rows every 60px: rows 0-2 on screen, 3+ below. Row 0 hugs the top edge. */
+  function stubLayout() {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+      const index = this.getAttribute("data-segment-index");
+      const top = index === null ? 0 : Number(index) * 60;
+      const height = index === null ? 200 : 50;
+      return { top, bottom: top + height, left: 0, right: 300, width: 300, height, x: 0, y: top } as DOMRect;
+    });
+  }
+  const scrolledRows = () =>
+    scrollIntoView.mock.contexts.map((el) => (el as Element).getAttribute("data-segment-index"));
+
+  it("while playing, scrolls only when the active line leaves the comfortable middle", () => {
+    stubLayout();
+    renderList();
+    act(() => controls.play());
+    // Starting playback brings row 0 (hugging the top edge) to the middle; not under test here.
+    scrollIntoView.mockClear();
+    act(() => controls.seek(3_000)); // row 1, mid-viewport
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    act(() => controls.seek(12_000)); // row 4, off-screen
+    expect(scrolledRows()).toEqual(["4"]);
+    expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: "smooth", block: "center" });
+  });
+
+  it("never re-centres a line the user clicked, but keeps following afterwards", () => {
+    stubLayout();
+    renderList();
+    act(() => controls.play());
+    // Starting playback brings row 0 (hugging the top edge) to the middle; not under test here.
+    scrollIntoView.mockClear();
+    // Row 3 is near the bottom edge, so a follow-scroll would normally move it.
+    fireEvent.click(screen.getByText(segments[3]!.text));
+    expect(activeRow()).toBe("3");
+    expect(scrollIntoView).not.toHaveBeenCalled();
+
+    // Playback carrying on into row 4 (off-screen) is followed again.
+    for (let i = 0; i < 32; i++) act(() => vi.advanceTimersByTime(100));
+    expect(activeRow()).toBe("4");
+    expect(scrolledRows()).toEqual(["4"]);
+  });
+
+  it("pauses on manual scroll and resumes from the pill", () => {
+    stubLayout();
     const { scrollRef } = renderList();
     act(() => controls.play());
-    act(() => controls.seek(3_000));
-    expect(scrollIntoView).toHaveBeenLastCalledWith({ behavior: "smooth", block: "center" });
-    expect(scrollIntoView.mock.contexts.at(-1)).toBe(document.querySelector('[data-segment-index="1"]'));
+    // Starting playback brings row 0 (hugging the top edge) to the middle; not under test here.
+    scrollIntoView.mockClear();
 
     fireEvent.wheel(scrollRef.current!);
     const pill = screen.getByRole("button", { name: "Jump to current" });
-    scrollIntoView.mockClear();
-    act(() => controls.seek(6_000));
+    act(() => controls.seek(12_000));
     expect(scrollIntoView).not.toHaveBeenCalled();
 
     fireEvent.click(pill);
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
-    expect(scrollIntoView.mock.contexts[0]).toBe(document.querySelector('[data-segment-index="2"]'));
+    expect(scrolledRows()).toEqual(["4"]);
     expect(screen.queryByRole("button", { name: "Jump to current" })).toBeNull();
+  });
+
+  it("treats scroll keys pressed on a focused timestamp button as manual scrolling", () => {
+    renderList();
+    const stamp = screen.getByRole("button", { name: "Play from 00:06" });
+    stamp.focus();
+    fireEvent.keyDown(stamp, { key: "PageDown" });
+    expect(screen.getByRole("button", { name: "Jump to current" })).toBeTruthy();
   });
 });

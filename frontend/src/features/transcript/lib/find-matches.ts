@@ -4,9 +4,18 @@ export type Match = { segmentIndex: number; start: number; end: number };
 
 const MARKS = /\p{M}/gu;
 
-/** Case- and accent-folds one piece of text: "É" → "e". */
+/**
+ * Case-, accent- and compatibility-folds one character: "É" → "e", "ß" → "ss",
+ * "ﬁ" → "fi". NFKD (not NFD) so ligatures and full-width forms match their plain letters.
+ */
 function fold(text: string): string {
-  return text.normalize("NFD").replace(MARKS, "").toLowerCase().normalize("NFD").replace(MARKS, "");
+  return text
+    .normalize("NFKD")
+    .replace(MARKS, "")
+    .toLowerCase()
+    .replace(/ß/g, "ss")
+    .normalize("NFKD")
+    .replace(MARKS, "");
 }
 
 type Folded = {
@@ -53,7 +62,8 @@ function foldWithOffsets(text: string): Folded {
  * Case- and diacritic-insensitive: "cafe" finds "Café".
  */
 export function findMatches(segments: readonly { text: string }[], query: string): Match[] {
-  const needle = fold(query.trim());
+  // Folded exactly like the text, character by character, so both sides agree.
+  const needle = foldWithOffsets(query.trim()).text;
   if (!needle) return [];
 
   const matches: Match[] = [];
