@@ -75,6 +75,8 @@ class AnalyticsRepository:
         completed = func.coalesce(
             func.sum(case((ActionItem.status == ActionItemStatus.COMPLETED, 1), else_=0)), 0
         )
+        # Items are dated by their meeting, so standalone tasks (no meeting) fall outside
+        # every window: `NULL IN (...)` is never true.
         stmt = select(func.count(ActionItem.id), completed).where(
             ActionItem.meeting_id.in_(self._meeting_ids(since))
         )
