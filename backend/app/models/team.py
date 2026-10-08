@@ -27,7 +27,7 @@ class TeamMember(Base):
     __table_args__ = (
         enum_check("role", TeamRole),
         enum_check("status", TeamMemberStatus),
-        Index("ix_team_members_user_id", "user_id"),
+        Index("uq_team_members_user_id", "user_id", unique=True),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

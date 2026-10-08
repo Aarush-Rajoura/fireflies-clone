@@ -76,7 +76,8 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_team_members")),
         sa.UniqueConstraint("invite_token", name=op.f("uq_team_members_invite_token")),
     )
-    op.create_index("ix_team_members_user_id", "team_members", ["user_id"])
+    # Unique: the DB itself enforces one team per user (NULLs, i.e. pending invites, may repeat).
+    op.create_index("uq_team_members_user_id", "team_members", ["user_id"], unique=True)
     # Expression index: autogenerate cannot detect it, so it is written by hand.
     op.create_index(
         "uq_team_members_team_email_lower",
@@ -88,7 +89,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_index("uq_team_members_team_email_lower", table_name="team_members")
-    op.drop_index("ix_team_members_user_id", table_name="team_members")
+    op.drop_index("uq_team_members_user_id", table_name="team_members")
     op.drop_table("team_members")
     op.drop_index("ix_teams_created_by", table_name="teams")
     op.drop_table("teams")

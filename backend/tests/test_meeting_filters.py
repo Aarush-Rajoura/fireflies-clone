@@ -3,8 +3,8 @@ from datetime import UTC, date, datetime
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import Channel, Summary
-from app.models.enums import MeetingSource, MeetingStatus
+from app.models import Channel, Summary, Team, TeamMember
+from app.models.enums import MeetingSource, MeetingStatus, TeamMemberStatus, TeamRole
 from app.repositories.meetings import MeetingRepository
 from app.schemas.common import PageParams
 from app.schemas.meeting_filters import MeetingSort
@@ -187,3 +187,31 @@ def test_channel_filter(db_session: Session, repo: MeetingRepository):
     f.make_meeting(db_session, host=host, title="in", channel_id=ch.id)
     f.make_meeting(db_session, host=host, title="out")
     assert titles(run(repo, channel_id=ch.id)[0]) == ["in"]
+
+
+def test_shared_scope_includes_meetings_hosted_by_teammates(
+    db_session: Session, repo: MeetingRepository
+):
+    me, mate, pending, stranger = (f.make_user(db_session) for _ in range(4))
+    team = Team(name="Acme")
+    db_session.add(team)
+    db_session.flush()
+    for user, status in (
+        (me, TeamMemberStatus.ACTIVE),
+        (mate, TeamMemberStatus.ACTIVE),
+        (pending, TeamMemberStatus.INVITED),
+    ):
+        db_session.add(
+            TeamMember(
+                team_id=team.id,
+                user_id=user.id,
+                email=user.email,
+                role=TeamRole.MEMBER,
+                status=status,
+                invite_token=f"tok-{user.id}",
+            )
+        )
+    f.make_meeting(db_session, host=mate, title="teammate")
+    f.make_meeting(db_session, host=pending, title="not accepted")
+    f.make_meeting(db_session, host=stranger, title="stranger")
+    assert titles(run(repo, me.id, scope="shared")[0]) == ["teammate"]

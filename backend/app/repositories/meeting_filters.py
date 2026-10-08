@@ -6,8 +6,8 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import ColumnElement, and_, exists, or_, select
 
 from app.db.search import transcript_matches
-from app.models import Meeting, MeetingTag, Participant, Summary
-from app.models.enums import MeetingSource, MeetingStatus
+from app.models import Meeting, MeetingTag, Participant, Summary, TeamMember
+from app.models.enums import MeetingSource, MeetingStatus, TeamMemberStatus
 from app.schemas.meeting_filters import MeetingFilters
 
 
@@ -40,13 +40,28 @@ def _day_start(day: date, tz: str) -> datetime:
     return datetime.combine(day, time.min, tzinfo=ZoneInfo(tz)).astimezone(UTC)
 
 
+def _hosted_by_teammate(user_id: int) -> ColumnElement[bool]:
+    """The host holds an active seat on the same team as `user_id`."""
+    my_team = select(TeamMember.team_id).where(TeamMember.user_id == user_id)
+    return exists().where(
+        TeamMember.user_id == Meeting.host_id,
+        TeamMember.status == TeamMemberStatus.ACTIVE,
+        TeamMember.team_id.in_(my_team),
+    )
+
+
 def _scope_clause(scope: str, user_id: int) -> ColumnElement[bool] | None:
     if scope == "hosted":
         return Meeting.host_id == user_id
     if scope == "shared":
         return and_(
             Meeting.host_id != user_id,
-            exists().where(Participant.meeting_id == Meeting.id, Participant.user_id == user_id),
+            or_(
+                exists().where(
+                    Participant.meeting_id == Meeting.id, Participant.user_id == user_id
+                ),
+                _hosted_by_teammate(user_id),
+            ),
         )
     if scope == "uploads":
         return Meeting.source.in_([MeetingSource.UPLOAD, MeetingSource.PASTE])

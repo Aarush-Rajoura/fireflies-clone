@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, ValidationFailedError
@@ -203,3 +204,23 @@ def test_accepting_while_on_another_team_is_409(db_session: Session) -> None:
     with pytest.raises(ConflictError) as err:
         svc.accept_invite("t-bo-2")
     assert err.value.code == "TEAM_EXISTS"
+
+
+def test_database_enforces_one_team_per_user(db_session: Session) -> None:
+    svc, me = _service(db_session)
+    svc.create_team("Acme")
+    other = Team(name="Other")
+    db_session.add(other)
+    db_session.flush()
+    db_session.add(
+        TeamMember(
+            team_id=other.id,
+            user_id=me.id,
+            email="dup@example.com",
+            role=TeamRole.MEMBER,
+            status=TeamMemberStatus.ACTIVE,
+            invite_token="dup-token",
+        )
+    )
+    with pytest.raises(IntegrityError):
+        db_session.flush()
