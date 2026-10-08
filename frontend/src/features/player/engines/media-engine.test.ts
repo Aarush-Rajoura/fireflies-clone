@@ -101,6 +101,13 @@ describe.each(engines)("%s (MediaEngine contract)", (_name, make) => {
     expect(listener).toHaveBeenCalledTimes(3);
   });
 
+  it("setDurationMs shrinks the timeline and clamps the position", () => {
+    engine.seek(50_000);
+    engine.setDurationMs(30_000);
+    expect(engine.durationMs).toBe(30_000);
+    expect(engine.currentMs).toBe(30_000);
+  });
+
   it("keeps volume and mute settings", () => {
     engine.setVolume(0.4);
     engine.setMuted(true);

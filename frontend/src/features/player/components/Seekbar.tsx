@@ -21,6 +21,7 @@ export function Seekbar({ className }: { className?: string }) {
   const controls = usePlayerControls();
   const trackRef = useRef<HTMLDivElement>(null);
   const [dragMs, setDragMs] = useState<number | null>(null);
+  const dragging = useRef(false);
 
   const shownMs = dragMs ?? currentMs;
   const pct = durationMs > 0 ? Math.min(100, (shownMs / durationMs) * 100) : 0;
@@ -36,16 +37,22 @@ export function Seekbar({ className }: { className?: string }) {
     if (e.button !== 0) return;
     e.currentTarget.setPointerCapture?.(e.pointerId);
     e.currentTarget.focus();
+    dragging.current = true;
     setDragMs(msAt(e.clientX));
   };
 
   const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
-    if (dragMs !== null) setDragMs(msAt(e.clientX));
+    if (dragging.current) setDragMs(msAt(e.clientX));
   };
 
+  // A ref, not `dragMs`, guards this: releasing capture on pointerup fires
+  // lostpointercapture before React re-renders, and it must be a no-op then.
   const endDrag = (e: PointerEvent<HTMLDivElement>, commit: boolean) => {
-    if (dragMs === null) return;
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    if (!dragging.current) return;
+    dragging.current = false;
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
     if (commit) controls.seek(msAt(e.clientX));
     setDragMs(null);
   };
@@ -82,6 +89,7 @@ export function Seekbar({ className }: { className?: string }) {
       onPointerMove={onPointerMove}
       onPointerUp={(e) => endDrag(e, true)}
       onPointerCancel={(e) => endDrag(e, false)}
+      onLostPointerCapture={(e) => endDrag(e, false)}
       onKeyDown={onKeyDown}
       className={cn(
         "group relative flex h-4 cursor-pointer touch-none select-none items-center rounded-full outline-none focus-visible:shadow-focus",

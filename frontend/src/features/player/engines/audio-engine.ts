@@ -21,7 +21,9 @@ type AudioEngineOptions = {
  * - File fails to load: the engine degrades to the virtual clock for good.
  */
 export class AudioEngine implements MediaEngine {
-  readonly durationMs: number;
+  private _durationMs: number;
+  /** A seek target applied before metadata, re-checked once the file's length is known. */
+  private pendingTargetMs: number | null = null;
   private readonly el: HTMLMediaElement;
   private readonly tail: VirtualClockEngine;
   private readonly emitter = new Emitter();
@@ -34,7 +36,7 @@ export class AudioEngine implements MediaEngine {
   private readonly unsubscribeTail: () => void;
 
   constructor({ src, durationMs, element }: AudioEngineOptions) {
-    this.durationMs = Math.max(0, durationMs);
+    this._durationMs = Math.max(0, durationMs);
     this.el = element ?? new Audio();
     this.el.preload = "metadata";
     this.el.src = src;
@@ -44,6 +46,10 @@ export class AudioEngine implements MediaEngine {
     this.el.addEventListener("error", this.onError);
     this.el.addEventListener("loadedmetadata", this.onMetadata);
     this.el.addEventListener("pause", this.onElementPause);
+  }
+
+  get durationMs(): number {
+    return this._durationMs;
   }
 
   get currentMs(): number {
@@ -80,8 +86,7 @@ export class AudioEngine implements MediaEngine {
     try {
       await this.el.play();
     } catch (error) {
-      // A pause() issued while play() was pending rejects it; that is not a failure.
-      if (!this.playing) return;
+      if (this.isBenignPlayRejection(error)) return;
       this.playing = false;
       this.clearBoundary();
       this.emitter.emit();
@@ -101,18 +106,39 @@ export class AudioEngine implements MediaEngine {
   seek(ms: number): void {
     if (this.destroyed) return;
     const target = clamp(ms, 0, this.durationMs);
+    this.pendingTargetMs = null;
     if (this.failed || target >= this.mediaEndMs()) {
       this.enterTail(target);
     } else {
       this.tail.pause();
       this.mode = "media";
       this.el.currentTime = target / 1000;
+      // Before metadata the file's end is unknown and the element would clamp a
+      // past-the-end target to its own duration; remember it for onMetadata.
+      if (!Number.isFinite(this.el.duration)) this.pendingTargetMs = target;
       if (this.playing) {
         this.scheduleBoundary();
         // Returning to the audio from the silent tail: the element was paused.
-        if (this.el.paused) this.el.play().catch(() => this.pause());
+        if (this.el.paused) {
+          this.el.play().catch((error: unknown) => {
+            if (!this.isBenignPlayRejection(error)) this.pause();
+          });
+        }
       }
     }
+    this.emitter.emit();
+  }
+
+  setDurationMs(ms: number): void {
+    if (this.destroyed) return;
+    const position = this.currentMs;
+    this._durationMs = Math.max(0, ms);
+    this.tail.setDurationMs(this.durationMs);
+    if (position > this.durationMs) {
+      this.seek(this.durationMs);
+      return;
+    }
+    if (this.playing && this.mode === "media") this.scheduleBoundary();
     this.emitter.emit();
   }
 
@@ -151,8 +177,9 @@ export class AudioEngine implements MediaEngine {
     this.el.removeEventListener("loadedmetadata", this.onMetadata);
     this.el.removeEventListener("pause", this.onElementPause);
     this.el.pause();
-    // Dropping the source releases the network connection and decoder.
+    // Dropping the source and reloading aborts the fetch and frees the decoder.
     this.el.removeAttribute("src");
+    this.el.load();
     this.unsubscribeTail();
     this.tail.destroy();
     this.emitter.clear();
@@ -162,6 +189,16 @@ export class AudioEngine implements MediaEngine {
   private mediaEndMs(): number {
     const d = this.el.duration;
     return Number.isFinite(d) ? d * 1000 : Number.POSITIVE_INFINITY;
+  }
+
+  /**
+   * A pending el.play() is rejected (AbortError) when we pause the element
+   * ourselves, e.g. pause() or a seek into the silent tail while buffering.
+   * Those must not flip the engine to paused while the tail keeps running.
+   */
+  private isBenignPlayRejection(error: unknown): boolean {
+    if (!this.playing || this.mode !== "media") return true;
+    return error instanceof Error && error.name === "AbortError";
   }
 
   private enterTail(atMs: number): void {
@@ -222,15 +259,24 @@ export class AudioEngine implements MediaEngine {
    * (asynchronous) event arrives.
    */
   private onElementPause = (): void => {
-    if (this.mode !== "media" || !this.playing || this.el.ended) return;
+    // `paused` is re-checked because the event is queued: a pause()+play() in
+    // one task delivers it after the element is already playing again.
+    if (this.mode !== "media" || !this.playing || this.el.ended || !this.el.paused) return;
     this.playing = false;
     this.clearBoundary();
     this.emitter.emit();
   };
 
   private onMetadata = (): void => {
-    // Duration just became known, so the file-end boundary can now be timed.
-    if (this.playing && this.mode === "media") this.scheduleBoundary();
+    const pending = this.pendingTargetMs;
+    this.pendingTargetMs = null;
+    if (pending !== null && this.mode === "media" && pending >= this.mediaEndMs()) {
+      // A deep link past the file's end: resume the timeline there on the silent tail.
+      this.enterTail(pending);
+    } else if (this.playing && this.mode === "media") {
+      // Duration just became known, so the file-end boundary can now be timed.
+      this.scheduleBoundary();
+    }
     this.emitter.emit();
   };
 

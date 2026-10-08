@@ -55,4 +55,15 @@ describe("Seekbar", () => {
     expect(slider.getAttribute("aria-valuenow")).toBe("50000");
     expect(slider.getAttribute("aria-valuetext")).toBe("0:50 of 1:40");
   });
+
+  it("cancels the drag without seeking when pointer capture is lost", () => {
+    const slider = renderSeekbar(100_000);
+    slider.getBoundingClientRect = () => ({ left: 0, width: 200, top: 0, height: 16 }) as DOMRect;
+    fireEvent.pointerDown(slider, { button: 0, clientX: 150, pointerId: 1 });
+    expect(slider.getAttribute("aria-valuenow")).toBe("75000");
+    fireEvent(slider, new Event("lostpointercapture", { bubbles: true }));
+    expect(slider.getAttribute("aria-valuenow")).toBe("0");
+    fireEvent.pointerUp(slider, { clientX: 150, pointerId: 1 });
+    expect(slider.getAttribute("aria-valuenow")).toBe("0");
+  });
 });

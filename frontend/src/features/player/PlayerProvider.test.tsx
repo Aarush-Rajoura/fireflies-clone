@@ -93,6 +93,45 @@ describe("PlayerProvider", () => {
     expect(screen.getByTestId("t").textContent).toBe("45000");
   });
 
+  it("swaps the engine on a new mediaUrl, carrying position, rate and playback", () => {
+    const made: VirtualClockEngine[] = [];
+    const factory = ({ durationMs }: { durationMs: number }) => {
+      const e = new VirtualClockEngine({ durationMs });
+      made.push(e);
+      return e;
+    };
+    let controls!: PlayerControls;
+    function Grab() {
+      controls = usePlayerControls();
+      return null;
+    }
+    const tree = (mediaUrl: string, durationMs: number) => (
+      <PlayerProvider mediaUrl={mediaUrl} durationMs={durationMs} createEngine={factory}>
+        <Grab />
+      </PlayerProvider>
+    );
+    const { rerender } = render(tree("/a.mp3", 60_000));
+    act(() => {
+      controls.seek(10_000);
+      controls.setRate(1.5);
+      controls.play();
+    });
+
+    rerender(tree("/b.mp3", 60_000));
+    expect(made).toHaveLength(2);
+    const [first, second] = made;
+    expect(first?.isPlaying).toBe(false); // destroyed
+    expect(second?.currentMs).toBe(10_000);
+    expect(second?.rate).toBe(1.5);
+    expect(second?.isPlaying).toBe(true);
+
+    // A duration-only change is applied in place: no new engine, no media reload.
+    rerender(tree("/b.mp3", 45_000));
+    expect(made).toHaveLength(2);
+    expect(second?.durationMs).toBe(45_000);
+    expect(second?.isPlaying).toBe(true);
+  });
+
   it("uses the injected engine and destroys it on unmount", () => {
     const engine = new VirtualClockEngine({ durationMs: 10_000 });
     const destroy = vi.spyOn(engine, "destroy");

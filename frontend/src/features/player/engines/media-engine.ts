@@ -24,6 +24,8 @@ export interface MediaEngine {
   readonly muted: boolean;
   setVolume(v: number): void;
   setMuted(m: boolean): void;
+  /** The meeting's length can be refined after load; this must not reload media. */
+  setDurationMs(ms: number): void;
 }
 
 export type CreateEngineArgs = { mediaUrl: string | null; durationMs: number };

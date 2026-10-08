@@ -16,7 +16,13 @@ export type PlayerControls = {
 /** ~10 repaints a second: smooth enough for a playhead, cheap enough for a long transcript. */
 export const PUBLISH_INTERVAL_MS = 100;
 
-type Settings = { positionMs: number; rate: number; volume: number; muted: boolean };
+type Settings = {
+  positionMs: number;
+  rate: number;
+  volume: number;
+  muted: boolean;
+  playing: boolean;
+};
 
 /**
  * Bridges an engine to React without living in React state.
@@ -28,14 +34,20 @@ type Settings = { positionMs: number; rate: number; volume: number; muted: boole
  *
  * Calls made while no engine is attached (child effects run before the
  * provider's, e.g. a `?t=` seek on mount) are kept as settings and applied
- * when one attaches; the same settings carry position/rate/volume across an
- * engine swap.
+ * when one attaches; the same settings carry position/rate/volume and
+ * whether it was playing across an engine swap (new media URL).
  */
 export class PlayerRuntime {
   readonly clock: ClockStore;
   readonly controls: PlayerControls;
   private engine: MediaEngine | null = null;
-  private settings: Settings = { positionMs: 0, rate: 1, volume: 1, muted: false };
+  private settings: Settings = {
+    positionMs: 0,
+    rate: 1,
+    volume: 1,
+    muted: false,
+    playing: false,
+  };
   private unsubscribe: (() => void) | null = null;
   private frame: number | null = null;
   private lastPublishAt = 0;
@@ -54,7 +66,7 @@ export class PlayerRuntime {
 
   attach(engine: MediaEngine): void {
     if (this.engine) this.detach(this.engine);
-    const { positionMs, rate, volume, muted } = this.settings;
+    const { positionMs, rate, volume, muted, playing } = this.settings;
     engine.setRate(rate);
     engine.setVolume(volume);
     engine.setMuted(muted);
@@ -62,6 +74,8 @@ export class PlayerRuntime {
     this.engine = engine;
     this.unsubscribe = engine.subscribe(this.publish);
     this.publish();
+    // Autoplay-policy rejections are expected; the engine has already reset isPlaying.
+    if (playing) engine.play().catch(() => undefined);
   }
 
   detach(engine: MediaEngine): void {
@@ -71,6 +85,7 @@ export class PlayerRuntime {
       rate: engine.rate,
       volume: engine.volume,
       muted: engine.muted,
+      playing: engine.isPlaying,
     };
     this.unsubscribe?.();
     this.unsubscribe = null;
@@ -80,9 +95,12 @@ export class PlayerRuntime {
     this.clock.patch({ isPlaying: false });
   }
 
-  /** Keeps the bar's scale right before an engine exists for the new duration. */
+  /** Applied in place: a refined duration must not tear down (and reload) the media. */
   setDuration(durationMs: number): void {
-    if (!this.engine) this.clock.patch({ durationMs });
+    if (this.engine) return this.engine.setDurationMs(durationMs);
+    const positionMs = Math.min(this.settings.positionMs, Math.max(0, durationMs));
+    this.settings = { ...this.settings, positionMs };
+    this.clock.patch({ durationMs, currentMs: positionMs });
   }
 
   private publish = (): void => {

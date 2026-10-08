@@ -10,7 +10,7 @@ import { clamp, clampRate, Emitter, type MediaEngine } from "./media-engine";
  * the provider's job, not the engine's.
  */
 export class VirtualClockEngine implements MediaEngine {
-  readonly durationMs: number;
+  private _durationMs: number;
   private anchorMs = 0;
   private anchorAt = 0;
   private playing = false;
@@ -22,7 +22,20 @@ export class VirtualClockEngine implements MediaEngine {
   private readonly emitter = new Emitter();
 
   constructor({ durationMs }: { durationMs: number }) {
-    this.durationMs = Math.max(0, durationMs);
+    this._durationMs = Math.max(0, durationMs);
+  }
+
+  get durationMs(): number {
+    return this._durationMs;
+  }
+
+  setDurationMs(ms: number): void {
+    if (this.destroyed) return;
+    this.rebase();
+    this._durationMs = Math.max(0, ms);
+    this.anchorMs = Math.min(this.anchorMs, this._durationMs);
+    if (this.playing) this.scheduleEnd();
+    this.emitter.emit();
   }
 
   get currentMs(): number {

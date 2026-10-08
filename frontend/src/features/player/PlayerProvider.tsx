@@ -31,13 +31,17 @@ export function PlayerProvider({
   const makeEngine = useEffectEvent(() => createEngine({ mediaUrl, durationMs }));
 
   // The engine lives in an effect, not render: `new Audio()` cannot run on the
-  // server, and StrictMode's double mount must destroy what it creates.
+  // server, and StrictMode's double mount must destroy what it creates. Only a
+  // new media URL rebuilds it; duration changes are applied in place below.
   useEffect(() => {
-    runtime.setDuration(durationMs);
     const engine = makeEngine();
     runtime.attach(engine);
     return () => runtime.detach(engine);
-  }, [runtime, mediaUrl, durationMs]);
+  }, [runtime, mediaUrl]);
+
+  useEffect(() => {
+    runtime.setDuration(durationMs);
+  }, [runtime, durationMs]);
 
   return (
     <PlayerControlsContext.Provider value={runtime.controls}>
