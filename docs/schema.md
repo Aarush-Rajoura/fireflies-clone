@@ -145,7 +145,9 @@ segment id), so it is not drawn as an ordinary table.
   them. Queries use `Meeting.not_deleted()`. Hard deletes (and the cascades below) only happen
   when a row is purged.
 - **Denormalisations, all deliberate.**
-  - `meetings.duration_ms`: the recording length, which can exceed the last segment's `end_ms`.
+  - `meetings.duration_ms`: set when the meeting is written, to the last transcript segment's
+    `end_ms` (0 for a form meeting with no transcript); text edits never change it. Stored so
+    lists and the `-duration_ms` sort need no segment scan.
   - `participants.talk_ms`: derivable from segments; stored so analytics needs no scan.
   - `action_items.completed_at`: redundant with `status = 'completed'`; records when.
   - `comments.meeting_id` and `highlights.meeting_id`: derivable via the segment; stored so

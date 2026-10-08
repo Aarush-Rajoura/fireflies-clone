@@ -8,7 +8,9 @@ Interactive docs: `/docs` on a running server.
 
 - **Thin routers.** A route parses the request, calls one service method and returns its schema.
   `scripts/check_layering.py` fails the build if `app/api` imports models, db, repositories or
-  SQLAlchemy, or if `app/services` imports FastAPI/Starlette.
+  SQLAlchemy, or if `app/services` imports FastAPI/Starlette. `app/core/deps.py` is the
+  composition root: the one module that builds services (and picks the AI provider) for a
+  request, so it may import services and `app.ai`.
 - **Error envelope on every error:** `{"error": {"code", "message", "details"}}`. `code` is a
   stable machine string (`NOT_FOUND`, `MEETING_DELETED`, `CHANNEL_EXISTS`, `RATE_LIMITED`, ...).
   Every route declares the errors it can return with the `ErrorResponse` schema.
@@ -23,6 +25,17 @@ Interactive docs: `/docs` on a running server.
   (inclusive UTC days), `tag` (tag id, repeat for any-of), `channel` (id),
   `scope` (`all|hosted|shared|uploads`), `status` (`completed|upcoming`), `sort`
   (`-started_at` default, `started_at`, `title`, `-duration_ms`).
+  - `q` matches a case-insensitive substring of the title, a participant name or the summary
+    overview, **or** every word of it in the transcript (FTS5, last word as a prefix; the same
+    safe query builder as `/search`).
+  - `status=completed` (default, the library) is `status = completed` only; `status=upcoming`
+    is `scheduled` with `started_at` in the future. A scheduled meeting whose time passed, and
+    live/processing meetings, appear in neither.
+- **Meeting rows** (list and detail) carry `status`, `channel_id`, `channel` (`{id, name, slug}`
+  or null), `meeting_url`, `platform` and `language`, so the Upcoming tab and channel chips need
+  no extra calls.
+- **`POST /meetings` `source`** may be `upload`, `paste` or `manual` (default); `seed`,
+  `capture` and `calendar` are set only by the server (422 otherwise).
 - **Shallow nesting:** collections live under the parent (`/meetings/{id}/action-items`);
   items are top-level (`/action-items/{id}`).
 - **Times:** UTC ISO-8601. Recording positions are integer milliseconds (`start_ms`, `end_ms`,
@@ -32,13 +45,18 @@ Interactive docs: `/docs` on a running server.
   precise OpenAPI schema. For uploads, a declared `Content-Length` above `MAX_UPLOAD_MB` (plus a
   small multipart allowance) is rejected up front with `422 UPLOAD_TOO_LARGE`; otherwise the file
   is read at most `MAX_UPLOAD_MB + 1` bytes and rejected if it exceeds the limit. Pasted text is
-  measured by the service with the same limit and code.
-- **Rate limiting:** only `POST /meetings/{id}/summary/regenerate` (an AI call) is limited, per
-  client address, by `AI_RATE_LIMIT` (default `10/minute`, read from the app's settings). The
-  429 carries `Retry-After`. The client address is the first `X-Forwarded-For` hop when present,
+  measured by the service with the same limit and code. A line over 5000 characters is split
+  into consecutive segments (at word boundaries, sharing its time span by text length) with a
+  warning, never truncated.
+- **Rate limiting:** only requests that run the AI are limited: `POST
+  /meetings/{id}/summary/regenerate`, and `POST /meetings` **when it carries `segments`**. They
+  share one per-client budget, `AI_RATE_LIMIT` (default `10/minute`, read from the app's
+  settings). The check runs after the service's guards, so 404/409/410/422 responses never use
+  up the budget. The 429 carries `Retry-After`. The client address is the first `X-Forwarded-For` hop when present,
   else the socket peer; that header is only trustworthy behind a proxy that sets it (Vercel does),
   and counters are in memory, per process.
-- **AI failures:** a provider error that escapes the fallback wrapper is `503 AI_UNAVAILABLE`.
+- **AI failures:** a provider error that escapes the fallback wrapper is `503 AI_UNAVAILABLE`
+  (`ProviderError` is a `ServiceUnavailableError`); the message is generic, the cause is logged.
 - **Unseeded database:** every route that needs the default user answers `503 NOT_SEEDED`,
   including `POST /meetings`.
 - **Operation ids** are the handler names (`list_meetings`, `create_action_item`, ...), and tags
@@ -50,7 +68,7 @@ Interactive docs: `/docs` on a running server.
 | Method | Path | Success | Declared errors |
 |---|---|---|---|
 | GET | `/meetings` | 200 Page of meetings | 422, 503 |
-| POST | `/meetings` | 201 meeting | 422, 503 |
+| POST | `/meetings` | 201 meeting | 422, 429, 503 |
 | GET | `/meetings/{id}` | 200 meeting | 404, 410, 422 |
 | PATCH | `/meetings/{id}` | 200 meeting | 404, 409, 410, 422 |
 | DELETE | `/meetings/{id}` | 204 | 404, 410, 422 |
