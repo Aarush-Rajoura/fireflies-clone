@@ -97,7 +97,7 @@ export function MeetingDetailsForm({
           onChange={setParticipants}
         />
       </Field>
-      {error && <InlineError message={error} />}
+      {error && <InlineError message={error} focusOnMount />}
       <div className="flex justify-end gap-2 pb-2">
         <Button variant="ghost" onClick={onCancel}>
           Cancel

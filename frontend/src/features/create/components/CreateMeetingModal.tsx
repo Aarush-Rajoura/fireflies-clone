@@ -1,13 +1,15 @@
 "use client";
 
-import { ClipboardPaste, FileUp, Film, PencilLine } from "lucide-react";
 import { useState } from "react";
 
-import { Modal, SegmentedControl, SoonBadge, type SegmentedOption } from "@/components/ui";
+import { useIsMutating } from "@tanstack/react-query";
+
+import { Modal } from "@/components/ui";
 import type { TranscriptPreview } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
 import { useCreateMeeting } from "../hooks/useCreateMeeting";
+import { PREVIEW_MUTATION_KEY } from "../lib/keys";
 import { createErrorMessage } from "../lib/error-messages";
 import { titleFromFileName } from "../lib/file-validation";
 import { useCreateMeetingModal } from "../lib/modal-store";
@@ -19,54 +21,13 @@ import {
   type MeetingDetails,
 } from "../lib/payload";
 
+import { CreateMeetingTabs, PANEL_ID, TAB_ID } from "./CreateMeetingTabs";
 import { CreatingState } from "./CreatingState";
 import { MediaComingSoon } from "./MediaComingSoon";
 import { MeetingDetailsForm } from "./MeetingDetailsForm";
 import { PastePanel } from "./PastePanel";
 import { PreviewSummary } from "./PreviewSummary";
 import { UploadDropzone } from "./UploadDropzone";
-
-const TABS: readonly SegmentedOption<CreateTab>[] = [
-  {
-    value: "upload",
-    label: (
-      <>
-        <FileUp className="size-4" strokeWidth={1.75} />
-        Upload transcript
-      </>
-    ),
-  },
-  {
-    value: "paste",
-    label: (
-      <>
-        <ClipboardPaste className="size-4" strokeWidth={1.75} />
-        Paste
-      </>
-    ),
-  },
-  {
-    value: "form",
-    label: (
-      <>
-        <PencilLine className="size-4" strokeWidth={1.75} />
-        Form
-      </>
-    ),
-  },
-  {
-    value: "media",
-    label: (
-      <>
-        <Film className="size-4" strokeWidth={1.75} />
-        Upload audio/video
-        <SoonBadge />
-      </>
-    ),
-  },
-];
-
-const TAB_ID = "create-meeting-tab";
 
 type Upload = { preview: TranscriptPreview; fileName: string };
 
@@ -136,6 +97,7 @@ function CreateMeetingBody({
   const [upload, setUpload] = useState<Upload | null>(null);
   const [pasteText, setPasteText] = useState("");
   const [pasted, setPasted] = useState<TranscriptPreview | null>(null);
+  const previewing = useIsMutating({ mutationKey: PREVIEW_MUTATION_KEY }) > 0;
 
   const details = (preview: TranscriptPreview | null, initialTitle = "") => (
     <MeetingDetailsForm
@@ -191,16 +153,8 @@ function CreateMeetingBody({
       {pending && <CreatingState withNotes={withNotes} />}
       {/* Hidden, not unmounted, while creating: a failure brings the form back with its input. */}
       <div className={cn("flex flex-col gap-5", pending && "hidden")}>
-        <div className="-mx-1 overflow-x-auto px-1">
-          <SegmentedControl
-            label="How to add the meeting"
-            options={TABS}
-            value={tab}
-            onChange={onTabChange}
-            idPrefix={TAB_ID}
-          />
-        </div>
-        <div role="tabpanel" aria-labelledby={`${TAB_ID}-${tab}`}>
+        <CreateMeetingTabs tab={tab} onChange={onTabChange} locked={previewing} />
+        <div role="tabpanel" id={`${PANEL_ID}-${tab}`} aria-labelledby={`${TAB_ID}-${tab}`}>
           {panel}
         </div>
       </div>

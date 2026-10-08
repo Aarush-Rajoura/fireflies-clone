@@ -20,10 +20,11 @@ export function useCreateMeeting() {
     mutationFn: (body: MeetingCreate) => createMeeting(body),
     // Shown inline in the modal, where the user can fix the input and resubmit.
     meta: { errorToast: false },
-    onSuccess: async (meeting) => {
+    onSuccess: (meeting) => {
       // Seeding the detail cache makes the meeting page render without a second fetch.
       client.setQueryData(qk.meetings.detail(meeting.id), meeting);
-      await client.invalidateQueries({ queryKey: qk.meetings.lists() });
+      // Not awaited: the lists refresh in the background while we navigate.
+      void client.invalidateQueries({ queryKey: qk.meetings.lists() });
       toast.success("Meeting created");
       closeCreateMeeting();
       router.push(`/meetings/${meeting.id}`);

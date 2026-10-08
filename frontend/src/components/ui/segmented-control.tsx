@@ -15,6 +15,11 @@ export type SegmentedControlProps<V extends string> = {
   size?: "sm" | "md";
   /** Optional id prefix; tab ids become `${idPrefix}-${value}` for aria-labelledby on panels. */
   idPrefix?: string;
+  /**
+   * Set when the control drives a tab panel with id `${panelIdPrefix}-${value}`.
+   * Only the selected tab gets aria-controls: only its panel is rendered.
+   */
+  panelIdPrefix?: string;
   className?: string;
 };
 
@@ -30,6 +35,7 @@ export function SegmentedControl<V extends string>({
   label,
   size = "md",
   idPrefix,
+  panelIdPrefix,
   className,
 }: SegmentedControlProps<V>) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -38,7 +44,8 @@ export function SegmentedControl<V extends string>({
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
     const pos = enabled.indexOf(index);
     let target: number | undefined;
-    if (e.key === "ArrowRight" || e.key === "ArrowDown") target = enabled[(pos + 1) % enabled.length];
+    if (e.key === "ArrowRight" || e.key === "ArrowDown")
+      target = enabled[(pos + 1) % enabled.length];
     else if (e.key === "ArrowLeft" || e.key === "ArrowUp")
       target = enabled[(pos - 1 + enabled.length) % enabled.length];
     else if (e.key === "Home") target = enabled[0];
@@ -69,6 +76,7 @@ export function SegmentedControl<V extends string>({
             type="button"
             role="tab"
             aria-selected={selected}
+            aria-controls={panelIdPrefix && selected ? `${panelIdPrefix}-${o.value}` : undefined}
             disabled={o.disabled}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(o.value)}

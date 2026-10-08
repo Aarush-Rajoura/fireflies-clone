@@ -52,4 +52,21 @@ describe("SegmentedControl", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Upcoming" }));
     expect(selected()).toBe("Upcoming");
   });
+
+  test("points only the selected tab at its panel when a panel prefix is given", () => {
+    render(
+      <SegmentedControl
+        label="Feed"
+        value="b"
+        onChange={() => undefined}
+        panelIdPrefix="panel"
+        options={[
+          { value: "a", label: "A" },
+          { value: "b", label: "B" },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("tab", { name: "B" }).getAttribute("aria-controls")).toBe("panel-b");
+    expect(screen.getByRole("tab", { name: "A" }).getAttribute("aria-controls")).toBeNull();
+  });
 });

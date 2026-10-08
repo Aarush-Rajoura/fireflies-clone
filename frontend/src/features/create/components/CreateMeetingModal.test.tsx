@@ -74,6 +74,61 @@ describe("CreateMeetingModal", () => {
     expect(screen.getByLabelText("Choose a transcript file")).toBeTruthy();
   });
 
+  it("links the selected tab to its panel", () => {
+    setup("form");
+    const selected = tab(/^Form$/);
+    const panel = screen.getByRole("tabpanel");
+    expect(selected.getAttribute("aria-controls")).toBe(panel.id);
+    expect(panel.getAttribute("aria-labelledby")).toBe(selected.id);
+    expect(tab(/^Paste$/).getAttribute("aria-controls")).toBeNull();
+  });
+
+  it("locks the other tabs while a transcript is being parsed", async () => {
+    let finish: (p: TranscriptPreview) => void = () => undefined;
+    vi.mocked(api.previewTranscriptText).mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    setup("paste");
+    fireEvent.change(screen.getByLabelText("Transcript"), { target: { value: "A: hi" } });
+    fireEvent.click(screen.getByRole("button", { name: "Preview transcript" }));
+
+    await waitFor(() => expect((tab(/^Form$/) as HTMLButtonElement).disabled).toBe(true));
+    expect((tab(/^Paste$/) as HTMLButtonElement).disabled).toBe(false);
+    await act(async () => finish(preview));
+    await screen.findByLabelText("Transcript preview");
+    expect((tab(/^Form$/) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it("keeps focus inside the dialog: on the progress state, then on the error", async () => {
+    let fail: (e: Error) => void = () => undefined;
+    vi.mocked(api.createMeeting).mockReturnValue(
+      new Promise((_, reject) => {
+        fail = reject;
+      }),
+    );
+    setup("form");
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Planning" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create meeting" }));
+
+    const progress = await screen.findByText("Creating your meeting…");
+    expect(progress.closest("[role=status]")).toBe(document.activeElement);
+
+    await act(async () => fail(new ApiError("AI_UNAVAILABLE", 503, "x")));
+    const alert = await screen.findByRole("alert");
+    expect(document.activeElement).toBe(alert);
+  });
+
+  it("navigates without waiting for the meeting lists to refetch", async () => {
+    vi.mocked(api.createMeeting).mockResolvedValue({ id: 5 } as MeetingDetail);
+    const { client } = setup("form");
+    vi.spyOn(client, "invalidateQueries").mockReturnValue(new Promise(() => undefined));
+    fireEvent.change(screen.getByLabelText("Title"), { target: { value: "Planning" } });
+    fireEvent.click(screen.getByRole("button", { name: "Create meeting" }));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/meetings/5"));
+  });
+
   it("pastes the sample, previews, then creates and navigates once", async () => {
     vi.mocked(api.previewTranscriptText).mockResolvedValue(preview);
     vi.mocked(api.createMeeting).mockResolvedValue({ id: 42 } as MeetingDetail);

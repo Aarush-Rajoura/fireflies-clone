@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type DragEvent, type ReactNode } from "react";
+import { useRef, useState, type DragEvent, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -22,13 +22,22 @@ export type DropzoneProps = {
  */
 export function Dropzone({ accept, onFiles, label, disabled, children, className }: DropzoneProps) {
   const [dragging, setDragging] = useState(false);
+  // dragenter/dragleave also fire when the pointer crosses child elements; counting
+  // them keeps the highlight steady until the drag really leaves the zone.
+  const depth = useRef(0);
 
-  const over = (e: DragEvent) => {
+  const enter = (e: DragEvent) => {
     e.preventDefault();
+    depth.current += 1;
     if (!disabled) setDragging(true);
+  };
+  const leave = () => {
+    depth.current = Math.max(0, depth.current - 1);
+    if (depth.current === 0) setDragging(false);
   };
   const drop = (e: DragEvent) => {
     e.preventDefault();
+    depth.current = 0;
     setDragging(false);
     if (disabled) return;
     const files = Array.from(e.dataTransfer.files);
@@ -37,13 +46,14 @@ export function Dropzone({ accept, onFiles, label, disabled, children, className
 
   return (
     <label
-      onDragEnter={over}
-      onDragOver={over}
-      onDragLeave={() => setDragging(false)}
+      onDragEnter={enter}
+      // Required on every dragover, or the browser refuses the drop.
+      onDragOver={(e) => e.preventDefault()}
+      onDragLeave={leave}
       onDrop={drop}
       data-dragging={dragging || undefined}
       className={cn(
-        "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-card border border-dashed border-strong bg-surface-sunken px-6 py-10 text-center transition-colors duration-fast hover:border-accent-border focus-within:border-accent-border",
+        "flex cursor-pointer flex-col items-center justify-center gap-3 rounded-card border border-dashed border-strong bg-surface-sunken px-6 py-10 text-center transition-colors duration-fast hover:border-accent-border has-[:focus-visible]:border-accent-border has-[:focus-visible]:shadow-focus",
         dragging && "border-accent-border bg-accent-subtle",
         disabled && "pointer-events-none opacity-50",
         className,
