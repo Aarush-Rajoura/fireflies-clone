@@ -1,5 +1,6 @@
 "use client";
 
+import { TimestampButton } from "@/components/ui";
 import { usePlayerControls } from "@/features/player";
 
 import { formatChapterRange, type NoteChapter } from "../lib/chapters";
@@ -21,14 +22,13 @@ export function NotesSection({ label, notes }: { label: string; notes: readonly 
                 {range && start !== null && (
                   <>
                     {": "}
-                    <button
-                      type="button"
-                      onClick={() => seek(start)}
-                      aria-label={`Jump to ${note.title} at ${range}`}
-                      className="tnum rounded-tag text-accent hover:underline"
+                    <TimestampButton
+                      ms={start}
+                      onSeek={seek}
+                      label={`Jump to ${note.title} at ${range}`}
                     >
                       {range}
-                    </button>
+                    </TimestampButton>
                   </>
                 )}
               </h4>

@@ -3,6 +3,16 @@ import type { Summary } from "@/lib/api";
 import { attachNoteRanges, buildChapters, formatChapterRange, formatChapterTime } from "./chapters";
 import { getTemplate, type SectionId, type TemplateId } from "./templates";
 
+/**
+ * AI/user text must not become markup: a stray `*` or `[` would restyle or
+ * link the paste. Inline contexts (titles, bullets, pills) also fold newlines,
+ * which would otherwise break a bullet or heading in two.
+ */
+export function escapeMd(text: string, { inline = true } = {}): string {
+  const escaped = text.replace(/[\\`*_#[\]]/g, "\\$&");
+  return inline ? escaped.replace(/\s*\n\s*/g, " ").trim() : escaped.trim();
+}
+
 export type MarkdownOptions = {
   title?: string;
   durationMs: number;
@@ -19,15 +29,16 @@ export function summaryToMarkdown(summary: Summary, options: MarkdownOptions): s
   const chapters = buildChapters(summary.outline, options.durationMs);
 
   const render: Record<SectionId, () => string | null> = {
-    keywords: () => (summary.keywords.length ? summary.keywords.join(" · ") : null),
-    overview: () => summary.overview.trim() || null,
+    keywords: () =>
+      summary.keywords.length ? summary.keywords.map((k) => escapeMd(k)).join(" · ") : null,
+    overview: () => escapeMd(summary.overview, { inline: false }) || null,
     outline: () =>
       chapters.length
         ? chapters
             .map((c) =>
               c.startMs === null
-                ? `- ${c.title}`
-                : `- \`${formatChapterTime(c.startMs)}\` ${c.title}`,
+                ? `- ${escapeMd(c.title)}`
+                : `- \`${formatChapterTime(c.startMs)}\` ${escapeMd(c.title)}`,
             )
             .join("\n")
         : null,
@@ -36,15 +47,16 @@ export function summaryToMarkdown(summary: Summary, options: MarkdownOptions): s
         ? attachNoteRanges(summary.notes, chapters)
             .map((n) => {
               const range = n.range ? formatChapterRange(n.range) : "";
-              const heading = range ? `### ${n.title}: ${range}` : `### ${n.title}`;
-              return [heading, "", ...n.bullets.map((b) => `- ${b}`)].join("\n");
+              const title = escapeMd(n.title);
+              const heading = range ? `### ${title}: ${range}` : `### ${title}`;
+              return [heading, "", ...n.bullets.map((b) => `- ${escapeMd(b)}`)].join("\n");
             })
             .join("\n\n")
         : null,
     actionItems: () => null,
   };
 
-  const blocks: string[] = options.title ? [`# ${options.title}`] : [];
+  const blocks: string[] = options.title ? [`# ${escapeMd(options.title)}`] : [];
   for (const { id, label } of getTemplate(options.template ?? "general").sections) {
     const body = render[id]();
     if (body) blocks.push(`## ${label}\n\n${body}`);

@@ -6,6 +6,8 @@ import { toast } from "@/components/ui";
 import { ApiError, qk, type ActionItem, type ActionItemUpdate } from "@/lib/api";
 
 import { updateActionItem } from "../api";
+import { actionItemMutationScope, settleActionItems } from "../lib/settle";
+import { replaceItem } from "../lib/cache";
 
 export type AssigneeOption = { id: number; display_name: string };
 
@@ -41,6 +43,23 @@ export function applyPatch(
   return next;
 }
 
+/** Undo only the fields this patch changed, so a concurrent edit to another field survives. */
+export function revertPatch(
+  current: ActionItem,
+  before: ActionItem,
+  patch: ActionItemUpdate,
+): ActionItem {
+  const next: ActionItem = { ...current };
+  if (patch.text != null) next.text = before.text;
+  if (patch.due_date !== undefined) next.due_date = before.due_date;
+  if (patch.status != null) {
+    next.status = before.status;
+    next.completed_at = before.completed_at;
+  }
+  if (patch.assignee_participant_id !== undefined) next.assignee = before.assignee;
+  return next;
+}
+
 function failureMessage(error: unknown): string {
   if (error instanceof ApiError) {
     if (error.code === "ASSIGNEE_NOT_IN_MEETING") return "That person isn't in this meeting.";
@@ -57,21 +76,25 @@ function failureMessage(error: unknown): string {
 export function useUpdateActionItem(meetingId: number) {
   const client = useQueryClient();
   const key = qk.actionItems(meetingId);
-  const mutationKey = ["action-items", "update", meetingId];
   const mutation = useMutation({
-    mutationKey,
+    mutationKey: [...actionItemMutationScope(meetingId), "update"],
     mutationFn: ({ id, patch }: UpdateActionItemVars) => updateActionItem(id, patch),
     meta: { errorToast: false },
     onMutate: async (vars) => {
       await client.cancelQueries({ queryKey: key });
-      const previous = client.getQueryData<ActionItem[]>(key);
+      const before = client.getQueryData<ActionItem[]>(key)?.find((x) => x.id === vars.id);
       client.setQueryData<ActionItem[]>(key, (old) =>
         old?.map((item) => (item.id === vars.id ? applyPatch(item, vars) : item)),
       );
-      return { previous };
+      return { before };
     },
     onError: (error, vars, context) => {
-      if (context?.previous) client.setQueryData(key, context.previous);
+      const before = context?.before;
+      if (before) {
+        client.setQueryData<ActionItem[]>(key, (old) =>
+          old?.map((item) => (item.id === vars.id ? revertPatch(item, before, vars.patch) : item)),
+        );
+      }
       const retryable = error instanceof ApiError && error.isRetryable;
       toast.error(
         failureMessage(error),
@@ -79,15 +102,9 @@ export function useUpdateActionItem(meetingId: number) {
       );
     },
     onSuccess: (saved) => {
-      client.setQueryData<ActionItem[]>(key, (old) =>
-        old?.map((item) => (item.id === saved.id ? saved : item)),
-      );
+      client.setQueryData<ActionItem[]>(key, (old) => replaceItem(old, saved));
     },
-    // Refetching while another edit is in flight would flash its optimistic change away.
-    onSettled: () =>
-      client.isMutating({ mutationKey }) === 1
-        ? client.invalidateQueries({ queryKey: key })
-        : undefined,
+    onSettled: () => settleActionItems(client, meetingId),
   });
   return mutation;
 }

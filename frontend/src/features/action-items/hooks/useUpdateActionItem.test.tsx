@@ -28,12 +28,13 @@ const base: ActionItem = {
 
 function setup() {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  client.setQueryData(qk.actionItems(1), [base]);
+  client.setQueryData(qk.actionItems(1), [base, { ...base, id: 6, text: "Other" }]);
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
   const { result } = renderHook(() => useUpdateActionItem(1), { wrapper });
-  const cached = () => client.getQueryData<ActionItem[]>(qk.actionItems(1))?.[0];
+  const cached = (id = 5) =>
+    client.getQueryData<ActionItem[]>(qk.actionItems(1))?.find((x) => x.id === id);
   return { result, cached };
 }
 
@@ -53,6 +54,22 @@ describe("useUpdateActionItem", () => {
     await waitFor(() => expect(cached()?.status).toBe("open"));
     expect(cached()?.completed_at).toBeNull();
     expect(getToasts().map((t) => [t.kind, t.message])).toEqual([["error", "Nope"]]);
+  });
+
+  it("rolls back only the failed item's patched fields, not concurrent edits", async () => {
+    const rejects: ((e: unknown) => void)[] = [];
+    vi.mocked(updateActionItem).mockImplementation(() => new Promise((_, r) => rejects.push(r)));
+    const { result, cached } = setup();
+
+    act(() => result.current.mutate({ id: 5, patch: { status: "completed" } }));
+    act(() => result.current.mutate({ id: 6, patch: { text: "Other, edited" } }));
+    act(() => result.current.mutate({ id: 5, patch: { due_date: "2026-10-12" } }));
+    await waitFor(() => expect(rejects).toHaveLength(3));
+
+    await act(async () => rejects[0]!(new ApiError("X", 422, "no")));
+    await waitFor(() => expect(cached(5)?.status).toBe("open"));
+    expect(cached(5)?.due_date).toBe("2026-10-12");
+    expect(cached(6)?.text).toBe("Other, edited");
   });
 
   it("keeps the server's version on success", async () => {

@@ -7,8 +7,7 @@ import { Button, Input, Select } from "@/components/ui";
 
 import { useCreateActionItem } from "../hooks/useCreateActionItem";
 import type { AssigneeOption } from "../hooks/useUpdateActionItem";
-
-const NOBODY = "unassigned";
+import { assigneeOptions, NOBODY } from "../lib/fields";
 
 export function ActionItemComposer({
   meetingId,
@@ -51,10 +50,7 @@ export function ActionItemComposer({
         className="w-36"
         value={assignee}
         onValueChange={setAssignee}
-        options={[
-          { value: NOBODY, label: "Unassigned" },
-          ...participants.map((p) => ({ value: String(p.id), label: p.display_name })),
-        ]}
+        options={assigneeOptions(participants, null)}
       />
       <Button
         type="submit"

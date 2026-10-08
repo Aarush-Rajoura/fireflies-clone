@@ -113,6 +113,18 @@ export function SummaryHeader({
               </Badge>
             </Tooltip>
           )}
+          {isStale && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 px-2 text-caption"
+              leadingIcon={<RefreshCw strokeWidth={1.75} />}
+              loading={isRegenerating}
+              onClick={() => setConfirmOpen(true)}
+            >
+              Regenerate
+            </Button>
+          )}
         </div>
       )}
 

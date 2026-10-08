@@ -12,25 +12,3 @@ export function SummarySection({ label, children }: { label: string; children: R
     </section>
   );
 }
-
-/** Small accent link-button showing a timestamp; clicking jumps the player there. */
-export function TimestampButton({
-  label,
-  onClick,
-  title,
-}: {
-  label: string;
-  onClick: () => void;
-  title: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={`Jump to ${title} at ${label}`}
-      className="tnum shrink-0 rounded-tag text-body-strong text-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-    >
-      {label}
-    </button>
-  );
-}

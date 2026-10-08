@@ -1,9 +1,10 @@
 "use client";
 
+import { TimestampButton } from "@/components/ui";
 import { usePlayerControls } from "@/features/player";
 
 import { formatChapterTime, type Chapter } from "../lib/chapters";
-import { SummarySection, TimestampButton } from "./SummarySection";
+import { SummarySection } from "./SummarySection";
 
 export function OutlineSection({
   label,
@@ -21,10 +22,13 @@ export function OutlineSection({
           <li key={i} className="flex items-baseline gap-3 text-body text-primary">
             {c.startMs !== null ? (
               <TimestampButton
-                label={formatChapterTime(c.startMs)}
-                title={c.title}
-                onClick={() => seek(c.startMs ?? 0)}
-              />
+                ms={c.startMs}
+                onSeek={seek}
+                label={`Jump to ${c.title} at ${formatChapterTime(c.startMs)}`}
+                className="text-body-strong"
+              >
+                {formatChapterTime(c.startMs)}
+              </TimestampButton>
             ) : (
               <span className="tnum w-10 shrink-0 text-muted" aria-hidden>
                 --:--

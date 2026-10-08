@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Summary } from "@/lib/api";
 
-import { summaryToMarkdown } from "./to-markdown";
+import { escapeMd, summaryToMarkdown } from "./to-markdown";
 
 const summary: Summary = {
   overview: "The team agreed on a rollout plan.",
@@ -53,6 +53,17 @@ describe("summaryToMarkdown", () => {
         "",
       ].join("\n"),
     );
+  });
+
+  it("escapes markdown syntax and folds newlines inside bullets and titles", () => {
+    expect(escapeMd("a *b* _c_ `d` [e](f) #g \\h")).toBe(
+      "a \\*b\\* \\_c\\_ \\`d\\` \\[e\\](f) \\#g \\\\h",
+    );
+    const md = summaryToMarkdown(
+      { ...summary, keywords: [], outline: [], notes: [{ title: "#1", bullets: ["line\nbreak"] }] },
+      { durationMs: 0 },
+    );
+    expect(md).toContain("### \\#1\n\n- line break");
   });
 
   it("follows the template and omits empty sections", () => {
