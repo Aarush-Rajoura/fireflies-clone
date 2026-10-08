@@ -9,9 +9,9 @@ from app.services.export.bundle import (
     SECTION_TITLES,
     ExportBundle,
     Section,
-    clock,
     task_suffix,
 )
+from app.services.timefmt import clock
 
 
 class MarkdownExporter:

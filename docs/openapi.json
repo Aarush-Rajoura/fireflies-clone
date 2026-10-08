@@ -256,14 +256,6 @@
       "AskRequest": {
         "additionalProperties": false,
         "properties": {
-          "history": {
-            "items": {
-              "$ref": "#/components/schemas/AskTurn"
-            },
-            "maxItems": 20,
-            "title": "History",
-            "type": "array"
-          },
           "question": {
             "maxLength": 500,
             "minLength": 1,
@@ -302,8 +294,15 @@
             "title": "Model"
           },
           "provider": {
-            "title": "Provider",
-            "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
           }
         },
         "required": [
@@ -313,30 +312,6 @@
           "model"
         ],
         "title": "AskResponse",
-        "type": "object"
-      },
-      "AskTurn": {
-        "additionalProperties": false,
-        "properties": {
-          "role": {
-            "enum": [
-              "user",
-              "assistant"
-            ],
-            "title": "Role",
-            "type": "string"
-          },
-          "text": {
-            "maxLength": 4000,
-            "title": "Text",
-            "type": "string"
-          }
-        },
-        "required": [
-          "role",
-          "text"
-        ],
-        "title": "AskTurn",
         "type": "object"
       },
       "AssigneeRead": {
@@ -657,7 +632,7 @@
       },
       "HighlightCreate": {
         "additionalProperties": false,
-        "description": "Half-open character range `[start_offset, end_offset)` inside the segment's text.",
+        "description": "Half-open range `[start_offset, end_offset)` inside the segment's text, in UTF-16\ncode units (JavaScript string indices).",
         "properties": {
           "color": {
             "default": "yellow",
@@ -672,6 +647,7 @@
             "type": "string"
           },
           "end_offset": {
+            "description": "Exclusive end offset into the segment text, in UTF-16 code units, matching JavaScript string indices; at most its length.",
             "minimum": 1.0,
             "title": "End Offset",
             "type": "integer"
@@ -681,6 +657,7 @@
             "type": "integer"
           },
           "start_offset": {
+            "description": "Inclusive start offset into the segment text, in UTF-16 code units, matching JavaScript string indices.",
             "minimum": 0.0,
             "title": "Start Offset",
             "type": "integer"
@@ -719,6 +696,7 @@
             "title": "Created By"
           },
           "end_offset": {
+            "description": "Exclusive end offset into the segment text, in UTF-16 code units, matching JavaScript string indices; at most its length.",
             "title": "End Offset",
             "type": "integer"
           },
@@ -735,6 +713,7 @@
             "type": "integer"
           },
           "start_offset": {
+            "description": "Inclusive start offset into the segment text, in UTF-16 code units, matching JavaScript string indices.",
             "title": "Start Offset",
             "type": "integer"
           }
@@ -783,6 +762,7 @@
                 "type": "null"
               }
             ],
+            "description": "Exclusive end offset into the segment text, in UTF-16 code units, matching JavaScript string indices; at most its length.",
             "title": "End Offset"
           },
           "start_offset": {
@@ -795,6 +775,7 @@
                 "type": "null"
               }
             ],
+            "description": "Inclusive start offset into the segment text, in UTF-16 code units, matching JavaScript string indices.",
             "title": "Start Offset"
           }
         },
@@ -3223,7 +3204,7 @@
             }
           },
           {
-            "description": "Inclusive, UTC day.",
+            "description": "Inclusive, local day in `tz`.",
             "in": "query",
             "name": "date_from",
             "required": false,
@@ -3237,12 +3218,12 @@
                   "type": "null"
                 }
               ],
-              "description": "Inclusive, UTC day.",
+              "description": "Inclusive, local day in `tz`.",
               "title": "Date From"
             }
           },
           {
-            "description": "Inclusive, UTC day.",
+            "description": "Inclusive, local day in `tz`.",
             "in": "query",
             "name": "date_to",
             "required": false,
@@ -3256,8 +3237,20 @@
                   "type": "null"
                 }
               ],
-              "description": "Inclusive, UTC day.",
+              "description": "Inclusive, local day in `tz`.",
               "title": "Date To"
+            }
+          },
+          {
+            "description": "IANA time zone the date filters are days in, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`.",
+            "in": "query",
+            "name": "tz",
+            "required": false,
+            "schema": {
+              "default": "UTC",
+              "description": "IANA time zone the date filters are days in, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`.",
+              "title": "Tz",
+              "type": "string"
             }
           },
           {
@@ -3805,7 +3798,7 @@
     },
     "/api/v1/meetings/{meeting_id}/ask": {
       "post": {
-        "description": "Answers from the meeting's transcript; each citation is one of its lines. A meeting without a transcript is `422 TRANSCRIPT_EMPTY`.",
+        "description": "Answers from the meeting's transcript; each citation is one of its lines. With nothing to answer from (no transcript) it answers that it found nothing, with `provider: null`, without calling the AI or counting towards the rate limit.",
         "operationId": "ask_meeting",
         "parameters": [
           {
@@ -4085,6 +4078,11 @@
             "schema": {
               "default": "md",
               "description": "One of: md, txt, pdf.",
+              "enum": [
+                "md",
+                "txt",
+                "pdf"
+              ],
               "title": "Format",
               "type": "string"
             }
@@ -4976,7 +4974,7 @@
     },
     "/api/v1/search/ask": {
       "post": {
-        "description": "Answers from the best transcript matches (and those meetings' summaries) across all live meetings, or only `meeting_ids` when given.",
+        "description": "Answers from the best transcript matches (and those meetings' summaries) across all live meetings, or only `meeting_ids` when given. With no matches it answers that it found nothing, with `provider: null`, without calling the AI or counting towards the rate limit.",
         "operationId": "ask_across_meetings",
         "requestBody": {
           "content": {

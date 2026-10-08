@@ -12,7 +12,7 @@ from app.schemas.comment import CommentCreate, CommentUpdate
 from app.schemas.common import PageParams
 from app.schemas.highlight import HighlightCreate, HighlightUpdate
 from app.services.comments import CommentService
-from app.services.highlights import HighlightService
+from app.services.highlights import HighlightService, utf16_length
 from tests import factories as f
 from tests.service_helpers import seeded
 
@@ -84,6 +84,26 @@ def test_highlight_offsets_are_checked_against_the_text(db_session: Session) -> 
         HighlightCreate(segment_id=seg.id, start_offset=0, end_offset=2, color="#ff0000")  # type: ignore[arg-type]
     svc.delete(ok.id)
     assert svc.list(m.id, PageParams()).total == 0
+
+
+def test_highlight_offsets_are_utf16_code_units(db_session: Session) -> None:
+    uow, _, m = seeded(db_session)
+    text = "🚀 launch"  # 8 Python characters, 9 UTF-16 units: the emoji is a surrogate pair
+    seg = f.make_segment(db_session, m, f.make_speaker(db_session, m), text)
+    db_session.commit()
+    assert (len(text), utf16_length(text)) == (8, 9)
+    svc = HighlightService(uow)
+    # What JavaScript reports for selecting "launch": text.indexOf("launch") == 3, length 9.
+    word = svc.create(m.id, HighlightCreate(segment_id=seg.id, start_offset=3, end_offset=9))
+    assert (word.start_offset, word.end_offset) == (3, 9)
+    with pytest.raises(ValidationFailedError):
+        svc.create(m.id, HighlightCreate(segment_id=seg.id, start_offset=3, end_offset=10))
+
+
+def test_highlight_offset_unit_is_in_the_openapi_contract(api: TestClient) -> None:
+    schema = api.get("/openapi.json").json()["components"]["schemas"]["HighlightCreate"]
+    assert "UTF-16 code units" in schema["properties"]["start_offset"]["description"]
+    assert "UTF-16 code units" in schema["properties"]["end_offset"]["description"]
 
 
 def _meeting_with_segments(api: TestClient, title: str = "Sync") -> tuple[int, list[int]]:

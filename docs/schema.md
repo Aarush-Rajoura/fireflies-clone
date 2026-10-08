@@ -181,7 +181,8 @@ meeting's data. Services must check each of these on write:
 - `action_items.assignee_participant_id` refers to a participant of the same `meeting_id`.
 - `comments` and `highlights`: `(meeting_id, segment_id)` must match the segment's meeting
   (`422 SEGMENT_NOT_IN_MEETING`).
-- `highlights`: `end_offset <= len(segment.text)` when the highlight is written. Editing the
+- `highlights`: offsets are UTF-16 code units (JavaScript string indices), and `end_offset` is
+  at most the text's UTF-16 length when the highlight is written. Editing the
   segment text later does not move or trim highlights, so a client clamps ranges to the text.
 - `highlights.color` is one of `yellow|green|blue|pink|purple` (checked by the request schema,
   not the database).

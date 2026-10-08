@@ -20,7 +20,8 @@ Ask = Annotated[AskService, Depends(get_ask_service)]
     response_model=AskResponse,
     summary="Ask a question about a meeting",
     description="Answers from the meeting's transcript; each citation is one of its lines. "
-    "A meeting without a transcript is `422 TRANSCRIPT_EMPTY`.",
+    "With nothing to answer from (no transcript) it answers that it found nothing, with "
+    "`provider: null`, without calling the AI or counting towards the rate limit.",
     responses={**NOT_FOUND, **GONE, **VALIDATION, **RATE_LIMITED, **AI_UNAVAILABLE},
 )
 def ask_meeting(meeting_id: int, body: AskRequest, request: Request, service: Ask) -> AskResponse:
@@ -34,7 +35,9 @@ def ask_meeting(meeting_id: int, body: AskRequest, request: Request, service: As
     response_model=AskResponse,
     summary="Ask a question across meetings",
     description="Answers from the best transcript matches (and those meetings' summaries) "
-    "across all live meetings, or only `meeting_ids` when given.",
+    "across all live meetings, or only `meeting_ids` when given. With no matches it answers "
+    "that it found nothing, with `provider: null`, without calling the AI or counting towards "
+    "the rate limit.",
     responses={**VALIDATION, **RATE_LIMITED, **AI_UNAVAILABLE},
 )
 def ask_across_meetings(

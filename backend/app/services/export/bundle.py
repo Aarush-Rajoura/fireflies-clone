@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 
+from app.services.timefmt import clock
+
 
 class Section(StrEnum):
     SUMMARY = "summary"
@@ -68,13 +70,6 @@ class ExportBundle:
         if self.participants:
             rows.append(("Participants", ", ".join(self.participants)))
         return rows
-
-
-def clock(ms: int) -> str:
-    """`MM:SS`, or `H:MM:SS` past the hour: formatting belongs to the presentation edge."""
-    hours, rest = divmod(ms // 1000, 3600)
-    minutes, seconds = divmod(rest, 60)
-    return f"{hours}:{minutes:02d}:{seconds:02d}" if hours else f"{minutes:02d}:{seconds:02d}"
 
 
 def task_suffix(task: TaskLine) -> str:

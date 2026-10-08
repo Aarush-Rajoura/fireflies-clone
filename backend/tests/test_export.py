@@ -4,6 +4,7 @@ import zlib
 from datetime import UTC, datetime
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from app.core.exceptions import ValidationFailedError
@@ -148,3 +149,9 @@ def test_export_api_errors(api: TestClient) -> None:
     assert api.get(f"{V1}/meetings/999/export").status_code == 404
     api.delete(f"{V1}/meetings/{mid}")
     assert api.get(f"{V1}/meetings/{mid}/export").status_code == 410
+
+
+def test_openapi_advertises_the_registry_formats_as_an_enum(app: FastAPI) -> None:
+    params = app.openapi()["paths"]["/api/v1/meetings/{meeting_id}/export"]["get"]["parameters"]
+    fmt = next(p for p in params if p["name"] == "format")
+    assert fmt["schema"]["enum"] == default_exporters().formats()

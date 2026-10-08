@@ -9,9 +9,9 @@ from app.services.export.bundle import (
     SECTION_TITLES,
     ExportBundle,
     Section,
-    clock,
     task_suffix,
 )
+from app.services.timefmt import clock
 
 
 def _heading(text: str, rule: str) -> str:

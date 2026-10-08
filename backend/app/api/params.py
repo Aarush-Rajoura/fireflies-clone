@@ -33,8 +33,15 @@ def meeting_filters(
         ),
     ] = None,
     participant: Annotated[str | None, Query(description="Participant name contains.")] = None,
-    date_from: Annotated[date | None, Query(description="Inclusive, UTC day.")] = None,
-    date_to: Annotated[date | None, Query(description="Inclusive, UTC day.")] = None,
+    date_from: Annotated[date | None, Query(description="Inclusive, local day in `tz`.")] = None,
+    date_to: Annotated[date | None, Query(description="Inclusive, local day in `tz`.")] = None,
+    tz: Annotated[
+        str,
+        Query(
+            description="IANA time zone the date filters are days in, e.g. `Asia/Kolkata`; "
+            "an unknown name is `422 INVALID_TIMEZONE`."
+        ),
+    ] = "UTC",
     tag: Annotated[list[int] | None, Query(description="Tag id; repeat for any-of.")] = None,
     channel: Annotated[int | None, Query(description="Channel id.")] = None,
     scope: Literal["all", "hosted", "shared", "uploads"] = "all",
@@ -45,6 +52,7 @@ def meeting_filters(
         participant=participant,
         date_from=date_from,
         date_to=date_to,
+        tz=tz,
         tag_ids=tuple(tag or ()),
         channel_id=channel,
         scope=scope,

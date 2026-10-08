@@ -16,9 +16,9 @@ from app.services.export.bundle import (
     SECTION_TITLES,
     ExportBundle,
     Section,
-    clock,
     task_suffix,
 )
+from app.services.timefmt import clock
 
 # A PDF cannot read the app's CSS tokens; these mirror the light theme's accent and muted ink.
 _ACCENT = HexColor("#6A39EF")

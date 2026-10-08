@@ -6,6 +6,7 @@ from app.models import Meeting, Soundbite
 from app.schemas.common import Page, PageParams
 from app.schemas.soundbite import SoundbiteCreate, SoundbiteRead
 from app.services.guards import require_active_meeting, require_current_user
+from app.services.timefmt import clock
 
 MIN_LENGTH_MS = 3_000
 MAX_LENGTH_MS = 180_000
@@ -22,11 +23,6 @@ def _read(s: Soundbite) -> SoundbiteRead:
         duration_ms=s.end_ms - s.start_ms,
         created_by=s.created_by,
     )
-
-
-def _clock(ms: int) -> str:
-    minutes, seconds = divmod(ms // 1000, 60)
-    return f"{minutes:02d}:{seconds:02d}"
 
 
 class SoundbiteService:
@@ -71,7 +67,7 @@ class SoundbiteService:
                 if len(text) > _TITLE_CHARS:
                     text = text[: _TITLE_CHARS - 1].rstrip() + "…"
                 return text
-        return f"Soundbite at {_clock(start_ms)}"
+        return f"Soundbite at {clock(start_ms)}"
 
 
 def _check_bounds(meeting: Meeting, start_ms: int, end_ms: int) -> None:

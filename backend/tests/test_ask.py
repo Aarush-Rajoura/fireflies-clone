@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.ai.factory import get_question_answerer
 from app.ai.mock import MockProvider
 from app.ai.types import Passage
-from app.core.exceptions import GoneError, ValidationFailedError
+from app.core.exceptions import GoneError
 from app.db.search import to_any_query
 from app.models import Meeting, Summary
 from app.services.ask import AskService
@@ -67,11 +67,22 @@ def test_guards_run_before_the_ai_and_the_limiter(db_session: Session) -> None:
     db_session.commit()
     stub, counted = StubAnswerer(), []
     svc = AskService(uow, stub)
-    with pytest.raises(ValidationFailedError) as err:
-        svc.ask_meeting(empty.id, "anything?", before_ai=lambda: counted.append(1))
-    assert err.value.code == "TRANSCRIPT_EMPTY"
     with pytest.raises(GoneError):
         svc.ask_meeting(gone.id, "anything?", before_ai=lambda: counted.append(1))
+    assert counted == [] and stub.calls == []
+
+
+def test_no_passages_short_circuits_before_the_limiter_and_ai(db_session: Session) -> None:
+    uow, _, empty = seeded(db_session)
+    _transcript(db_session, "Sync", ["The roadmap is ready"])
+    stub, counted = StubAnswerer(), []
+    svc = AskService(uow, stub)
+    no_transcript = svc.ask_meeting(empty.id, "anything?", before_ai=lambda: counted.append(1))
+    assert no_transcript.answer == "I couldn't find that in this meeting."
+    no_hits = svc.ask_across("zebra migration?", before_ai=lambda: counted.append(1))
+    assert no_hits.answer == "I couldn't find that in your meetings."
+    for result in (no_transcript, no_hits):
+        assert result.citations == [] and (result.provider, result.model) == (None, None)
     assert counted == [] and stub.calls == []
 
 
@@ -128,9 +139,10 @@ def test_ask_api_contract(api: TestClient) -> None:
     for bad in ({"question": "   "}, {"question": "x" * 501}, {}, {"question": "q", "x": 1}):
         resp = api.post(f"{V1}/meetings/{mid}/ask", json=bad)
         assert resp.status_code == 422, bad
-    history = [{"role": "user", "text": "hi"}, {"role": "assistant", "text": "hello"}]
-    ok = api.post(f"{V1}/meetings/{mid}/ask", json={"question": "launch?", "history": history})
-    assert ok.status_code == 200
+    # history is not part of the contract (yet), so the strict body rejects it.
+    history = [{"role": "user", "text": "hi"}]
+    stale = api.post(f"{V1}/meetings/{mid}/ask", json={"question": "launch?", "history": history})
+    assert stale.status_code == 422
     assert api.post(f"{V1}/meetings/999/ask", json={"question": "q"}).status_code == 404
 
     across = api.post(f"{V1}/search/ask", json={"question": "launch date"})
@@ -152,6 +164,9 @@ def test_ask_is_rate_limited(api: TestClient, app: FastAPI) -> None:
     assert codes == [200, 200, 429]
     limited = api.post(f"{V1}/search/ask", json={"question": "launch"})
     assert limited.status_code == 429 and limited.json()["error"]["code"] == "RATE_LIMITED"
+    # Nothing to answer from: no AI call, so it is answered even with the budget spent.
+    empty = api.post(f"{V1}/search/ask", json={"question": "zebra"})
+    assert empty.status_code == 200 and empty.json()["provider"] is None
 
 
 def test_provider_failure_is_503(api: TestClient, api_app: FastAPI) -> None:

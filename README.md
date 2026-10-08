@@ -35,7 +35,7 @@ Legend: **Done (API)** means the backend and its tests are finished and the endp
 
 | Brief item | Backend | Frontend |
 |---|---|---|
-| Library: title, date, duration, participants; search and filter by title, date, participant; sort by recency | Done (API): `GET /meetings` with `q`, `participant`, `date_from`/`date_to`, `tag`, `channel`, `scope`, `status`, `sort` | In progress |
+| Library: title, date, duration, participants; search and filter by title, date, participant; sort by recency | Done (API): `GET /meetings` with `q`, `participant`, `date_from`/`date_to` (local days in `tz`), `tag`, `channel`, `scope`, `status`, `sort` | In progress |
 | Meeting detail: transcript with speakers and timestamps, media player, click-to-seek | Done (API): transcript, speakers, `GET /meetings/{id}/media` with HTTP Range | In progress |
 | In-transcript search with highlighted matches | Not needed: the client searches the full transcript from `GET /meetings/{id}/transcript` | In progress |
 | AI summary, action items, outline / chapters, keywords | Done (API): generated on import, `POST .../summary/regenerate` | In progress |
@@ -257,8 +257,8 @@ and reloads the web app).
 1. App screens on the existing API: meetings library and hub, meeting detail with player and
    transcript, create/upload flow, tasks.
 2. Screens for tags, comments, highlights and soundbites (the endpoints exist).
-3. The "Ask AI" panels in a meeting and on the Meetings hub (the endpoints exist); use the
-   conversation `history` the ask endpoints already accept.
+3. The "Ask AI" panels in a meeting and on the Meetings hub (the endpoints exist); then add
+   conversation history to the ask contract.
 4. The export modal (the endpoint exists).
 5. Dark/light theme toggle, home dashboard, AskFred page, analytics, and the simulated team and
    integrations pages.

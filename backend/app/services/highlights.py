@@ -1,4 +1,4 @@
-"""Highlight use cases: character ranges inside one transcript line of the meeting."""
+"""Highlight use cases: UTF-16 ranges inside one transcript line of the meeting."""
 
 from app.core.exceptions import NotFoundError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
@@ -24,12 +24,19 @@ def _read(h: Highlight) -> HighlightRead:
     )
 
 
+def utf16_length(text: str) -> int:
+    """Length as JavaScript counts it: characters outside the BMP (emoji) are 2 units."""
+    return len(text.encode("utf-16-le")) // 2
+
+
 def _check_range(start: int, end: int, text: str) -> None:
-    if not 0 <= start < end <= len(text):
+    # Offsets are UTF-16 code units (what a browser selection reports), not Python characters.
+    length = utf16_length(text)
+    if not 0 <= start < end <= length:
         raise ValidationFailedError(
             "Highlight range is outside the segment text",
             code="HIGHLIGHT_OUT_OF_RANGE",
-            details={"start_offset": start, "end_offset": end, "text_length": len(text)},
+            details={"start_offset": start, "end_offset": end, "text_length": length},
         )
 
 

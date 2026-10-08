@@ -1,6 +1,7 @@
 """Meeting list filters as composable WHERE builders (query code only)."""
 
 from datetime import UTC, date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import ColumnElement, and_, exists, or_, select
 
@@ -34,8 +35,9 @@ def _text_matches(term: str) -> ColumnElement[bool]:
     return or_(*clauses)
 
 
-def _day_start(day: date) -> datetime:
-    return datetime.combine(day, time.min, tzinfo=UTC)
+def _day_start(day: date, tz: str) -> datetime:
+    """The UTC instant a calendar day begins in zone `tz` (validated by the service)."""
+    return datetime.combine(day, time.min, tzinfo=ZoneInfo(tz)).astimezone(UTC)
 
 
 def _scope_clause(scope: str, user_id: int) -> ColumnElement[bool] | None:
@@ -61,9 +63,10 @@ def build_conditions(
     if filters.participant and filters.participant.strip():
         conds.append(_name_matches(filters.participant.strip()))
     if filters.date_from:
-        conds.append(Meeting.started_at >= _day_start(filters.date_from))
+        conds.append(Meeting.started_at >= _day_start(filters.date_from, filters.tz))
     if filters.date_to:
-        conds.append(Meeting.started_at < _day_start(filters.date_to + timedelta(days=1)))
+        next_day = filters.date_to + timedelta(days=1)
+        conds.append(Meeting.started_at < _day_start(next_day, filters.tz))
     if filters.tag_ids:
         conds.append(
             exists(

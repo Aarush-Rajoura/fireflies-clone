@@ -17,8 +17,10 @@ class MeetingSort(StrEnum):
 class MeetingFilters:
     q: str | None = None
     participant: str | None = None
-    date_from: date | None = None  # inclusive, whole day (UTC)
-    date_to: date | None = None  # inclusive, whole day (UTC)
+    date_from: date | None = None  # inclusive, whole local day in `tz`
+    date_to: date | None = None  # inclusive, whole local day in `tz`
+    # IANA zone the dates are calendar days in (the viewer's), e.g. "Asia/Kolkata".
+    tz: str = "UTC"
     tag_ids: tuple[int, ...] = ()
     host_id: int | None = None
     channel_id: int | None = None

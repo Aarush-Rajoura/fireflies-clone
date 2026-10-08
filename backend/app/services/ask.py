@@ -8,7 +8,6 @@ from collections.abc import Callable, Sequence
 
 from app.ai.interfaces import QuestionAnswerer
 from app.ai.types import Answer, Passage
-from app.core.exceptions import ValidationFailedError
 from app.db.search import search_any_words
 from app.db.unit_of_work import UnitOfWork
 from app.schemas.ask import AskCitation, AskResponse
@@ -18,11 +17,18 @@ from app.services.transcript_text import build_transcript_for_ai
 # Enough context to answer from, small enough to stay inside one LLM prompt.
 MAX_CROSS_PASSAGES = 40
 _QUOTE_CHARS = 220
+NO_ANSWER_MEETING = "I couldn't find that in this meeting."
+NO_ANSWER_MEETINGS = "I couldn't find that in your meetings."
 
 
 def _clip(text: str) -> str:
     text = " ".join(text.split())
     return text if len(text) <= _QUOTE_CHARS else text[: _QUOTE_CHARS - 1].rstrip() + "…"
+
+
+def _not_found(message: str) -> AskResponse:
+    # Nothing to ground an answer in: answer without calling the AI or spending rate-limit quota.
+    return AskResponse(answer=message, citations=[], provider=None, model=None)
 
 
 class AskService:
@@ -36,6 +42,8 @@ class AskService:
         """`before_ai` (the rate limiter) runs after every guard, so rejected requests are free."""
         try:
             passages = self._meeting_passages(meeting_id)
+            if not passages:
+                return _not_found(NO_ANSWER_MEETING)
             if before_ai is not None:
                 before_ai()
         finally:
@@ -51,6 +59,8 @@ class AskService:
     ) -> AskResponse:
         try:
             passages = self._search_passages(question, meeting_ids)
+            if not passages:
+                return _not_found(NO_ANSWER_MEETINGS)
             if before_ai is not None:
                 before_ai()
         finally:
@@ -61,9 +71,7 @@ class AskService:
         meeting = require_active_meeting(self.uow, meeting_id)
         segments = self.uow.transcript.segments(meeting_id)
         if not segments:
-            raise ValidationFailedError(
-                "This meeting has no transcript to ask about", code="TRANSCRIPT_EMPTY"
-            )
+            return []
         transcript = build_transcript_for_ai(
             meeting,
             segments,

@@ -22,9 +22,13 @@ Interactive docs: `/docs` on a running server.
 - **Pagination:** every list returns `{items, page, page_size, total, total_pages, has_next}`.
   Query `page` (from 1) and `page_size` (default 20, clamped to 100).
 - **Filtering and sorting (`GET /meetings`):** `q`, `participant`, `date_from`, `date_to`
-  (inclusive UTC days), `tag` (tag id, repeat for any-of), `channel` (id),
+  (inclusive whole days in `tz`), `tz` (IANA zone name such as `Asia/Kolkata`, default `UTC`;
+  an unknown name is `422 INVALID_TIMEZONE`), `tag` (tag id, repeat for any-of), `channel` (id),
   `scope` (`all|hosted|shared|uploads`), `status` (`completed|upcoming`), `sort`
   (`-started_at` default, `started_at`, `title`, `-duration_ms`).
+  - Dates are calendar days where the viewer is: `date_from=date_to=2026-10-09&tz=Asia/Kolkata`
+    covers `2026-10-08T18:30Z` up to (not including) `2026-10-09T18:30Z`, so a meeting at
+    `2026-10-08T20:00Z` is included; with the default `tz=UTC` it is not.
   - `q` matches a case-insensitive substring of the title, a participant name or the summary
     overview, **or** every word of it in the transcript (FTS5, last word as a prefix; the same
     safe query builder as `/search`).
@@ -50,9 +54,10 @@ Interactive docs: `/docs` on a running server.
   warning, never truncated.
 - **Rate limiting:** only requests that run the AI are limited: `POST
   /meetings/{id}/summary/regenerate`, `POST /meetings/{id}/ask`, `POST /search/ask`, and
-  `POST /meetings` **when it carries `segments`**. They share one per-client budget, `AI_RATE_LIMIT` (default `10/minute`, read from the app's
-  settings). The check runs after the service's guards, so 404/409/410/422 responses never use
-  up the budget. The 429 carries `Retry-After`. The client address is the first `X-Forwarded-For` hop when present,
+  `POST /meetings` **when it carries `segments`**. They share one per-client budget,
+  `AI_RATE_LIMIT` (default `10/minute`, read from the app's settings). The check runs after the
+  service's guards, so 404/409/410/422 responses never use up the budget, and neither does an
+  ask with nothing to answer from. The 429 carries `Retry-After`. The client address is the first `X-Forwarded-For` hop when present,
   else the socket peer; that header is only trustworthy behind a proxy that sets it (Vercel does),
   and counters are in memory, per process.
 - **AI failures:** a provider error that escapes the fallback wrapper is `503 AI_UNAVAILABLE`
@@ -67,28 +72,34 @@ Interactive docs: `/docs` on a running server.
   id is `422 TAG_NOT_FOUND`) and returns the updated meeting. Deleting a tag removes it from
   every meeting. `MeetingDetail.suggested_tags` is the meeting's top keywords not already
   applied as tags (no AI call on read).
-- **Ask AI:** `POST /meetings/{id}/ask` `{question (1-500 chars), history?}` answers from that
-  meeting's transcript (`422 TRANSCRIPT_EMPTY` when it has none); `history` is accepted and
-  validated but not used yet. `POST /search/ask` `{question, meeting_ids?}` answers from up to 40
+- **Ask AI:** `POST /meetings/{id}/ask` `{question (1-500 chars)}` answers from that
+  meeting's transcript (there is no conversation history in the contract yet; unknown fields
+  are 422). `POST /search/ask` `{question, meeting_ids?}` answers from up to 40
   best transcript matches (any content word of the question, bm25 order) across live meetings,
   or only `meeting_ids`, plus those meetings' summary overviews. Both return
   `{answer, citations[{meeting_id, meeting_title, segment_id, start_ms, quote}], provider,
   model}`; a citation the provider makes up (a segment that was not among the passages) is
   dropped, and `start_ms` always comes from the database. Passages are read, the transaction is
-  closed, and only then is the AI called.
+  closed, and only then is the AI called. When there is nothing to answer from (a meeting with
+  no transcript, or no matching lines across meetings) the answer is "I couldn't find that in
+  this meeting." / "...in your meetings." with no citations and `provider: null`, returned before
+  the rate limiter and without an AI call.
 - **Comments:** listed oldest first; `body` 1-2000 chars; an optional `segment_id` must be a
   line of the same meeting (`422 SEGMENT_NOT_IN_MEETING`); the author is the current (default)
   user. `DELETE` hides the comment (`deleted_at`), after which it is `404`.
 - **Highlights:** `{segment_id, start_offset, end_offset, color}` with
-  `0 <= start_offset < end_offset <= len(segment.text)` (`422 HIGHLIGHT_OUT_OF_RANGE` when past
-  the text); `color` is `yellow|green|blue|pink|purple` (default `yellow`). Listed in transcript
+  `0 <= start_offset < end_offset <= length of the segment text` (`422 HIGHLIGHT_OUT_OF_RANGE`
+  when past the text). Offsets and the length are **UTF-16 code units, matching JavaScript
+  string indices** (an emoji counts as 2), so a browser selection's offsets can be sent as they
+  are; the server measures with the same unit. `color` is `yellow|green|blue|pink|purple` (default `yellow`). Listed in transcript
   order.
 - **Soundbites:** `{title?, start_ms, end_ms}`; length 3-180 s (`422 SOUNDBITE_LENGTH_INVALID`)
   and `end_ms <= duration_ms` (`422 SOUNDBITE_OUT_OF_RANGE`). Without a title, the first line
   spoken inside the clip is used. Listed in recording order.
 - **Export:** `GET /meetings/{id}/export?format=md|txt|pdf&sections=summary,action_items,transcript`
   returns the file with `Content-Disposition: attachment; filename="<title-slug>-<date>.<ext>"`.
-  `format` defaults to `md`, `sections` to all (rendered in that fixed order). An unknown format
+  `format` defaults to `md`, `sections` to all (rendered in that fixed order). OpenAPI lists
+  `format` as an enum built from the exporter registry, so client types get a union. An unknown format
   is `422 EXPORT_FORMAT_UNSUPPORTED`, an unknown or empty section list
   `422 EXPORT_SECTION_UNKNOWN`. The PDF uses reportlab's built-in Helvetica, so characters
   outside Latin-1 do not render there.

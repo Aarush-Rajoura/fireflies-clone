@@ -33,7 +33,14 @@ _FILE: Responses = {
 def export_meeting(
     meeting_id: int,
     service: Annotated[ExportService, Depends(get_export_service)],
-    format: Annotated[str, Query(description=f"One of: {', '.join(DEFAULT_FORMATS)}.")] = "md",
+    # Typed `str` so the registry stays open; the enum is only advertised for client types.
+    format: Annotated[
+        str,
+        Query(
+            description=f"One of: {', '.join(DEFAULT_FORMATS)}.",
+            json_schema_extra={"enum": list(DEFAULT_FORMATS)},
+        ),
+    ] = "md",
     sections: Annotated[
         str | None,
         Query(

@@ -41,7 +41,7 @@ class Highlight(Base):
         ForeignKey("transcript_segments.id", ondelete="CASCADE")
     )
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
-    # Character offsets inside the segment text.
+    # Offsets inside the segment text in UTF-16 code units (JavaScript string indices).
     start_offset: Mapped[int]
     end_offset: Mapped[int]
     color: Mapped[str] = mapped_column(String(32))

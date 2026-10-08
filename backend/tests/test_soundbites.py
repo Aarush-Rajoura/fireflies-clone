@@ -8,6 +8,7 @@ from app.core.exceptions import GoneError, NotFoundError, ValidationFailedError
 from app.schemas.common import PageParams
 from app.schemas.soundbite import SoundbiteCreate
 from app.services.soundbites import SoundbiteService
+from app.services.timefmt import clock
 from tests import factories as f
 from tests.service_helpers import seeded
 
@@ -56,6 +57,15 @@ def test_create_list_delete_and_default_title(db_session: Session) -> None:
     db_session.commit()
     with pytest.raises(GoneError):
         svc.delete(spoken.id)
+
+
+def test_default_title_uses_the_shared_clock_past_the_hour(db_session: Session) -> None:
+    uow, user, _ = seeded(db_session)
+    m = f.make_meeting(db_session, host=user, duration_ms=4_000_000)
+    db_session.commit()
+    bite = SoundbiteService(uow).create(m.id, SoundbiteCreate(start_ms=3_605_000, end_ms=3_610_000))
+    assert bite.title == "Soundbite at 1:00:05"
+    assert clock(65_000) == "01:05"
 
 
 def test_soundbites_api_contract(api: TestClient) -> None:

@@ -7,13 +7,20 @@ from app.schemas.common import InputModel
 # Named swatches, not hex: the client maps each to a theme token.
 HighlightColor = Literal["yellow", "green", "blue", "pink", "purple"]
 
+# The browser measures a selection in UTF-16 code units, so the API does too: an emoji
+# counts as 2, exactly as in JavaScript's `String.prototype.length`.
+_UNIT = "UTF-16 code units, matching JavaScript string indices"
+START_DOC = f"Inclusive start offset into the segment text, in {_UNIT}."
+END_DOC = f"Exclusive end offset into the segment text, in {_UNIT}; at most its length."
+
 
 class HighlightCreate(InputModel):
-    """Half-open character range `[start_offset, end_offset)` inside the segment's text."""
+    """Half-open range `[start_offset, end_offset)` inside the segment's text, in UTF-16
+    code units (JavaScript string indices)."""
 
     segment_id: int
-    start_offset: int = Field(ge=0)
-    end_offset: int = Field(ge=1)
+    start_offset: int = Field(ge=0, description=START_DOC)
+    end_offset: int = Field(ge=1, description=END_DOC)
     color: HighlightColor = "yellow"
 
     @model_validator(mode="after")
@@ -26,8 +33,8 @@ class HighlightCreate(InputModel):
 class HighlightUpdate(InputModel):
     """Partial edit; the resulting range is re-checked against the segment text."""
 
-    start_offset: int | None = Field(default=None, ge=0)
-    end_offset: int | None = Field(default=None, ge=1)
+    start_offset: int | None = Field(default=None, ge=0, description=START_DOC)
+    end_offset: int | None = Field(default=None, ge=1, description=END_DOC)
     color: HighlightColor | None = None
 
     @field_validator("start_offset", "end_offset", "color", mode="before")
@@ -42,7 +49,7 @@ class HighlightRead(BaseModel):
     id: int
     meeting_id: int
     segment_id: int
-    start_offset: int
-    end_offset: int
+    start_offset: int = Field(description=START_DOC)
+    end_offset: int = Field(description=END_DOC)
     color: HighlightColor
     created_by: int | None
