@@ -4,6 +4,7 @@ from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routers import (
     action_items,
+    analytics,
     ask,
     channels,
     chats,
@@ -34,6 +35,7 @@ ROUTERS = (
     ask,
     chats,
     search,
+    analytics,
     channels,
     tags,
     integrations,

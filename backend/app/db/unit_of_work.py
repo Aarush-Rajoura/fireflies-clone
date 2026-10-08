@@ -5,6 +5,7 @@ from types import TracebackType
 from sqlalchemy.orm import Session
 
 from app.repositories.action_items import ActionItemRepository
+from app.repositories.analytics import AnalyticsRepository
 from app.repositories.calendar import CalendarConnectionRepository
 from app.repositories.channels import ChannelRepository
 from app.repositories.chat_context import ChatContextRepository
@@ -43,6 +44,7 @@ class UnitOfWork:
         self.integration_connections = IntegrationConnectionRepository(session)
         self.chats = ChatRepository(session)
         self.chat_context = ChatContextRepository(session)
+        self.analytics = AnalyticsRepository(session)
 
     def __enter__(self) -> "UnitOfWork":
         return self

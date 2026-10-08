@@ -12,6 +12,7 @@ from app.core.config import Settings
 from app.db.unit_of_work import UnitOfWork
 from app.parsers import default_registry
 from app.services.action_items import ActionItemService
+from app.services.analytics import AnalyticsService
 from app.services.ask import AskService
 from app.services.calendar import CalendarService
 from app.services.channels import ChannelService
@@ -127,6 +128,10 @@ def get_soundbite_service(uow: Uow) -> SoundbiteService:
 
 def get_export_service(uow: Uow) -> ExportService:
     return ExportService(uow, default_exporters())
+
+
+def get_analytics_service(uow: Uow) -> AnalyticsService:
+    return AnalyticsService(uow)
 
 
 def get_ask_service(
