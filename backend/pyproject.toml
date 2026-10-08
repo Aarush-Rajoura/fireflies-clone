@@ -13,6 +13,7 @@ dependencies = [
     "httpx",
     "reportlab",
     "slowapi",
+    "tzdata>=2026.5",
 ]
 
 [dependency-groups]
