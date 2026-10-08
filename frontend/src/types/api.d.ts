@@ -169,6 +169,61 @@ export interface paths {
         patch: operations["update_highlight"];
         trace?: never;
     };
+    "/api/v1/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the integration catalogue with the current user's connection state */
+        get: operations["list_integrations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List integration categories with catalogue counts */
+        get: operations["list_integration_categories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/integrations/{key}/connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Connect an integration (simulated; idempotent)
+         * @description No data leaves the app: the connection is only recorded. An unknown key is `404 INTEGRATION_NOT_FOUND`.
+         */
+        put: operations["connect_integration"];
+        post?: never;
+        /** Disconnect an integration (idempotent) */
+        delete: operations["disconnect_integration"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -1035,6 +1090,37 @@ export interface components {
             start_offset?: number | null;
         };
         /**
+         * IntegrationCategory
+         * @enum {string}
+         */
+        IntegrationCategory: "video-conferencing" | "calendar" | "crm" | "project-management" | "notes" | "collaboration" | "ats" | "dialers" | "audio-recording" | "mcp" | "storage";
+        /** IntegrationCategoryRead */
+        IntegrationCategoryRead: {
+            /** Count */
+            count: number;
+            key: components["schemas"]["IntegrationCategory"];
+            /** Label */
+            label: string;
+        };
+        /** IntegrationRead */
+        IntegrationRead: {
+            category: components["schemas"]["IntegrationCategory"];
+            /** Connected */
+            connected: boolean;
+            /** Connected At */
+            connected_at: string | null;
+            /** Description */
+            description: string;
+            /** Featured */
+            featured: boolean;
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Vendor */
+            vendor: string;
+        };
+        /**
          * JoinPreference
          * @enum {string}
          */
@@ -1414,6 +1500,36 @@ export interface components {
             readonly has_next: boolean;
             /** Items */
             items: components["schemas"]["HighlightRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[IntegrationCategoryRead] */
+        Page_IntegrationCategoryRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["IntegrationCategoryRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[IntegrationRead] */
+        Page_IntegrationRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["IntegrationRead"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -2455,6 +2571,182 @@ export interface operations {
             };
             /** @description Invalid input; `details.errors[].loc` is the field path. */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_integrations: {
+        parameters: {
+            query?: {
+                category?: components["schemas"]["IntegrationCategory"] | null;
+                /** @description Case-insensitive substring of the name, vendor or description. */
+                q?: string | null;
+                /** @description Only connected (`true`) or unconnected (`false`). */
+                connected?: boolean | null;
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_IntegrationRead_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_integration_categories: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_IntegrationCategoryRead_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    connect_integration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IntegrationRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    disconnect_integration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

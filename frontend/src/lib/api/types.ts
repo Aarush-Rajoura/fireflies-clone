@@ -63,6 +63,14 @@ export type CalendarProvider = Schemas["CalendarProvider"];
 export type CalendarConnection = Schemas["CalendarConnectionRead"];
 export type FeedItem = Schemas["FeedItem"];
 export type Notification = Schemas["NotificationRead"];
+
+export type Integration = Schemas["IntegrationRead"];
+export type IntegrationCategory = Schemas["IntegrationCategory"];
+export type IntegrationCategoryInfo = Schemas["IntegrationCategoryRead"];
+/** Query parameters of GET /api/v1/integrations. */
+export type IntegrationListParams = NonNullable<
+  operations["list_integrations"]["parameters"]["query"]
+>;
 export type SearchHit = Schemas["SearchHit"];
 /** Query parameters of GET /api/v1/search. */
 export type SearchParams = operations["search"]["parameters"]["query"];

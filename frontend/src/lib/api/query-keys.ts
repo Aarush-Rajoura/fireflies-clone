@@ -1,4 +1,4 @@
-import type { MeetingListParams, SearchParams } from "./types";
+import type { IntegrationListParams, MeetingListParams, SearchParams } from "./types";
 
 /*
  * Every TanStack Query key in the app comes from here, so invalidation can
@@ -27,6 +27,11 @@ export const qk = {
   feed: () => ["feed"] as const,
   calendarConnections: () => ["calendar-connections"] as const,
   notifications: () => ["notifications"] as const,
+  integrations: {
+    all: ["integrations"] as const,
+    list: (params: IntegrationListParams = {}) => ["integrations", "list", params] as const,
+    categories: () => ["integrations", "categories"] as const,
+  },
   // Not under ['meetings']: search spans every meeting, so instead of being
   // invalidated by meeting edits its queries use staleTime 0 (see useSearch).
   search: {
