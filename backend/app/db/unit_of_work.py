@@ -10,6 +10,7 @@ from app.repositories.comments import CommentRepository
 from app.repositories.highlights import HighlightRepository
 from app.repositories.meetings import MeetingRepository
 from app.repositories.participants import ParticipantRepository
+from app.repositories.soundbites import SoundbiteRepository
 from app.repositories.summaries import SummaryRepository
 from app.repositories.tags import TagRepository
 from app.repositories.transcript import TranscriptRepository
@@ -29,6 +30,7 @@ class UnitOfWork:
         self.channels = ChannelRepository(session)
         self.comments = CommentRepository(session)
         self.highlights = HighlightRepository(session)
+        self.soundbites = SoundbiteRepository(session)
 
     def __enter__(self) -> "UnitOfWork":
         return self

@@ -20,6 +20,7 @@ from app.services.media import MediaService
 from app.services.meeting_creation import MeetingCreationService
 from app.services.meetings import MeetingService
 from app.services.search import SearchService
+from app.services.soundbites import SoundbiteService
 from app.services.summary import SummaryService
 from app.services.tags import TagService
 from app.services.transcript import TranscriptService
@@ -101,6 +102,10 @@ def get_comment_service(uow: Uow) -> CommentService:
 
 def get_highlight_service(uow: Uow) -> HighlightService:
     return HighlightService(uow)
+
+
+def get_soundbite_service(uow: Uow) -> SoundbiteService:
+    return SoundbiteService(uow)
 
 
 def get_health_service(uow: Uow) -> HealthService:

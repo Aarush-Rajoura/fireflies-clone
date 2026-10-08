@@ -1500,6 +1500,49 @@
         "title": "Page[SearchHit]",
         "type": "object"
       },
+      "Page_SoundbiteRead_": {
+        "properties": {
+          "has_next": {
+            "readOnly": true,
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SoundbiteRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "readOnly": true,
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "has_next"
+        ],
+        "title": "Page[SoundbiteRead]",
+        "type": "object"
+      },
       "Page_TagRead_": {
         "properties": {
           "has_next": {
@@ -1844,6 +1887,91 @@
           "text"
         ],
         "title": "SegmentUpdate",
+        "type": "object"
+      },
+      "SoundbiteCreate": {
+        "additionalProperties": false,
+        "description": "A clip of the recording; the length must be 3-180 s and end within the meeting.",
+        "properties": {
+          "end_ms": {
+            "minimum": 0.0,
+            "title": "End Ms",
+            "type": "integer"
+          },
+          "start_ms": {
+            "minimum": 0.0,
+            "title": "Start Ms",
+            "type": "integer"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "start_ms",
+          "end_ms"
+        ],
+        "title": "SoundbiteCreate",
+        "type": "object"
+      },
+      "SoundbiteRead": {
+        "properties": {
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "end_ms": {
+            "title": "End Ms",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "meeting_id": {
+            "title": "Meeting Id",
+            "type": "integer"
+          },
+          "start_ms": {
+            "title": "Start Ms",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "meeting_id",
+          "title",
+          "start_ms",
+          "end_ms",
+          "duration_ms",
+          "created_by"
+        ],
+        "title": "SoundbiteRead",
         "type": "object"
       },
       "SpeakerRead": {
@@ -3975,6 +4103,173 @@
         ]
       }
     },
+    "/api/v1/meetings/{meeting_id}/soundbites": {
+      "get": {
+        "operationId": "list_soundbites",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "title": "Meeting Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Clamped to 100.",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Clamped to 100.",
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_SoundbiteRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The meeting was soft-deleted; restore it to use it again."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "List a meeting's soundbites (recording order)",
+        "tags": [
+          "soundbites"
+        ]
+      },
+      "post": {
+        "description": "Length must be 3-180 s (`422 SOUNDBITE_LENGTH_INVALID`) and `end_ms` at most the meeting's `duration_ms` (`422 SOUNDBITE_OUT_OF_RANGE`).",
+        "operationId": "create_soundbite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "title": "Meeting Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SoundbiteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoundbiteRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The meeting was soft-deleted; restore it to use it again."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Clip part of the recording",
+        "tags": [
+          "soundbites"
+        ]
+      }
+    },
     "/api/v1/meetings/{meeting_id}/summary": {
       "get": {
         "operationId": "get_summary",
@@ -4401,6 +4696,61 @@
         "summary": "Edit a transcript segment",
         "tags": [
           "transcripts"
+        ]
+      }
+    },
+    "/api/v1/soundbites/{soundbite_id}": {
+      "delete": {
+        "operationId": "delete_soundbite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "soundbite_id",
+            "required": true,
+            "schema": {
+              "title": "Soundbite Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The meeting was soft-deleted; restore it to use it again."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Delete a soundbite",
+        "tags": [
+          "soundbites"
         ]
       }
     },
