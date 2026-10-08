@@ -53,7 +53,7 @@ class FeedRepository:
 
     def open_items_assigned_to(self, user_id: int, limit: int) -> list[ActionItemRow]:
         stmt = (
-            select(ActionItem.meeting_id, Meeting.title, ActionItem.text, ActionItem.created_at)
+            select(Meeting.id, Meeting.title, ActionItem.text, ActionItem.created_at)
             .join(Meeting, Meeting.id == ActionItem.meeting_id)
             .join(Participant, Participant.id == ActionItem.assignee_participant_id)
             .where(
