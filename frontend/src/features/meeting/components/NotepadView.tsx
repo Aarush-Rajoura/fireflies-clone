@@ -23,6 +23,7 @@ import { useNotepadFlyouts } from "../hooks/useNotepadFlyouts";
 import { AnnotatedTranscript } from "./AnnotatedTranscript";
 import { DeleteMeetingDialog } from "./DeleteMeetingDialog";
 import { EditMeetingModal, type EditMode } from "./EditMeetingModal";
+import { LiveDemoNotice } from "./LiveDemoNotice";
 import {
   DeletedMeetingState,
   MeetingLoadError,
@@ -125,6 +126,7 @@ function LoadedNotepad({
         onMove={() => setEditMode("move")}
         onDelete={() => setDeleteOpen(true)}
       />
+      {meeting.status === "live" && <LiveDemoNotice startedAt={meeting.started_at} />}
       <div className="min-h-0 flex-1">
         <ResizablePanels
           defaultSize={55}

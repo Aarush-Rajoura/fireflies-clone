@@ -46,7 +46,7 @@ describe("NotepadHeader", () => {
   it("labels media toggle and status from the meeting, falls back to My Meetings without a channel", () => {
     renderHeader({ media_type: "video", has_media: true, status: "live", channel: null });
     expect(screen.getByRole("button", { name: "Video" })).toBeTruthy();
-    expect(screen.getByText("REC")).toBeTruthy();
+    expect(screen.getByText("Live (demo)")).toBeTruthy();
     expect(screen.getByRole("link", { name: "# My Meetings" })).toBeTruthy();
   });
 

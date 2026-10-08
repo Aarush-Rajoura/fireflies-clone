@@ -105,6 +105,24 @@
   --ff-rose-950: #331623; /* [S] quick-start tint: schedule */
   --ff-teal-950: #162522; /* [S] quick-start tint: upload   */
   --ff-magenta-500: #c43990; /* brand glyph */
+  --ff-rose-500: #8a4363; /* [S] quick-start icon: schedule */
+  --ff-teal-600: #3a6056; /* [S] quick-start icon: upload   */
+  --ff-violet-450: #514895; /* [S] quick-start icon: capture  */
+
+  /* Home welcome banner and product-demo thumbnail */
+  --ff-brown-900: #2e1c10; /* [D] banner gradient end   */
+  --ff-brown-850: #342012; /* [S] banner fill           */
+  --ff-brown-700: #5b3b22; /* [S] banner border         */
+  --ff-cream-300: #eecaa5; /* [S] demo thumbnail frame  */
+  --ff-amber-100: #fdf1e3; /* [D] light banner fill     */
+  --ff-amber-200: #f6dfc4; /* [D] light banner border   */
+  --ff-indigo-night: #06021b; /* [S] demo thumbnail bottom */
+  --ff-violet-glow: #7a39f3; /* [S] demo thumbnail top    */
+  /* Home page backdrop: a cool wash top-left, a warm one top-right. [S] */
+  --ff-glow-cool-dark: rgba(52, 66, 94, 0.42);
+  --ff-glow-warm-dark: rgba(70, 44, 40, 0.3);
+  --ff-glow-cool-light: rgba(104, 63, 229, 0.06);
+  --ff-glow-warm-light: rgba(247, 144, 9, 0.05);
   --ff-white: #ffffff;
 
   /* Speaker hues: dark ones lifted for legibility on the dark ground, light
@@ -231,6 +249,23 @@
   --ff-tint-teal: var(--ff-teal-950);
   --ff-tint-violet: var(--ff-violet-950);
 
+  /* Home quick-start cards: fill, icon */
+  --ff-qs-schedule: var(--ff-tint-rose);
+  --ff-qs-schedule-icon: var(--ff-rose-500);
+  --ff-qs-upload: var(--ff-tint-teal);
+  --ff-qs-upload-icon: var(--ff-teal-600);
+  --ff-qs-capture: var(--ff-tint-violet);
+  --ff-qs-capture-icon: var(--ff-violet-450);
+
+  --ff-welcome-from: var(--ff-brown-850);
+  --ff-welcome-to: var(--ff-brown-900);
+  --ff-welcome-border: var(--ff-brown-700);
+  --ff-demo-frame: var(--ff-cream-300);
+  --ff-demo-from: var(--ff-violet-glow);
+  --ff-demo-to: var(--ff-indigo-night);
+  --ff-glow-cool: var(--ff-glow-cool-dark);
+  --ff-glow-warm: var(--ff-glow-warm-dark);
+
   --ff-brand-mark: var(--ff-magenta-500);
 
   --ff-speaker-0: var(--ff-speaker-dark-0);
@@ -332,6 +367,22 @@
   --ff-tint-rose: var(--ff-red-50);
   --ff-tint-teal: var(--ff-green-50);
   --ff-tint-violet: var(--ff-violet-100);
+
+  --ff-qs-schedule: var(--ff-tint-rose);
+  --ff-qs-schedule-icon: var(--ff-speaker-light-3);
+  --ff-qs-upload: var(--ff-tint-teal);
+  --ff-qs-upload-icon: var(--ff-green-800);
+  --ff-qs-capture: var(--ff-tint-violet);
+  --ff-qs-capture-icon: var(--ff-violet-600);
+
+  --ff-welcome-from: var(--ff-amber-100);
+  --ff-welcome-to: var(--ff-amber-50);
+  --ff-welcome-border: var(--ff-amber-200);
+  --ff-demo-frame: var(--ff-cream-300);
+  --ff-demo-from: var(--ff-violet-glow);
+  --ff-demo-to: var(--ff-indigo-night);
+  --ff-glow-cool: var(--ff-glow-cool-light);
+  --ff-glow-warm: var(--ff-glow-warm-light);
 
   --ff-brand-mark: var(--ff-magenta-500);
 

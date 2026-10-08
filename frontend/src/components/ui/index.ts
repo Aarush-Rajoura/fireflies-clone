@@ -21,6 +21,7 @@ export * from "./modal";
 export * from "./nav-item";
 export * from "./pagination";
 export * from "./popover";
+export * from "./pressable";
 export * from "./progress-bar";
 export * from "./radio-card";
 export * from "./resizable-panels";

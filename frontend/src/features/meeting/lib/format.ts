@@ -43,7 +43,7 @@ export function attendeeLabel(names: readonly string[]): string {
 }
 
 export const STATUS_BADGE: Record<MeetingStatus, { label: string; tone: BadgeTone }> = {
-  live: { label: "REC", tone: "danger" },
+  live: { label: "Live (demo)", tone: "danger" },
   processing: { label: "Processing", tone: "warning" },
   completed: { label: "Ready", tone: "success" },
   scheduled: { label: "Scheduled", tone: "neutral" },

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 
 import { Badge, Button } from "@/components/ui";
+import { NotificationsPopover } from "@/features/notifications";
 import { SearchDropdown } from "@/features/search";
 import { useUsage } from "@/features/user";
 
@@ -10,7 +11,6 @@ import { titleForPath } from "../nav";
 
 import { CaptureMenu } from "./CaptureMenu";
 import { useComingSoon } from "./ComingSoonDialog";
-import { NotificationsButton } from "./NotificationsButton";
 
 /**
  * 56px bar: title · centred search · plan badge + Upgrade · bell · Capture.
@@ -47,7 +47,7 @@ export function Topbar() {
           Upgrade
         </Button>
         <span aria-hidden className="h-6 w-px bg-divider" />
-        <NotificationsButton />
+        <NotificationsPopover />
         <CaptureMenu />
       </div>
       {upgrade.dialog}

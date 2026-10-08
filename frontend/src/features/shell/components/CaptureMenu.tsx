@@ -5,13 +5,14 @@ import { useState } from "react";
 
 import { SplitButton } from "@/components/ui";
 import { openCreateMeeting } from "@/features/create";
+import { CaptureModal, ScheduleModal } from "@/features/home";
 
-import { CaptureModal } from "./CaptureModal";
 import { useComingSoon } from "./ComingSoonDialog";
 
-/** Top-bar "Capture ▾": live capture, scheduling and recording are placeholders; upload is real. */
+/** Top-bar "Capture ▾": live capture and scheduling open the Home flows; upload opens the create flow. */
 export function CaptureMenu() {
   const [liveOpen, setLiveOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
   const soon = useComingSoon();
   return (
     <>
@@ -29,11 +30,7 @@ export function CaptureMenu() {
           {
             label: "Schedule new meeting",
             icon: <Calendar strokeWidth={1.75} />,
-            onSelect: () =>
-              soon.show({
-                title: "Schedule new meeting",
-                message: "Scheduling Fred for upcoming calendar meetings is coming soon.",
-              }),
+            onSelect: () => setScheduleOpen(true),
           },
           {
             label: "Upload audio or video",
@@ -52,6 +49,7 @@ export function CaptureMenu() {
         ]}
       />
       <CaptureModal open={liveOpen} onOpenChange={setLiveOpen} />
+      <ScheduleModal open={scheduleOpen} onOpenChange={setScheduleOpen} />
       {soon.dialog}
     </>
   );
