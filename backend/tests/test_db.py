@@ -16,6 +16,12 @@ def test_connection_pragmas(settings: Settings) -> None:
         assert conn.execute(text("PRAGMA busy_timeout")).scalar() == 5000
 
 
+def test_journal_mode_is_configurable(settings: Settings) -> None:
+    engine = make_engine(settings.database_url, "delete")
+    with engine.connect() as conn:
+        assert conn.execute(text("PRAGMA journal_mode")).scalar() == "delete"
+
+
 def test_uow_rolls_back_without_commit(settings: Settings) -> None:
     engine = make_engine(settings.database_url)
     factory = make_session_factory(engine)

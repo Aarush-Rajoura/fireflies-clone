@@ -2,13 +2,12 @@
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config, pool
-
 import app.models  # noqa: F401  (registers every model on Base.metadata)
 from alembic import context
 from app.core.config import get_settings
 from app.db.base import Base
 from app.db.migration_filters import include_object
+from app.db.session import make_engine
 
 config = context.config
 if config.config_file_name is not None:
@@ -33,11 +32,9 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    # Same engine factory as the app, so migrations get the same pragmas (journal mode).
+    settings = get_settings()
+    connectable = make_engine(settings.database_url, settings.sqlite_journal_mode)
     with connectable.connect() as connection:
         context.configure(
             connection=connection,

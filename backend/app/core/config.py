@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=_ENV_FILE, extra="ignore")
 
     database_url: str = "sqlite:///./fireflies.db"
+    # WAL needs every process on one machine. Hosts whose consoles and web workers share
+    # the file over a network (PythonAnywhere) must use "delete" or writes get lost.
+    sqlite_journal_mode: Literal["wal", "delete"] = "wal"
     # NoDecode: accept "a,b" from the environment instead of requiring a JSON list.
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
     ai_provider: Literal["mock", "gemini"] = "mock"

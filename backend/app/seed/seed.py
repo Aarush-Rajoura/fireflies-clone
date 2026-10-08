@@ -159,7 +159,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 1
     if args.reset:
         print(f"resetting {settings.database_url}")
-    engine: Engine = make_engine(settings.database_url)
+    engine: Engine = make_engine(settings.database_url, settings.sqlite_journal_mode)
     factory: sessionmaker[Session] = make_session_factory(engine)
     if args.refresh_upcoming:
         with factory() as session:

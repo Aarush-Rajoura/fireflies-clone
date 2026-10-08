@@ -29,12 +29,15 @@ if [ ! -f "$ENV_FILE" ]; then
   cat > "$ENV_FILE" <<ENVEOF
 DATABASE_URL=sqlite:///$DATA/fireflies.db
 CORS_ORIGINS=$FRONTEND_ORIGIN
+SQLITE_JOURNAL_MODE=delete
 AI_PROVIDER=mock
 AI_API_KEY=
 MEDIA_DIR=$REPO/backend/media
 ENVEOF
   echo "   wrote $ENV_FILE (edit it to set AI_PROVIDER=gemini and AI_API_KEY)"
 fi
+# Consoles and the web app run on different machines here, so WAL would lose writes.
+grep -q '^SQLITE_JOURNAL_MODE=' "$ENV_FILE" || echo "SQLITE_JOURNAL_MODE=delete" >> "$ENV_FILE"
 
 echo "==> Database"
 (cd "$REPO/backend" && "$VENV/bin/alembic" upgrade head)

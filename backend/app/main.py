@@ -34,7 +34,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         generate_unique_id_function=lambda route: route.name,
     )
     app.state.settings = settings
-    app.state.engine = make_engine(settings.database_url)
+    app.state.engine = make_engine(settings.database_url, settings.sqlite_journal_mode)
     app.state.session_factory = make_session_factory(app.state.engine)
 
     # Added last = outermost, so CORS headers also land on error responses.
