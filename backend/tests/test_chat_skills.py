@@ -187,6 +187,14 @@ def test_free_question_without_matches_does_not_call_the_ai(db: Session) -> None
         ("Prepare weekly digest, based on my meetings", None, ChatSkillId.DIGEST, None),
         ("What did we decide about pricing?", None, ChatSkillId.ASK, None),
         ("Who owns the summary of the outage?", None, ChatSkillId.ASK, None),
+        ("What went into the launch digest email?", None, ChatSkillId.ASK, None),
+        ("Did the weekly digest mention pricing?", None, ChatSkillId.ASK, None),
+        ("Who joins my next meeting with Brightpath?", None, ChatSkillId.ASK, None),
+        ("Which action items slipped this week?", None, ChatSkillId.ASK, None),
+        ("Weekly digest please", None, ChatSkillId.DIGEST, None),
+        ("Give me a digest", None, ChatSkillId.DIGEST, None),
+        ("Help me prepare for my next meeting", None, ChatSkillId.PREPARE, None),
+        ("My todos for this week?", None, ChatSkillId.ACTION_ITEMS, None),
     ],
 )
 def test_router_selects_skills(

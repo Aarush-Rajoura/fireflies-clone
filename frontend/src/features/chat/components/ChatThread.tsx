@@ -7,6 +7,7 @@ import { Button, EmptyState, Skeleton } from "@/components/ui";
 import { ApiError } from "@/lib/api";
 
 import { useChat } from "../hooks/useChats";
+import { useThreadMeeting } from "../hooks/useMeetingSearch";
 import { useSendMessage } from "../hooks/useSendMessage";
 import { Conversation } from "./Conversation";
 
@@ -15,6 +16,7 @@ export function ChatThread({ chatId }: { chatId: number }) {
   const chat = useChat(chatId);
   const send = useSendMessage(chatId);
   const router = useRouter();
+  const meeting = useThreadMeeting(chat.data?.meeting_id);
 
   if (chat.isPending) {
     return (
@@ -58,6 +60,7 @@ export function ChatThread({ chatId }: { chatId: number }) {
   return (
     <Conversation
       messages={chat.data.messages}
+      meeting={meeting}
       pending={send.isPending}
       failure={send.isError ? { error: send.error, body: send.variables } : null}
       onSend={(body) => {

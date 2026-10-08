@@ -41,7 +41,11 @@ class PrepareUpcomingSkill(ChatSkill):
     icon = "wand-sparkles"
     triggers = (
         re.compile(r"^\W*(please\s+)?(prepare|prep|brief)\s+me\b", re.I),
-        re.compile(r"\b(upcoming|next) meeting\b", re.I),
+        re.compile(
+            r"^\W*(please\s+)?(help me\s+)?(prepare|prep|get ready)( me)? for (the|my) "
+            r"(upcoming|next) meeting\b",
+            re.I,
+        ),
     )
 
     def prepare(self, uow: UnitOfWork, request: SkillRequest) -> PreparedReply:

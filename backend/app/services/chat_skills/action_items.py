@@ -18,7 +18,7 @@ class ActionItemsThisWeekSkill(ChatSkill):
     icon = "list-checks"
     triggers = (
         re.compile(r"^\W*(list|show|what are)\b.*\b(action items?|to-?dos?|tasks)\b", re.I),
-        re.compile(r"\b(action items?|to-?dos?)\b.*\bthis week\b", re.I),
+        re.compile(r"^\W*(my\s+)?(action items?|to-?dos?)\b.*\bthis week\b", re.I),
     )
 
     def prepare(self, uow: UnitOfWork, request: SkillRequest) -> PreparedReply:

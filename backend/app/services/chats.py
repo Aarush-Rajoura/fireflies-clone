@@ -1,9 +1,9 @@
 """AskFred conversations.
 
-Posting a question runs in three steps so the database is never locked while an
+Posting a question runs in four steps so the database is never locked while an
 AI works: read what the skill needs in a short transaction that is rolled back,
-let the skill finish with no transaction open, then write the question, the
-answer and its citations in one short transaction.
+save the question in its own short transaction, let the skill finish with no
+transaction open, then save the answer and its citations in a second one.
 """
 
 from collections.abc import Callable
@@ -177,18 +177,19 @@ class ChatService:
                 before_ai()
         finally:
             self.uow.rollback()
+        # The question is saved before the AI runs, so a failed answer never loses it.
+        thread, asked = self._save_question(thread_id, user_id, data, skill, meeting_title)
         reply = prepared.finish()
-        return self._save(thread_id, user_id, data, skill, reply, meeting_title)
+        return self._save_answer(thread.id, user_id, asked, skill, reply)
 
-    def _save(
+    def _save_question(
         self,
         thread_id: int | None,
         user_id: int,
         data: ChatMessageCreate,
         skill: ChatSkill,
-        reply: SkillReply,
         meeting_title: str | None,
-    ) -> ChatExchange:
+    ) -> tuple[ChatThread, ChatMessage]:
         now = self.clock()
         if thread_id is None:
             thread = self.uow.chats.add(
@@ -201,17 +202,29 @@ class ChatService:
                 )
             )
         else:
-            # Re-read: the thread may have been deleted while the AI was working.
-            found = self.uow.chats.get_for_user(thread_id, user_id)
-            if found is None:
-                raise thread_not_found()
-            thread = found
+            thread = self._require_thread(thread_id)
             thread.updated_at = now
             if data.meeting_id is not None:
                 thread.meeting_id = data.meeting_id
         asked = self.uow.chats.add_message(
             ChatMessage(thread_id=thread.id, role=ChatRole.USER, content=data.question)
         )
+        self.uow.commit()
+        return thread, asked
+
+    def _save_answer(
+        self,
+        thread_id: int,
+        user_id: int,
+        asked: ChatMessage,
+        skill: ChatSkill,
+        reply: SkillReply,
+    ) -> ChatExchange:
+        # Re-read: the thread may have been deleted while the AI was working.
+        thread = self.uow.chats.get_for_user(thread_id, user_id)
+        if thread is None:
+            raise thread_not_found()
+        thread.updated_at = self.clock()
         answered = self.uow.chats.add_message(
             ChatMessage(
                 thread_id=thread.id,

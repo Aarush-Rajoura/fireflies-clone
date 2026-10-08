@@ -5,6 +5,7 @@ import {
   type ChatSkill,
   type ChatThread,
   type ChatThreadDetail,
+  type MeetingDetail,
   type MeetingListItem,
   type Page,
 } from "@/lib/api";
@@ -34,6 +35,13 @@ export function deleteChat(id: number): Promise<void> {
   return unwrap(
     api.DELETE("/api/v1/chats/{chat_id}", { params: { path: { chat_id: id } } }),
   ) as Promise<void>;
+}
+
+/** The @-context of a reopened thread; a deleted meeting (410) means no context. */
+export function fetchMeetingContext(id: number, signal?: AbortSignal): Promise<MeetingDetail> {
+  return unwrap(
+    api.GET("/api/v1/meetings/{meeting_id}", { params: { path: { meeting_id: id } }, signal }),
+  );
 }
 
 export function fetchChatSkills(signal?: AbortSignal): Promise<ChatSkill[]> {

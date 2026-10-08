@@ -53,6 +53,8 @@ export function useCreateChat() {
     mutationFn: (body: ChatMessageCreate) => createChat(body),
     // The view explains failures inline, next to the question that failed.
     meta: { errorToast: false },
+    // A failed answer still leaves the new thread (with its question) in the history.
+    onError: () => refresh(),
     onSuccess: async (exchange) => {
       client.setQueryData(qk.chats.detail(exchange.thread.id), withExchange(undefined, exchange));
       await refresh();
@@ -79,8 +81,10 @@ export function useSendMessage(threadId: number) {
       }
       return { previous };
     },
-    onError: (_error, _body, context) => {
+    onError: async (_error, _body, context) => {
       if (context?.previous) client.setQueryData(key, context.previous);
+      // The server saves the question before the AI runs, so it may exist even though this failed.
+      await Promise.all([client.invalidateQueries({ queryKey: key }), refresh()]);
     },
     onSuccess: async (exchange) => {
       client.setQueryData<ChatThreadDetail>(key, (thread) => withExchange(thread, exchange));

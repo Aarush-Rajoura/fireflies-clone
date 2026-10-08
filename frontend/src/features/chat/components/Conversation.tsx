@@ -7,6 +7,7 @@ import { Button, Spinner } from "@/components/ui";
 import { describeAskError } from "@/features/ask";
 import type { ChatMessage, ChatMessageCreate } from "@/lib/api";
 
+import type { MeetingContext } from "../hooks/useComposer";
 import { Composer } from "./Composer";
 import { MessageItem } from "./MessageItem";
 
@@ -16,10 +17,18 @@ export type ConversationProps = {
   /** The last send's failure and what was sent, so it can be retried as-is. */
   failure: { error: unknown; body: ChatMessageCreate } | null;
   onSend: (body: ChatMessageCreate) => boolean;
+  /** A saved thread's @meeting, restored as the composer's chip. */
+  meeting?: MeetingContext | null;
 };
 
 /** The thread, kept scrolled to the newest turn, with the composer docked below. */
-export function Conversation({ messages, pending, failure, onSend }: ConversationProps) {
+export function Conversation({
+  messages,
+  pending,
+  failure,
+  onSend,
+  meeting = null,
+}: ConversationProps) {
   const endRef = useRef<HTMLDivElement>(null);
   const problem = failure ? describeAskError(failure.error) : null;
 
@@ -70,7 +79,15 @@ export function Conversation({ messages, pending, failure, onSend }: Conversatio
         </div>
       </div>
       <div className="mx-auto w-full max-w-[770px] shrink-0 px-6 pb-4">
-        <Composer onSubmit={onSend} pending={pending} menuPlacement="above" autoFocus />
+        {/* Keyed so the chip appears once the thread's meeting has loaded. */}
+        <Composer
+          key={meeting?.id ?? "none"}
+          onSubmit={onSend}
+          pending={pending}
+          menuPlacement="above"
+          initialMeeting={meeting}
+          autoFocus
+        />
         <p className="pt-2 text-center text-caption text-muted">Consumes AI credits</p>
       </div>
     </div>

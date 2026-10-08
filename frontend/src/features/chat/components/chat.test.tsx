@@ -71,6 +71,16 @@ describe("Composer", () => {
     expect(box.value).toBe("");
   });
 
+  it("starts with a reopened thread's meeting chip and sends it as context", () => {
+    const onSubmit = vi.fn(() => true);
+    wrap(<Composer onSubmit={onSubmit} initialMeeting={{ id: 7, title: "Hiring debrief" }} />);
+    expect(screen.getByText("Hiring debrief")).toBeTruthy();
+    const box = screen.getByRole("combobox", { name: "Ask AskFred" });
+    fireEvent.change(box, { target: { value: "summarize" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    expect(onSubmit).toHaveBeenCalledWith({ question: "summarize", meeting_id: 7 });
+  });
+
   it("keeps the draft when the send is refused", () => {
     wrap(<Composer onSubmit={() => false} />);
     const box = screen.getByRole("combobox", { name: "Ask AskFred" }) as HTMLTextAreaElement;

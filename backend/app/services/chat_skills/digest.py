@@ -16,6 +16,8 @@ from app.services.chat_skills.compose import (
 DIGEST_MEETINGS = 7
 MAX_ITEMS = 10
 MAX_THEMES = 6
+# "Prepare me a", "give me the", … in front of the request itself.
+_LEAD = r"(please\s+)?((prepare|give|make|create|write|build|send)\s+(me\s+)?)?((a|an|my|the)\s+)?"
 
 
 class WeeklyDigestSkill(ChatSkill):
@@ -27,8 +29,9 @@ class WeeklyDigestSkill(ChatSkill):
     description = "Overviews, decisions, themes and open items from your last 7 meetings."
     icon = "calendar"
     triggers = (
-        re.compile(r"\bdigest\b", re.I),
-        re.compile(r"\bweekly (summary|recap|update)\b", re.I),
+        # Anchored: a question that merely mentions a digest stays a free question.
+        re.compile(r"^\W*" + _LEAD + r"weekly (digest|summary|recap|update)\b", re.I),
+        re.compile(r"^\W*" + _LEAD + r"digest\b", re.I),
     )
 
     def prepare(self, uow: UnitOfWork, request: SkillRequest) -> PreparedReply:

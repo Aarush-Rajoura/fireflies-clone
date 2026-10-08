@@ -24,10 +24,11 @@ const dateFormat = new Intl.DateTimeFormat(undefined, { month: "short", day: "nu
 export function useComposer(
   onSubmit: (body: ChatMessageCreate) => boolean,
   inputRef: RefObject<HTMLTextAreaElement | null>,
+  initialMeeting: MeetingContext | null = null,
 ) {
   const [draft, setDraft] = useState("");
   const [caret, setCaret] = useState(0);
-  const [meeting, setMeeting] = useState<MeetingContext | null>(null);
+  const [meeting, setMeeting] = useState<MeetingContext | null>(initialMeeting);
   const [skill, setSkill] = useState<ChatSkill | null>(null);
   const [active, setActive] = useState(0);
   // Escape closes the menu for the token at this position until the user types elsewhere.

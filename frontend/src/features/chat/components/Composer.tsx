@@ -17,7 +17,7 @@ import { useComingSoon } from "@/features/shell";
 import type { ChatMessageCreate } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
-import { useComposer, type MenuOption } from "../hooks/useComposer";
+import { useComposer, type MeetingContext, type MenuOption } from "../hooks/useComposer";
 import { skillGlyph } from "../lib/skill-icons";
 
 export type ComposerProps = {
@@ -27,6 +27,8 @@ export type ComposerProps = {
   /** Where the @/skill menu opens: below on the home screen, above when docked at the bottom. */
   menuPlacement?: "above" | "below";
   autoFocus?: boolean;
+  /** The @meeting chip to start with, e.g. a reopened thread's meeting. */
+  initialMeeting?: MeetingContext | null;
 };
 
 function toOption(option: MenuOption): Option {
@@ -52,9 +54,10 @@ export function Composer({
   pending = false,
   menuPlacement = "below",
   autoFocus = false,
+  initialMeeting = null,
 }: ComposerProps) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const c = useComposer(onSubmit, inputRef);
+  const c = useComposer(onSubmit, inputRef, initialMeeting);
   const listId = useId();
   const soon = useComingSoon();
   const { menu } = c;

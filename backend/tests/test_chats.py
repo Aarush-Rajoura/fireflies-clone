@@ -147,12 +147,34 @@ def test_only_ai_answers_count_towards_the_rate_limit(api: TestClient, app: Fast
     assert _count_threads(api) == 3
 
 
-def test_provider_failure_saves_nothing(api: TestClient, api_app: FastAPI) -> None:
+def test_provider_failure_keeps_the_question(api: TestClient, api_app: FastAPI) -> None:
     _meeting(api)
     api_app.dependency_overrides[get_question_answerer] = lambda: StubAnswerer(fail=True)
     r = api.post(f"{V1}/chats", json={"question": "launch?"})
     assert r.status_code == 503 and r.json()["error"]["code"] == "AI_UNAVAILABLE"
-    assert _count(api_app, ChatThread) == 0 and _count(api_app, ChatMessage) == 0
+    # The question was committed before the AI ran; only the answer is missing.
+    [thread] = api.get(f"{V1}/chats").json()["items"]
+    assert thread["title"] == "launch?"
+    detail = api.get(f"{V1}/chats/{thread['id']}").json()
+    assert [(m["role"], m["content"]) for m in detail["messages"]] == [("user", "launch?")]
+    follow = api.post(f"{V1}/chats/{thread['id']}/messages", json={"question": "launch day?"})
+    assert follow.status_code == 503
+    assert _count(api_app, ChatMessage) == 2
+    # Rejected before the AI (validation, unknown meeting): nothing is saved.
+    api.post(f"{V1}/chats", json={"question": "q", "meeting_id": 999})
+    assert _count(api_app, ChatThread) == 1
+
+
+def test_citations_of_deleted_meetings_are_hidden(api: TestClient) -> None:
+    mid, _ = _meeting(api)
+    chat = api.post(f"{V1}/chats", json={"question": "Launch date?"}).json()
+    assert chat["assistant_message"]["citations"]
+    assert api.delete(f"{V1}/meetings/{mid}").status_code == 204
+    detail = api.get(f"{V1}/chats/{chat['thread']['id']}").json()
+    assert detail["messages"][1]["citations"] == []
+    assert api.post(f"{V1}/meetings/{mid}/restore").status_code == 200
+    detail = api.get(f"{V1}/chats/{chat['thread']['id']}").json()
+    assert detail["messages"][1]["citations"]
 
 
 def test_ai_runs_with_no_transaction_open(db_session: Session) -> None:
@@ -163,15 +185,22 @@ def test_ai_runs_with_no_transaction_open(db_session: Session) -> None:
     db_session.commit()
     in_tx: list[bool] = []
     limiter_in_tx: list[bool] = []
-    stub = StubAnswerer(
-        cite=[seg.id, 424242], on_call=lambda _: in_tx.append(db_session.in_transaction())
-    )
+    saved_before_ai: list[list[str]] = []
+
+    def on_call(_: object) -> None:
+        in_tx.append(db_session.in_transaction())
+        with Session(db_session.get_bind()) as other:
+            saved_before_ai.append(list(other.scalars(select(ChatMessage.content))))
+
+    stub = StubAnswerer(cite=[seg.id, 424242], on_call=on_call)
     service = ChatService(uow, default_router(stub))
     exchange = service.start(
         ChatMessageCreate(question="What about the budget?"),
         before_ai=lambda: limiter_in_tx.append(True),
     )
     assert in_tx == [False] and limiter_in_tx == [True]
+    # The question was already committed when the AI ran.
+    assert saved_before_ai == [["What about the budget?"]]
     # The invented segment id is dropped; the real one is stored with its meeting.
     assert [c.segment_id for c in exchange.assistant_message.citations] == [seg.id]
     assert exchange.assistant_message.provider == "stub"

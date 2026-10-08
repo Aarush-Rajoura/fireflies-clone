@@ -66,13 +66,14 @@ class ChatRepository(Repository[ChatThread]):
         return list(self.session.scalars(stmt)), total or 0
 
     def citations(self, message_ids: Sequence[int]) -> dict[int, list[tuple[ChatCitation, str]]]:
-        """Citations per message in insertion order, each with its meeting's current title."""
+        """Citations per message in insertion order, each with its meeting's current title.
+        Citations of soft-deleted meetings are left out: they would link to a 410."""
         if not message_ids:
             return {}
         stmt = (
             select(ChatCitation, Meeting.title)
             .join(Meeting, Meeting.id == ChatCitation.meeting_id)
-            .where(ChatCitation.message_id.in_(message_ids))
+            .where(ChatCitation.message_id.in_(message_ids), Meeting.not_deleted())
             .order_by(ChatCitation.id)
         )
         out: dict[int, list[tuple[ChatCitation, str]]] = {}
