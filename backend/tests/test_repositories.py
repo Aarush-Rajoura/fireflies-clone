@@ -2,13 +2,13 @@ import pytest
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
-from app.core.deps import get_current_user
 from app.core.exceptions import ServiceUnavailableError
 from app.db.session import make_session_factory
 from app.db.unit_of_work import UnitOfWork
 from app.models import Participant
 from app.models.enums import ActionItemStatus
 from app.repositories.meetings import MeetingRepository
+from app.services.users import UserService
 from tests import factories as f
 from tests.repo_helpers import at, count_queries, run
 
@@ -80,15 +80,15 @@ def test_uow_exposes_repositories(db_session: Session):
         assert hasattr(uow, name)
 
 
-def test_get_current_user(migrated_engine: Engine):
+def test_current_user_is_the_first_user(migrated_engine: Engine):
     factory = make_session_factory(migrated_engine)
     with UnitOfWork(factory()) as uow:
         with pytest.raises(ServiceUnavailableError) as exc:
-            get_current_user(uow)
+            UserService(uow).me()
         assert exc.value.code == "NOT_SEEDED"
         first = f.make_user(uow.session)
         f.make_user(uow.session)
-        assert get_current_user(uow).id == first.id
+        assert UserService(uow).me().id == first.id
 
 
 def test_get_detail_loads_relations(db_session: Session, repo: MeetingRepository):

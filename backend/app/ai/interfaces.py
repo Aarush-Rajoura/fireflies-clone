@@ -11,10 +11,26 @@ and `Answer.provider`; action items carry none.
 from typing import Protocol
 
 from app.ai.types import ActionItemDraft, Answer, Passage, SummaryResult, TranscriptForAI
+from app.core.exceptions import ServiceUnavailableError
 
 
-class ProviderError(RuntimeError):
-    """A provider could not produce a usable result (network, quota, bad output)."""
+class ProviderError(ServiceUnavailableError):
+    """A provider could not produce a usable result (network, quota, bad output).
+
+    A ServiceUnavailableError, so an unwrapped provider failure renders as 503
+    AI_UNAVAILABLE through the shared AppError handler. The client sees a generic
+    message; `reason` (also `str(error)`) is for logs only.
+    """
+
+    code = "AI_UNAVAILABLE"
+    default_message = "The AI provider is unavailable"
+
+    def __init__(self, reason: str) -> None:
+        super().__init__()
+        self.reason = reason
+
+    def __str__(self) -> str:
+        return self.reason
 
 
 class Summarizer(Protocol):

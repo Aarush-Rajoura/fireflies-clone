@@ -19,6 +19,8 @@ Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, ma
 PersonName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 
 SummaryStatus = Literal["none", "ready", "stale", "generating"]
+# What a client may say it is creating; seed/capture/calendar are set only by the server.
+CreatableSource = Literal["upload", "paste", "manual"]
 
 
 class ParticipantInput(InputModel):
@@ -41,7 +43,7 @@ class MeetingCreate(InputModel):
     participants: list[PersonName] = Field(default_factory=list)
     # None = a form meeting with no transcript; an empty list is a client mistake.
     segments: list[SegmentIn] | None = Field(default=None, min_length=1)
-    source: MeetingSource = MeetingSource.MANUAL
+    source: CreatableSource = "manual"
     channel_id: int | None = None
 
 

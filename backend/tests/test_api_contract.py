@@ -233,5 +233,11 @@ def test_provider_error_maps_to_declared_503(api_app: FastAPI) -> None:
         r = c.post(f"/api/v1/meetings/{mid}/summary/regenerate")
     assert r.status_code == 503
     assert r.json()["error"]["code"] == "AI_UNAVAILABLE"
+    assert r.json()["error"]["message"] == "The AI provider is unavailable"  # cause stays in logs
     declared = api_app.openapi()["paths"]["/api/v1/meetings/{meeting_id}/summary/regenerate"]
     assert "503" in declared["post"]["responses"]
+
+
+def test_create_with_server_only_source_is_422(api: TestClient) -> None:
+    r = api.post("/api/v1/meetings", json={"title": "t", "source": "seed"})
+    assert r.status_code == 422 and r.json()["error"]["code"] == "VALIDATION_ERROR"

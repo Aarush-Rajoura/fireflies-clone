@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
+from app.ai.interfaces import ProviderError
 from app.ai.types import ActionItemDraft, TranscriptForAI
 from app.core.exceptions import ServiceUnavailableError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
@@ -138,7 +139,7 @@ def test_db_failure_in_step_two_leaves_no_meeting(
 
 def test_ai_failure_writes_nothing(db_session: Session) -> None:
     uow, _, existing = seeded(db_session)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ProviderError):
         _service(uow, StubSummarizer(fail=True)).create(_data())
     assert [m.id for m in db_session.query(Meeting).all()] == [existing.id]
 

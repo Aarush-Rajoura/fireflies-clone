@@ -14,7 +14,13 @@ from app.core.config import BYTES_PER_MB, get_settings
 from app.core.exceptions import ServiceUnavailableError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
 from app.models import ActionItem, Meeting, Participant, Speaker, TranscriptSegment
-from app.models.enums import ActionItemSource, MediaType, MeetingStatus, ParticipantRole
+from app.models.enums import (
+    ActionItemSource,
+    MediaType,
+    MeetingSource,
+    MeetingStatus,
+    ParticipantRole,
+)
 from app.parsers import ParserRegistry
 from app.schemas.meeting import MeetingCreate, MeetingDetail
 from app.schemas.transcript import SegmentIn, TranscriptPreview
@@ -124,7 +130,7 @@ class MeetingCreationService:
                 duration_ms=max((s.end_ms for s in segments), default=0),
                 host_id=host.id,
                 channel_id=data.channel_id,
-                source=data.source,
+                source=MeetingSource(data.source),
                 status=MeetingStatus.COMPLETED,
                 media_type=MediaType.NONE,
             )

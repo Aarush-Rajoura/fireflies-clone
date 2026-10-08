@@ -4,7 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.models import Meeting
-from app.schemas.action_item import ActionItemCreate
+from app.schemas.action_item import ActionItemCreate, ActionItemUpdate
 from app.schemas.meeting import (
     ActionItemCountsRead,
     MeetingCreate,
@@ -93,3 +93,23 @@ def test_segment_and_datetime_rules() -> None:
         ActionItemCreate(text="x", start_ms=-1)
     with pytest.raises(ValidationError):
         MeetingUpdate(started_at=datetime(2026, 1, 1))  # naive
+
+
+@pytest.mark.parametrize("source", ["seed", "capture", "calendar", "bogus"])
+def test_create_rejects_server_only_sources(source: str) -> None:
+    with pytest.raises(ValidationError):
+        MeetingCreate.model_validate({"title": "t", "source": source})
+
+
+@pytest.mark.parametrize("source", ["upload", "paste", "manual"])
+def test_create_accepts_client_sources(source: str) -> None:
+    assert MeetingCreate.model_validate({"title": "t", "source": source}).source == source
+
+
+@pytest.mark.parametrize("field", ["text", "status"])
+def test_action_item_update_rejects_explicit_null(field: str) -> None:
+    with pytest.raises(ValidationError):
+        ActionItemUpdate.model_validate({field: None})
+    # Clearable fields still accept null.
+    u = ActionItemUpdate.model_validate({"due_date": None, "assignee_participant_id": None})
+    assert u.model_fields_set == {"due_date", "assignee_participant_id"}

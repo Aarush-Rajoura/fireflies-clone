@@ -1,7 +1,7 @@
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Any
 
-from pydantic import AwareDatetime, BaseModel, Field, StringConstraints
+from pydantic import AwareDatetime, BaseModel, Field, StringConstraints, field_validator
 
 from app.models.enums import ActionItemSource, ActionItemStatus
 from app.schemas.common import InputModel
@@ -23,6 +23,14 @@ class ActionItemUpdate(InputModel):
     assignee_participant_id: int | None = None
     due_date: date | None = None
     status: ActionItemStatus | None = None
+
+    @field_validator("text", "status", mode="before")
+    @classmethod
+    def _not_null(cls, value: Any) -> Any:
+        # NOT NULL columns: an explicit null can only be a client mistake (omit the field).
+        if value is None:
+            raise ValueError("must not be null")
+        return value
 
 
 class AssigneeRead(BaseModel):

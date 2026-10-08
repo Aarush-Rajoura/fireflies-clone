@@ -482,8 +482,14 @@
             "title": "Segments"
           },
           "source": {
-            "$ref": "#/components/schemas/MeetingSource",
-            "default": "manual"
+            "default": "manual",
+            "enum": [
+              "upload",
+              "paste",
+              "manual"
+            ],
+            "title": "Source",
+            "type": "string"
           },
           "started_at": {
             "anyOf": [

@@ -9,9 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.ai.factory import get_action_item_extractor, get_summarizer
 from app.ai.interfaces import ActionItemExtractor, Summarizer
 from app.core.config import Settings
-from app.core.exceptions import ServiceUnavailableError
 from app.db.unit_of_work import UnitOfWork
-from app.models import User
 from app.parsers import default_registry
 from app.services.action_items import ActionItemService
 from app.services.channels import ChannelService
@@ -32,20 +30,12 @@ def get_uow(request: Request) -> Iterator[UnitOfWork]:
         yield uow
 
 
-def get_current_user(uow: Annotated[UnitOfWork, Depends(get_uow)]) -> User:
-    user = uow.users.get_default()
-    if user is None:
-        raise ServiceUnavailableError("Database has not been seeded", code="NOT_SEEDED")
-    return user
-
-
 def get_app_settings(request: Request) -> Settings:
     return request.app.state.settings  # type: ignore[no-any-return]
 
 
 Uow = Annotated[UnitOfWork, Depends(get_uow)]
 AppSettings = Annotated[Settings, Depends(get_app_settings)]
-CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 def get_meeting_service(uow: Uow) -> MeetingService:
