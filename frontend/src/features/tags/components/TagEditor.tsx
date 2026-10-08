@@ -46,7 +46,7 @@ function TagEditorPanel({ meeting }: TagEditorProps) {
   const idBase = useId();
   const [query, setQuery] = useState("");
   const tags = useTags();
-  const { toggle } = useSetMeetingTags(meeting.id);
+  const { add, toggle } = useSetMeetingTags(meeting.id);
   const { apply, isCreating } = useApplyTagByName(meeting.id);
 
   const applied = new Set(meeting.tags.map((t) => t.id));
@@ -60,15 +60,18 @@ function TagEditorPanel({ meeting }: TagEditorProps) {
     (s) => !meeting.tags.some((t) => sameTagName(t.name, s)),
   );
 
-  const create = () => {
-    void apply(needle);
-    setQuery("");
+  // The query stays (and the Create button spins) until the tag is applied; kept on failure.
+  const create = async () => {
+    if (isCreating) return;
+    if (await apply(needle)) setQuery("");
   };
+  // Enter only ever adds: a stray Enter on an applied tag must not take it off.
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter" || !needle) return;
     e.preventDefault();
-    if (exact) toggle(exact);
-    else create();
+    if (!exact) return void create();
+    if (!applied.has(exact.id)) add(exact);
+    setQuery("");
   };
 
   return (
@@ -133,7 +136,7 @@ function TagEditorPanel({ meeting }: TagEditorProps) {
             size="sm"
             loading={isCreating}
             leadingIcon={<Plus strokeWidth={1.75} />}
-            onClick={create}
+            onClick={() => void create()}
             className="w-full justify-start"
           >
             <span className="truncate">Create “{needle}”</span>

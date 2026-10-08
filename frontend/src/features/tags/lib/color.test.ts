@@ -1,12 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { TAG_COLOR_COUNT, sameTagName, tagColorIndex, tagToneClass } from "./color";
+import { TAG_COLOR_COUNT, sameTagName, tagColorIndex, tagHue, tagToneClass } from "./color";
 
 describe("tag colour", () => {
-  it("is stable: the same name always maps to the same swatch", () => {
+  it("is stable: the same name always hashes to the same swatch", () => {
     const first = tagColorIndex("Launch");
     for (let i = 0; i < 5; i++) expect(tagColorIndex("Launch")).toBe(first);
-    expect(tagToneClass("Launch")).toBe(tagToneClass("Launch"));
   });
 
   it("ignores case and outer whitespace, like the backend's name rule", () => {
@@ -23,6 +22,18 @@ describe("tag colour", () => {
       expect(i).toBeLessThan(TAG_COLOR_COUNT);
     }
     expect(new Set(indices).size).toBeGreaterThan(3);
-    expect(tagToneClass("Launch")).toMatch(/^bg-tag-subtle-[0-7] text-tag-[0-7]$/);
+  });
+
+  it("shows the stored colour_index, so a rename keeps the colour", () => {
+    const before = { name: "Launch", color_index: 3 };
+    const renamed = { name: "Launch Q4", color_index: 3 };
+    expect(tagToneClass(before)).toBe("bg-tag-subtle-3 text-tag-3");
+    expect(tagToneClass(renamed)).toBe(tagToneClass(before));
+  });
+
+  it("falls back to the name hash without a valid stored index", () => {
+    expect(tagHue({ name: "Launch" })).toBe(tagColorIndex("Launch"));
+    expect(tagHue({ name: "Launch", color_index: 99 })).toBe(tagColorIndex("Launch"));
+    expect(tagHue({ name: "Launch", color_index: null })).toBe(tagColorIndex("Launch"));
   });
 });

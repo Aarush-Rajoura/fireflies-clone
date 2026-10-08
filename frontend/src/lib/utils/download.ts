@@ -1,8 +1,4 @@
-/**
- * Hands a same-origin URL to the browser's download manager. An `<a download>`
- * lets the server's Content-Disposition name the file and streams it straight
- * to disk, instead of buffering the whole body in memory as a Blob.
- */
+/** Hands a URL to the browser's download manager through a hidden `<a download>`. */
 export function downloadUrl(url: string, filename = ""): void {
   const link = document.createElement("a");
   link.href = url;
@@ -15,4 +11,12 @@ export function downloadUrl(url: string, filename = ""): void {
   } finally {
     link.remove();
   }
+}
+
+/** Saves an in-memory file under `filename`. */
+export function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  downloadUrl(url, filename);
+  // Revoked on a later tick: some browsers start reading the URL only after click() returns.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }

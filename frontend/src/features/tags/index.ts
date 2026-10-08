@@ -6,4 +6,11 @@ export { TagManager } from "./components/TagManager";
 export { useTags, useCreateTag, useUpdateTag, useDeleteTag } from "./hooks/useTags";
 export { useSetMeetingTags } from "./hooks/useSetMeetingTags";
 export { useApplyTagByName } from "./hooks/useApplyTagByName";
-export { tagColorIndex, tagToneClass, tagDotClass, sameTagName } from "./lib/color";
+export {
+  tagColorIndex,
+  tagHue,
+  tagToneClass,
+  tagDotClass,
+  sameTagName,
+  type TagLike,
+} from "./lib/color";

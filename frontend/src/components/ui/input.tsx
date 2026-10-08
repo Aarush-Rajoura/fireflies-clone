@@ -1,4 +1,9 @@
-import { forwardRef, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import {
+  forwardRef,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type TextareaHTMLAttributes,
+} from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -34,18 +39,41 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       )}
       {input}
       {trailing && (
-        <span className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">{trailing}</span>
+        <span className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
+          {trailing}
+        </span>
       )}
     </div>
   );
 });
 
-export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & { invalid?: boolean };
+export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  invalid?: boolean;
+  /**
+   * No field chrome or focus ring: for a textarea inside a container that is
+   * itself the field and shows focus (e.g. a chat composer card).
+   */
+  bare?: boolean;
+};
+
+const bareClasses =
+  "w-full resize-none bg-transparent text-body text-primary outline-none placeholder:text-muted focus-visible:shadow-none disabled:cursor-not-allowed disabled:opacity-50";
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { className, invalid, rows = 3, ...rest },
+  { className, invalid, bare = false, rows = 3, ...rest },
   ref,
 ) {
+  if (bare) {
+    return (
+      <textarea
+        ref={ref}
+        rows={rows}
+        aria-invalid={invalid || undefined}
+        className={cn(bareClasses, className)}
+        {...rest}
+      />
+    );
+  }
   return (
     <textarea
       ref={ref}

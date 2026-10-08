@@ -11,8 +11,9 @@ import { useDeleteMeeting } from "../hooks/useDeleteMeeting";
 import { useMeetings } from "../hooks/useMeetings";
 import { useMeetingsParams } from "../hooks/useMeetingsParams";
 import { useMoveMeeting } from "../hooks/useMoveMeeting";
+import { useScopedMeetingIds } from "../hooks/useScopedMeetingIds";
 import { emptyCopy } from "../lib/empty-copy";
-import { PAGE_SIZE, isNarrowed } from "../lib/params";
+import { PAGE_SIZE } from "../lib/params";
 
 import { AskFredPanel } from "./AskFredPanel";
 import { MeetingGroupList } from "./MeetingGroupList";
@@ -35,6 +36,7 @@ export function MeetingsHub() {
   const channels = useChannels();
   const remove = useDeleteMeeting();
   const move = useMoveMeeting();
+  const askScope = useScopedMeetingIds(params);
   useClampPage(meetings.data, meetings.isPlaceholderData, url.setPage);
 
   const channelOptions = (channels.data ?? []).map((c) => ({ id: c.id, name: c.name }));
@@ -42,10 +44,6 @@ export function MeetingsHub() {
   const contextLabel = activeChannel
     ? `#${activeChannel.name}`
     : (SCOPE_LABELS[params.scope] ?? "");
-  // A narrowed view asks over what is listed; plain "All Meetings" asks over every meeting,
-  // not just this page of it.
-  const viewIsAll = params.scope === "all" && params.channel === undefined && !isNarrowed(params);
-  const askMeetingIds = viewIsAll ? undefined : (meetings.data?.items.map((m) => m.id) ?? []);
 
   return (
     <div className="flex h-full min-h-0">
@@ -119,7 +117,7 @@ export function MeetingsHub() {
         )}
       </section>
 
-      <AskFredPanel contextLabel={contextLabel} meetingIds={askMeetingIds} />
+      <AskFredPanel contextLabel={contextLabel} scope={askScope} />
     </div>
   );
 }

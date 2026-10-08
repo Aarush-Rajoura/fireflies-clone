@@ -8,6 +8,7 @@ import {
   ListChecks,
   MoreHorizontal,
   Pencil,
+  Tags,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -108,6 +109,7 @@ export function MeetingRow({ meeting, channels, timeZone, ...actions }: MeetingR
     meeting.participant_count - Math.min(names.length, SHOWN_AVATARS),
   );
   const itemsLabel = `${openItems} open action ${openItems === 1 ? "item" : "items"}`;
+  const labels = [...meeting.tags.map((t) => t.name), ...meeting.keywords.slice(0, MAX_KEYWORDS)];
 
   const channelTag = meeting.channel && (
     <>
@@ -145,7 +147,7 @@ export function MeetingRow({ meeting, channels, timeZone, ...actions }: MeetingR
           {meeting.tags.length > 0 && (
             <ul
               aria-label="Tags"
-              className="flex h-[18px] min-w-0 shrink-[1000] flex-wrap items-center gap-1 overflow-hidden"
+              className="hidden h-[18px] min-w-0 shrink-[1000] flex-wrap items-center gap-1 overflow-hidden min-[1800px]:flex"
             >
               {meeting.tags.slice(0, MAX_TAGS).map((tag) => (
                 <li key={tag.id} className="flex">
@@ -181,7 +183,7 @@ export function MeetingRow({ meeting, channels, timeZone, ...actions }: MeetingR
       </div>
 
       {/* Wraps into a one-line-tall box, so chips that don't fit drop out whole instead of being cut. */}
-      <div className="hidden h-[22px] min-w-0 max-w-[30%] flex-[0_1_auto] flex-wrap gap-1.5 overflow-hidden 2xl:flex">
+      <div className="hidden h-[22px] min-w-0 max-w-[30%] flex-[0_1_auto] flex-wrap gap-1.5 overflow-hidden min-[1800px]:flex">
         {meeting.keywords.slice(0, MAX_KEYWORDS).map((keyword) => (
           <span
             key={keyword}
@@ -191,6 +193,17 @@ export function MeetingRow({ meeting, channels, timeZone, ...actions }: MeetingR
           </span>
         ))}
       </div>
+
+      {/* Narrower lists (e.g. with Ask Fred open) fold tags and keywords into one count, so titles keep the room. */}
+      {labels.length > 0 && (
+        <span
+          title={labels.join(", ")}
+          aria-label={`Tags and keywords: ${labels.join(", ")}`}
+          className="tnum flex h-[22px] shrink-0 items-center gap-1 rounded-tag bg-surface-3 px-1.5 text-caption text-secondary min-[1800px]:hidden"
+        >
+          <Tags aria-hidden strokeWidth={1.75} className="size-3.5" />+{labels.length}
+        </span>
+      )}
 
       {channelTag && (
         <span className="hidden max-w-[140px] shrink-0 items-center gap-1 text-caption text-accent 2xl:flex">

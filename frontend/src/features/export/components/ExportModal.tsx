@@ -3,7 +3,7 @@
 import { Download } from "lucide-react";
 import { useState } from "react";
 
-import { Button, Checkbox, Modal, SegmentedControl, toast } from "@/components/ui";
+import { Button, Checkbox, Modal, SegmentedControl } from "@/components/ui";
 import type { ExportFormat } from "@/lib/api";
 
 import { useExportDownload } from "../hooks/useExportDownload";
@@ -19,7 +19,7 @@ const ALL_SECTIONS = EXPORT_SECTIONS.map((s) => s.id);
 
 /** Format + sections, then a download. Choices persist while the page lives, like a print dialog. */
 export function ExportModal({ meetingId, open, onOpenChange }: ExportModalProps) {
-  const download = useExportDownload(meetingId);
+  const exporter = useExportDownload(meetingId);
   const [format, setFormat] = useState<ExportFormat>("md");
   const [sections, setSections] = useState<ReadonlySet<ExportSection>>(() => new Set(ALL_SECTIONS));
 
@@ -31,11 +31,9 @@ export function ExportModal({ meetingId, open, onOpenChange }: ExportModalProps)
       return next;
     });
 
-  const submit = () => {
-    download({ format, sections });
-    onOpenChange(false);
-    toast.success("Export started");
-  };
+  // Stays open while the file is fetched; closes once the download has started.
+  const submit = () =>
+    exporter.mutate({ format, sections }, { onSuccess: () => onOpenChange(false) });
 
   return (
     <Modal
@@ -44,15 +42,17 @@ export function ExportModal({ meetingId, open, onOpenChange }: ExportModalProps)
       title="Export meeting"
       description="Download the notes as a file."
       size="sm"
+      dismissible={!exporter.isPending}
       footer={
         <>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="ghost" disabled={exporter.isPending} onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button
             variant="primary"
             leadingIcon={<Download strokeWidth={1.75} />}
             disabled={sections.size === 0}
+            loading={exporter.isPending}
             onClick={submit}
           >
             Download

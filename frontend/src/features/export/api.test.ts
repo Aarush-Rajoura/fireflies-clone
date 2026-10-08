@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { exportUrl } from "./api";
+import { exportUrl, fetchExport, filenameFromDisposition } from "./api";
 import { EmptyExportError, normalizeSections } from "./lib/options";
 
 const query = (url: string) => new URL(url, "http://app.test").searchParams;
@@ -38,5 +38,55 @@ describe("normalizeSections", () => {
 
   it("throws when nothing known is left", () => {
     expect(() => normalizeSections(["bogus"])).toThrow("Pick at least one section");
+  });
+});
+
+describe("filenameFromDisposition", () => {
+  it("reads quoted, bare and RFC 5987 filenames", () => {
+    expect(filenameFromDisposition('attachment; filename="launch-2026.md"')).toBe("launch-2026.md");
+    expect(filenameFromDisposition("attachment; filename=notes.txt")).toBe("notes.txt");
+    expect(filenameFromDisposition("attachment; filename*=UTF-8''r%C3%A9union.pdf")).toBe(
+      "réunion.pdf",
+    );
+    expect(filenameFromDisposition(null)).toBeNull();
+  });
+});
+
+describe("fetchExport", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("returns the file and the server's filename", async () => {
+    const fetchMock = vi.fn<(req: Request) => Promise<Response>>(
+      async () =>
+        new Response("# Launch", {
+          status: 200,
+          headers: {
+            "Content-Type": "text/markdown",
+            "Content-Disposition": 'attachment; filename="launch.md"',
+          },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const file = await fetchExport(7, { format: "md", sections: ["summary"] });
+    expect(file.filename).toBe("launch.md");
+    expect(await file.blob.text()).toBe("# Launch");
+    const url = new URL(fetchMock.mock.calls[0]![0].url);
+    expect(url.pathname).toBe("/api/v1/meetings/7/export");
+    expect(url.searchParams.get("sections")).toBe("summary");
+  });
+
+  it("turns an error envelope into an ApiError instead of a file", async () => {
+    const envelope = JSON.stringify({ error: { code: "GONE", message: "Deleted", details: {} } });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(envelope, { status: 410, headers: { "Content-Type": "application/json" } }),
+      ),
+    );
+    await expect(fetchExport(7, { format: "pdf", sections: ["summary"] })).rejects.toMatchObject({
+      status: 410,
+      code: "GONE",
+    });
   });
 });

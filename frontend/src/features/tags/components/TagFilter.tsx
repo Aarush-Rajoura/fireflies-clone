@@ -40,7 +40,7 @@ export function TagFilter({ value, onChange }: TagFilterProps) {
               onClick={() => toggle(tag.id)}
               className="h-btn-sm px-2.5 text-meta"
             >
-              <span aria-hidden className={cn("size-2 rounded-full", tagDotClass(tag.name))} />
+              <span aria-hidden className={cn("size-2 rounded-full", tagDotClass(tag))} />
               {tag.name}
             </Chip>
           ))}

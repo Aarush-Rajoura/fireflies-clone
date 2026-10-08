@@ -120,6 +120,28 @@ describe("NotepadView", () => {
     expect(engine?.currentMs).toBe(3_000);
   });
 
+  it("opens Ask Fred as a drawer it controls, and hands focus back to the toggle on close", async () => {
+    renderView(meetingRoutes(() => json(meeting)));
+    await screen.findByText("Line 1 about the launch.");
+    const toggle = screen.getByRole("button", { name: "Ask Fred" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+
+    fireEvent.click(toggle);
+    const drawer = screen.getByRole("complementary", { name: "Ask Fred about this meeting" });
+    expect(toggle.getAttribute("aria-expanded")).toBe("true");
+    expect(toggle.getAttribute("aria-controls")).toBe(drawer.id);
+    expect(document.activeElement).toBe(within(drawer).getByRole("textbox"));
+
+    fireEvent.click(within(drawer).getByRole("button", { name: "Close Ask Fred" }));
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+    expect(document.activeElement).toBe(toggle);
+
+    // Escape from inside the drawer closes it the same way.
+    fireEvent.click(toggle);
+    fireEvent.keyDown(within(drawer).getByRole("textbox"), { key: "Escape" });
+    expect(document.activeElement).toBe(toggle);
+  });
+
   it("applies the ?t= deep link and hides/shows the player with the media toggle", async () => {
     renderView(
       meetingRoutes(() => json(meeting)),

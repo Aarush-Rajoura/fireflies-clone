@@ -19,11 +19,13 @@ import { Button, IconButton, Tooltip } from "@/components/ui";
 import { AskPanel, type AskSuggestion } from "@/features/ask";
 import { useMe } from "@/features/user";
 
+import type { ScopedMeetingIds } from "../hooks/useScopedMeetingIds";
+
 export type AskFredPanelProps = {
   /** What a question would be scoped to, e.g. "My Meetings" or "#sales". */
   contextLabel: string;
-  /** The meetings questions search; absent means every meeting. */
-  meetingIds?: readonly number[];
+  /** The meetings questions search; questions wait until it is ready. */
+  scope: ScopedMeetingIds;
 };
 
 const SUGGESTIONS: readonly AskSuggestion[] = [
@@ -71,14 +73,14 @@ function ConnectTiles() {
  * The right-hand Ask Fred column: a conversation over the meetings in the
  * current view. "New chat" remounts the conversation; history is not kept.
  */
-export function AskFredPanel({ contextLabel, meetingIds }: AskFredPanelProps) {
+export function AskFredPanel({ contextLabel, scope: scoped }: AskFredPanelProps) {
   const [open, setOpen] = useState(true);
   const [banner, setBanner] = useState(true);
   const [chat, setChat] = useState(0);
   const me = useMe();
   const firstName = me.data?.name.split(" ")[0];
   // Keyed by content, so a refetch of the same page doesn't hand AskPanel a new scope.
-  const idsKey = meetingIds?.join(",");
+  const idsKey = scoped.meetingIds?.join(",");
   const scope = useMemo(
     () => ({
       meetingIds: idsKey === undefined ? undefined : idsKey.split(",").filter(Boolean).map(Number),
@@ -138,6 +140,13 @@ export function AskFredPanel({ contextLabel, meetingIds }: AskFredPanelProps) {
       <AskPanel
         key={chat}
         scope={scope}
+        disabledReason={
+          scoped.status === "loading"
+            ? "Loading the meetings in this view…"
+            : scoped.status === "error"
+              ? "Couldn't load the meetings in this view"
+              : undefined
+        }
         suggestions={SUGGESTIONS}
         intro={banner && <ConnectBanner onDismiss={() => setBanner(false)} />}
         greeting={

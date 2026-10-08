@@ -39,7 +39,7 @@ export function AskMessages({ messages, pending, error, onRetry, citationMode }:
         ),
       )}
       {pending && (
-        <p role="status" className="flex items-center gap-2 text-meta text-muted">
+        <p className="flex items-center gap-2 text-meta text-muted">
           <Spinner />
           Fred is thinking…
         </p>

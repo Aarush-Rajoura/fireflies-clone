@@ -105,6 +105,11 @@ export function activeFilterCount(params: MeetingsParams): number {
   ).length;
 }
 
+/** Plain "All Meetings": no channel, ownership scope, search or filter. */
+export function isAllMeetingsView(params: MeetingsParams): boolean {
+  return params.scope === "all" && params.channel === undefined && !isNarrowed(params);
+}
+
 /** A search or filter (what "Clear filters" undoes) could explain an empty result. */
 export function isNarrowed(params: MeetingsParams): boolean {
   return Boolean(

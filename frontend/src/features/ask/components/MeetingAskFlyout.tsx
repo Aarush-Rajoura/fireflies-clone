@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils/cn";
 import { AskPanel, type AskSuggestion } from "./AskPanel";
 
 export type MeetingAskFlyoutProps = {
+  /** For the toggle's aria-controls. */
+  id?: string;
   meetingId: number;
   meetingTitle: string;
   open: boolean;
@@ -39,6 +41,7 @@ const SUGGESTIONS: readonly AskSuggestion[] = [
  * unmounted, when closed, so the conversation survives closing and reopening.
  */
 export function MeetingAskFlyout({
+  id,
   meetingId,
   meetingTitle,
   open,
@@ -55,6 +58,7 @@ export function MeetingAskFlyout({
   return (
     <aside
       ref={ref}
+      id={id}
       aria-label="Ask Fred about this meeting"
       hidden={!open}
       onKeyDown={(e) => {

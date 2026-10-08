@@ -118,6 +118,40 @@ describe("TagEditor", () => {
     expect(createTag).not.toHaveBeenCalled();
   });
 
+  it("never removes a tag on Enter, even when the query names an applied one", async () => {
+    const { shownTags, open } = setup();
+    await open();
+
+    const input = screen.getByRole("textbox", { name: "Search or create a tag" });
+    fireEvent.change(input, { target: { value: "LAUNCH" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(setMeetingTags).not.toHaveBeenCalled();
+    expect(shownTags()).toEqual(["Launch"]);
+  });
+
+  it("keeps the query, with a spinning Create, until the new tag is applied", async () => {
+    let resolve!: (t: Tag) => void;
+    vi.mocked(createTag).mockReturnValue(new Promise((r) => (resolve = r)));
+    vi.mocked(setMeetingTags).mockReturnValue(new Promise(() => {}));
+    const { open } = setup();
+    await open();
+
+    const input = screen.getByRole("textbox", {
+      name: "Search or create a tag",
+    }) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: "Budget" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    const create = await screen.findByRole("button", { name: /Create “Budget”/ });
+    await waitFor(() => expect(create.getAttribute("aria-busy")).toBe("true"));
+    expect(input.value).toBe("Budget");
+
+    await act(async () => resolve({ id: 3, name: "Budget", color_index: 4 }));
+    await waitFor(() => expect(input.value).toBe(""));
+    expect(setMeetingTags).toHaveBeenCalledWith(7, [1, 3]);
+  });
+
   it("applies a suggested keyword, falling back to the existing tag on 409", async () => {
     const roadmap: Tag = { id: 9, name: "Roadmap", color_index: 0 };
     vi.mocked(createTag).mockRejectedValue(new ApiError("TAG_EXISTS", 409, "exists"));

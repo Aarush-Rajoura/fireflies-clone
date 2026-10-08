@@ -15,7 +15,7 @@ import {
   Video,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type Ref } from "react";
 
 import { AvatarGroup, Badge, Button, IconButton, Menu, toast } from "@/components/ui";
 import { ExportModal } from "@/features/export";
@@ -38,6 +38,10 @@ export type NotepadHeaderProps = {
   onTogglePlayer: () => void;
   askOpen: boolean;
   onToggleAsk: () => void;
+  /** Id of the Ask Fred drawer the toggle controls. */
+  askPanelId?: string;
+  /** The toggle, so focus can return to it when the drawer closes. */
+  askToggleRef?: Ref<HTMLButtonElement>;
   onEdit: () => void;
   onMove: () => void;
   onDelete: () => void;
@@ -54,6 +58,8 @@ export function NotepadHeader({
   onTogglePlayer,
   askOpen,
   onToggleAsk,
+  askPanelId,
+  askToggleRef,
   onEdit,
   onMove,
   onDelete,
@@ -96,7 +102,9 @@ export function NotepadHeader({
         <div className="flex shrink-0 items-center gap-1">
           <Button
             size="sm"
-            aria-pressed={askOpen}
+            ref={askToggleRef}
+            aria-expanded={askOpen}
+            aria-controls={askPanelId}
             leadingIcon={<Bot strokeWidth={1.75} />}
             onClick={onToggleAsk}
             className={cn("mr-1", askOpen && "border-accent-border text-accent")}

@@ -23,6 +23,8 @@ export type AskPanelProps = {
   intro?: ReactNode;
   contextLabel?: ReactNode;
   placeholder?: string;
+  /** Set while questions can't be asked yet; shown in the composer, which is disabled. */
+  disabledReason?: string;
   className?: string;
   composerClassName?: string;
 };
@@ -39,6 +41,7 @@ export function AskPanel({
   intro,
   contextLabel,
   placeholder,
+  disabledReason,
   className,
   composerClassName,
 }: AskPanelProps) {
@@ -67,7 +70,12 @@ export function AskPanel({
                 className="mt-auto flex flex-col items-start gap-3 pt-10"
               >
                 {suggestions.map((s) => (
-                  <Chip key={s.label} icon={s.icon} onClick={() => chat.send(s.question)}>
+                  <Chip
+                    key={s.label}
+                    icon={s.icon}
+                    disabled={disabledReason !== undefined}
+                    onClick={() => chat.send(s.question)}
+                  >
                     {s.label}
                   </Chip>
                 ))}
@@ -80,7 +88,8 @@ export function AskPanel({
         <AskComposer
           onSend={chat.send}
           pending={chat.pending}
-          placeholder={placeholder}
+          placeholder={disabledReason ?? placeholder}
+          disabled={disabledReason !== undefined}
           contextLabel={contextLabel}
         />
       </div>

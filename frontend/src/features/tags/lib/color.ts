@@ -1,14 +1,31 @@
+import type { Tag } from "@/lib/api";
 import { speakerIndex } from "@/lib/utils/identity";
 
 export const TAG_COLOR_COUNT = 8;
 
+export type TagLike = Pick<Tag, "name"> & { color_index?: number | null };
+
 /**
- * Colour comes from the name, not the id, so a tag looks the same in every
- * list and before the server has even assigned it an id. Case and outer
- * whitespace are ignored, matching how the backend dedupes names.
+ * The swatch a new tag is created with: a hash of its name, ignoring case and
+ * outer whitespace like the backend's dedupe rule, so a tag gets the same
+ * colour whoever creates it.
  */
 export function tagColorIndex(name: string): number {
   return speakerIndex(name.trim().toLowerCase(), TAG_COLOR_COUNT);
+}
+
+/**
+ * The swatch a tag is shown in: its stored `color_index`, so renaming never
+ * recolours it; the name hash only for a tag without a valid one.
+ */
+export function tagHue(tag: TagLike): number {
+  const stored = tag.color_index;
+  return typeof stored === "number" &&
+    Number.isInteger(stored) &&
+    stored >= 0 &&
+    stored < TAG_COLOR_COUNT
+    ? stored
+    : tagColorIndex(tag.name);
 }
 
 // Literal class names so Tailwind can see them.
@@ -23,8 +40,8 @@ const TONES = [
   "bg-tag-subtle-7 text-tag-7",
 ] as const;
 
-export function tagToneClass(name: string): string {
-  return TONES[tagColorIndex(name)] ?? TONES[0];
+export function tagToneClass(tag: TagLike): string {
+  return TONES[tagHue(tag)] ?? TONES[0];
 }
 
 const DOTS = [
@@ -39,8 +56,8 @@ const DOTS = [
 ] as const;
 
 /** A solid swatch of the tag's hue, for dots beside a plain-text name. */
-export function tagDotClass(name: string): string {
-  return DOTS[tagColorIndex(name)] ?? DOTS[0];
+export function tagDotClass(tag: TagLike): string {
+  return DOTS[tagHue(tag)] ?? DOTS[0];
 }
 
 /** Case-insensitive, like the backend's uniqueness rule. */

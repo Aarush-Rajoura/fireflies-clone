@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useRef, useState } from "react";
 
 import { ResizablePanels } from "@/components/ui";
 import { ActionItemList } from "@/features/action-items";
@@ -84,6 +84,8 @@ function LoadedNotepad({
   const [editMode, setEditMode] = useState<EditMode | null>(edit ? "edit" : null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
+  const askPanelId = useId();
+  const askToggleRef = useRef<HTMLButtonElement>(null);
 
   const participants = useMemo(
     () => meeting.participants.map((p) => ({ id: p.id, display_name: p.display_name })),
@@ -114,6 +116,8 @@ function LoadedNotepad({
         onTogglePlayer={() => setPlayerVisible((v) => !v)}
         askOpen={askOpen}
         onToggleAsk={() => setAskOpen((v) => !v)}
+        askPanelId={askPanelId}
+        askToggleRef={askToggleRef}
         onEdit={() => setEditMode("edit")}
         onMove={() => setEditMode("move")}
         onDelete={() => setDeleteOpen(true)}
@@ -149,8 +153,13 @@ function LoadedNotepad({
               <MeetingAskFlyout
                 meetingId={meeting.id}
                 meetingTitle={meeting.title}
+                id={askPanelId}
                 open={askOpen}
-                onClose={() => setAskOpen(false)}
+                onClose={() => {
+                  setAskOpen(false);
+                  // Focus was inside the drawer, which is now hidden: hand it back to the toggle.
+                  askToggleRef.current?.focus();
+                }}
               />
             </div>
           }
