@@ -22,6 +22,7 @@ dev = [
     "ruff",
     "mypy",
     "httpx2>=2.13.1",
+    "types-reportlab>=5.0.0.20261006",
 ]
 
 [tool.pytest.ini_options]

@@ -14,6 +14,7 @@ from app.parsers import default_registry
 from app.services.action_items import ActionItemService
 from app.services.channels import ChannelService
 from app.services.comments import CommentService
+from app.services.export import ExportService, default_exporters
 from app.services.health import HealthService
 from app.services.highlights import HighlightService
 from app.services.media import MediaService
@@ -106,6 +107,10 @@ def get_highlight_service(uow: Uow) -> HighlightService:
 
 def get_soundbite_service(uow: Uow) -> SoundbiteService:
     return SoundbiteService(uow)
+
+
+def get_export_service(uow: Uow) -> ExportService:
+    return ExportService(uow, default_exporters())
 
 
 def get_health_service(uow: Uow) -> HealthService:

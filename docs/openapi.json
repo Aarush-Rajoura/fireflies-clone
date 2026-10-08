@@ -3820,6 +3820,110 @@
         ]
       }
     },
+    "/api/v1/meetings/{meeting_id}/export": {
+      "get": {
+        "description": "Unknown `format` is `422 EXPORT_FORMAT_UNSUPPORTED`; an unknown or empty `sections` list is `422 EXPORT_SECTION_UNKNOWN`.",
+        "operationId": "export_meeting",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "title": "Meeting Id",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "One of: md, txt, pdf.",
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "default": "md",
+              "description": "One of: md, txt, pdf.",
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated, any of: summary, action_items, transcript. Omit for all.",
+            "in": "query",
+            "name": "sections",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated, any of: summary, action_items, transcript. Omit for all.",
+              "title": "Sections"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              },
+              "text/markdown": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The file, with `Content-Disposition: attachment; filename=...`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The meeting was soft-deleted; restore it to use it again."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Export a meeting as a file",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
     "/api/v1/meetings/{meeting_id}/highlights": {
       "get": {
         "operationId": "list_highlights",
