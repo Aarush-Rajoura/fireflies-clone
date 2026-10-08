@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from app.repositories.action_items import ActionItemRepository
 from app.repositories.calendar import CalendarConnectionRepository
 from app.repositories.channels import ChannelRepository
+from app.repositories.chat_context import ChatContextRepository
+from app.repositories.chats import ChatRepository
 from app.repositories.comments import CommentRepository
 from app.repositories.feed import FeedRepository
 from app.repositories.highlights import HighlightRepository
@@ -39,6 +41,8 @@ class UnitOfWork:
         self.notifications = NotificationRepository(session)
         self.feed = FeedRepository(session)
         self.integration_connections = IntegrationConnectionRepository(session)
+        self.chats = ChatRepository(session)
+        self.chat_context = ChatContextRepository(session)
 
     def __enter__(self) -> "UnitOfWork":
         return self

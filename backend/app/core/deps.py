@@ -15,6 +15,8 @@ from app.services.action_items import ActionItemService
 from app.services.ask import AskService
 from app.services.calendar import CalendarService
 from app.services.channels import ChannelService
+from app.services.chat_skills import default_router
+from app.services.chats import ChatService
 from app.services.comments import CommentService
 from app.services.export import ExportService, default_exporters
 from app.services.feed import FeedService
@@ -131,6 +133,12 @@ def get_ask_service(
     uow: Uow, answerer: Annotated[QuestionAnswerer, Depends(get_question_answerer)]
 ) -> AskService:
     return AskService(uow, answerer)
+
+
+def get_chat_service(
+    uow: Uow, answerer: Annotated[QuestionAnswerer, Depends(get_question_answerer)]
+) -> ChatService:
+    return ChatService(uow, default_router(answerer))
 
 
 def get_health_service(uow: Uow) -> HealthService:

@@ -3,6 +3,7 @@
 from app.models.action_item import ActionItem
 from app.models.annotation import Comment, Highlight, Soundbite
 from app.models.channel import Channel
+from app.models.chat import ChatCitation, ChatMessage, ChatThread
 from app.models.home import CalendarConnection, Notification
 from app.models.integration import IntegrationConnection
 from app.models.meeting import Meeting
@@ -14,7 +15,8 @@ from app.models.user import User
 from app.models.user_tool import UserTool
 
 __all__ = [
-    "ActionItem", "CalendarConnection", "Channel", "Comment", "Highlight", "IntegrationConnection",
-    "Keyword", "Meeting", "MeetingTag", "Notification", "Participant", "Soundbite", "Speaker",
-    "Summary", "SummarySection", "Tag", "TranscriptSegment", "User", "UserTool",
+    "ActionItem", "CalendarConnection", "Channel", "ChatCitation", "ChatMessage", "ChatThread",
+    "Comment", "Highlight", "IntegrationConnection", "Keyword", "Meeting", "MeetingTag",
+    "Notification", "Participant", "Soundbite", "Speaker", "Summary", "SummarySection", "Tag",
+    "TranscriptSegment", "User", "UserTool",
 ]  # fmt: skip

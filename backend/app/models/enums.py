@@ -77,3 +77,8 @@ class NotificationKind(StrEnum):
     SUMMARY_REGENERATED = "summary_regenerated"
     ACTION_ITEM_ASSIGNED = "action_item_assigned"
     INVITE_ACCEPTED = "invite_accepted"
+
+
+class ChatRole(StrEnum):
+    USER = "user"
+    ASSISTANT = "assistant"

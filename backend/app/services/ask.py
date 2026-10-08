@@ -68,50 +68,59 @@ class AskService:
         return _response(self.answerer.answer(question, passages), passages)
 
     def _meeting_passages(self, meeting_id: int) -> list[Passage]:
-        meeting = require_active_meeting(self.uow, meeting_id)
-        segments = self.uow.transcript.segments(meeting_id)
-        if not segments:
-            return []
-        transcript = build_transcript_for_ai(
-            meeting,
-            segments,
-            self.uow.transcript.speakers(meeting_id),
-            self.uow.participants.list_for_meeting(meeting_id),
-        )
-        return [
-            Passage(
-                meeting_id=meeting.id,
-                meeting_title=meeting.title,
-                segment_id=line.segment_id,
-                start_ms=line.start_ms,
-                speaker=line.speaker,
-                text=line.text,
-            )
-            for line in transcript.lines
-        ]
+        return meeting_passages(self.uow, meeting_id)
 
     def _search_passages(self, question: str, meeting_ids: Sequence[int] | None) -> list[Passage]:
-        """Best FTS hits first, then the summaries of the meetings they came from."""
-        hits = search_any_words(
-            self.uow.session, question, meeting_ids=meeting_ids, limit=MAX_CROSS_PASSAGES
+        return search_passages(self.uow, question, meeting_ids)
+
+
+def meeting_passages(uow: UnitOfWork, meeting_id: int) -> list[Passage]:
+    """Every line of one live meeting's transcript (404/410 guarded)."""
+    meeting = require_active_meeting(uow, meeting_id)
+    segments = uow.transcript.segments(meeting_id)
+    if not segments:
+        return []
+    transcript = build_transcript_for_ai(
+        meeting,
+        segments,
+        uow.transcript.speakers(meeting_id),
+        uow.participants.list_for_meeting(meeting_id),
+    )
+    return [
+        Passage(
+            meeting_id=meeting.id,
+            meeting_title=meeting.title,
+            segment_id=line.segment_id,
+            start_ms=line.start_ms,
+            speaker=line.speaker,
+            text=line.text,
         )
-        passages = [
-            Passage(
-                h.meeting_id, h.meeting_title, h.segment_id, h.start_ms, h.speaker_label, h.text
-            )
-            for h in hits
-        ]
-        titles = {h.meeting_id: h.meeting_title for h in hits}
-        overviews = self.uow.summaries.overviews(list(titles))
-        passages += [
-            Passage(mid, titles[mid], None, None, None, overviews[mid])
-            for mid in titles
-            if overviews.get(mid, "").strip()
-        ]
-        return passages
+        for line in transcript.lines
+    ]
 
 
-def _response(answer: Answer, passages: list[Passage]) -> AskResponse:
+def search_passages(
+    uow: UnitOfWork, question: str, meeting_ids: Sequence[int] | None = None
+) -> list[Passage]:
+    """Best FTS hits first, then the summaries of the meetings they came from."""
+    hits = search_any_words(
+        uow.session, question, meeting_ids=meeting_ids, limit=MAX_CROSS_PASSAGES
+    )
+    passages = [
+        Passage(h.meeting_id, h.meeting_title, h.segment_id, h.start_ms, h.speaker_label, h.text)
+        for h in hits
+    ]
+    titles = {h.meeting_id: h.meeting_title for h in hits}
+    overviews = uow.summaries.overviews(list(titles))
+    passages += [
+        Passage(mid, titles[mid], None, None, None, overviews[mid])
+        for mid in titles
+        if overviews.get(mid, "").strip()
+    ]
+    return passages
+
+
+def grounded_citations(answer: Answer, passages: list[Passage]) -> list[AskCitation]:
     """Keep only citations that point at a passage we supplied; anything else is invented."""
     by_segment = {p.segment_id: p for p in passages if p.segment_id is not None}
     citations: list[AskCitation] = []
@@ -130,6 +139,13 @@ def _response(answer: Answer, passages: list[Passage]) -> AskResponse:
                 quote=_clip(cite.quote.strip() or source.text),
             )
         )
+    return citations
+
+
+def _response(answer: Answer, passages: list[Passage]) -> AskResponse:
     return AskResponse(
-        answer=answer.text, citations=citations, provider=answer.provider, model=answer.model
+        answer=answer.text,
+        citations=grounded_citations(answer, passages),
+        provider=answer.provider,
+        model=answer.model,
     )
