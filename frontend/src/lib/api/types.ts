@@ -81,6 +81,15 @@ export type SearchParams = operations["search"]["parameters"]["query"];
 export type AskResponse = Schemas["AskResponse"];
 export type AskCitation = Schemas["AskCitation"];
 
+export type ChatThread = Schemas["ChatThreadRead"];
+export type ChatThreadDetail = Schemas["ChatThreadDetail"];
+export type ChatMessage = Schemas["ChatMessageRead"];
+export type ChatCitation = Schemas["ChatCitationRead"];
+export type ChatExchange = Schemas["ChatExchange"];
+export type ChatMessageCreate = Schemas["ChatMessageCreate"];
+export type ChatSkill = Schemas["ChatSkillRead"];
+export type ChatSkillId = Schemas["ChatSkillId"];
+
 /** Export file formats the backend advertises. */
 export type ExportFormat = NonNullable<
   NonNullable<operations["export_meeting"]["parameters"]["query"]>["format"]

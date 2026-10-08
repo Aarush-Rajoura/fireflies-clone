@@ -20,6 +20,7 @@ export * from "./menu";
 export * from "./modal";
 export * from "./nav-item";
 export * from "./pager-dots";
+export * from "./option-list";
 export * from "./pagination";
 export * from "./popover";
 export * from "./pressable";

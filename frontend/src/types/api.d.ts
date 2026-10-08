@@ -131,6 +131,83 @@ export interface paths {
         patch: operations["rename_channel"];
         trace?: never;
     };
+    "/api/v1/chat-skills": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List AskFred's skills */
+        get: operations["list_chat_skills"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List your chats (most recently active first) */
+        get: operations["list_chats"];
+        put?: never;
+        /**
+         * Start a chat with its first question
+         * @description Creates the thread (titled after the question) and answers it. The skill is `skill` when given, else a leading `/command` (e.g. `/digest`), else a skill whose phrasing matches, else a free question answered from transcripts. Skills answer from stored meeting data without AI; only free questions call the AI and count towards the rate limit. `meeting_id` (an @-mention) focuses summaries and questions on that meeting. Citations point at meetings and, where possible, transcript lines.
+         */
+        post: operations["create_chat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{chat_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a chat with every message and citation */
+        get: operations["get_chat"];
+        put?: never;
+        post?: never;
+        /** Delete a chat and its messages */
+        delete: operations["delete_chat"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/chats/{chat_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a chat's messages (oldest first) */
+        get: operations["list_chat_messages"];
+        put?: never;
+        /**
+         * Ask a follow-up question in a chat
+         * @description The skill is `skill` when given, else a leading `/command` (e.g. `/digest`), else a skill whose phrasing matches, else a free question answered from transcripts. Skills answer from stored meeting data without AI; only free questions call the AI and count towards the rate limit. `meeting_id` (an @-mention) focuses summaries and questions on that meeting. Citations point at meetings and, where possible, transcript lines.
+         */
+        post: operations["post_chat_message"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/comments/{comment_id}": {
         parameters: {
             query?: never;
@@ -960,6 +1037,121 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** ChatCitationRead */
+        ChatCitationRead: {
+            /** Id */
+            id: number;
+            /** Meeting Id */
+            meeting_id: number;
+            /** Meeting Title */
+            meeting_title: string;
+            /** Quote */
+            quote: string;
+            /** Segment Id */
+            segment_id: number | null;
+            /** Start Ms */
+            start_ms: number | null;
+        };
+        /**
+         * ChatExchange
+         * @description One question and its answer, plus the thread as it stands afterwards.
+         */
+        ChatExchange: {
+            assistant_message: components["schemas"]["ChatMessageRead"];
+            thread: components["schemas"]["ChatThreadRead"];
+            user_message: components["schemas"]["ChatMessageRead"];
+        };
+        /** ChatMessageCreate */
+        ChatMessageCreate: {
+            /** Meeting Id */
+            meeting_id?: number | null;
+            /** Question */
+            question: string;
+            skill?: components["schemas"]["ChatSkillId"] | null;
+        };
+        /** ChatMessageRead */
+        ChatMessageRead: {
+            /** Citations */
+            citations: components["schemas"]["ChatCitationRead"][];
+            /** Content */
+            content: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Model */
+            model: string | null;
+            /** Provider */
+            provider: string | null;
+            role: components["schemas"]["ChatRole"];
+            /** Skill */
+            skill: string | null;
+        };
+        /**
+         * ChatRole
+         * @enum {string}
+         */
+        ChatRole: "user" | "assistant";
+        /**
+         * ChatSkillId
+         * @enum {string}
+         */
+        ChatSkillId: "action-items" | "summarize" | "prepare" | "digest" | "ask";
+        /** ChatSkillRead */
+        ChatSkillRead: {
+            /** Command */
+            command: string;
+            /** Description */
+            description: string;
+            /** Icon */
+            icon: string;
+            id: components["schemas"]["ChatSkillId"];
+            /** Label */
+            label: string;
+        };
+        /** ChatThreadDetail */
+        ChatThreadDetail: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Meeting Id */
+            meeting_id: number | null;
+            /** Messages */
+            messages: components["schemas"]["ChatMessageRead"][];
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ChatThreadRead */
+        ChatThreadRead: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Meeting Id */
+            meeting_id: number | null;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
         /** CommentCreate */
         CommentCreate: {
             /** Body */
@@ -1491,6 +1683,36 @@ export interface components {
             readonly has_next: boolean;
             /** Items */
             items: components["schemas"]["ChannelRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[ChatMessageRead] */
+        Page_ChatMessageRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["ChatMessageRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[ChatThreadRead] */
+        Page_ChatThreadRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["ChatThreadRead"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -2486,6 +2708,368 @@ export interface operations {
             };
             /** @description Invalid input; `details.errors[].loc` is the field path. */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_chat_skills: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatSkillRead"][];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_chats: {
+        parameters: {
+            query?: {
+                /** @description Case-insensitive match on the title or any message. */
+                q?: string | null;
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ChatThreadRead_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_chat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatMessageCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatExchange"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description AI rate limit exceeded; retry later. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The database is unseeded (NOT_SEEDED) or the AI provider failed (AI_UNAVAILABLE). */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_chat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatThreadDetail"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_chat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_chat_messages: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                chat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ChatMessageRead_"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    post_chat_message: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                chat_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChatMessageCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatExchange"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description AI rate limit exceeded; retry later. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The database is unseeded (NOT_SEEDED) or the AI provider failed (AI_UNAVAILABLE). */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
