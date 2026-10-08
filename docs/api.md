@@ -54,7 +54,8 @@ Interactive docs: `/docs` on a running server.
   warning, never truncated.
 - **Rate limiting:** only requests that run the AI are limited: `POST
   /meetings/{id}/summary/regenerate`, `POST /meetings/{id}/ask`, `POST /search/ask`, and
-  `POST /meetings` **when it carries `segments`**. They share one per-client budget,
+  `POST /meetings` **when it carries `segments`**, `POST /chats` and `POST /chats/{id}/messages`
+  (only when the chosen skill will call the AI). They share one per-client budget,
   `AI_RATE_LIMIT` (default `10/minute`, read from the app's settings). The check runs after the
   service's guards, so 404/409/410/422 responses never use up the budget, and neither does an
   ask with nothing to answer from. The 429 carries `Retry-After`. The client address is the first `X-Forwarded-For` hop when present,
@@ -161,6 +162,31 @@ Interactive docs: `/docs` on a running server.
 | GET | `/notifications` | 200 Page of notifications, unread first | 422, 503 |
 | PATCH | `/notifications/{id}` | 200 notification | 404, 422, 503 |
 | POST | `/notifications/read-all` | 204 | 422, 503 |
+| GET | `/me/usage` | 200 free-plan usage | 503 |
+| PATCH | `/me` | 200 user | 422, 503 |
+| PUT | `/me/onboarding` | 200 result | 422, 503 |
+| DELETE | `/me/onboarding` | 204 | 503 |
+| GET | `/action-items` | 200 Page of tasks | 422, 503 |
+| POST | `/action-items` | 201 task | 404, 410, 422 |
+| GET | `/integrations` | 200 Page of integrations | 422, 503 |
+| GET | `/integrations/categories` | 200 Page of categories | 422 |
+| PUT | `/integrations/{key}/connection` | 200 integration | 404, 422, 503 |
+| DELETE | `/integrations/{key}/connection` | 204 | 404, 422, 503 |
+| GET | `/chats` | 200 Page of chats | 422, 503 |
+| POST | `/chats` | 201 chat + first exchange | 404, 410, 422, 429, 503 |
+| GET | `/chats/{id}` | 200 chat with messages | 404, 422, 503 |
+| DELETE | `/chats/{id}` | 204 | 404, 422, 503 |
+| GET | `/chats/{id}/messages` | 200 Page of messages | 404, 422, 503 |
+| POST | `/chats/{id}/messages` | 201 exchange | 404, 410, 422, 429, 503 |
+| GET | `/chat-skills` | 200 skills | none |
+| GET | `/analytics/overview` | 200 overview | 422 |
+| GET | `/teams/me` | 200 team | 404, 503 |
+| POST | `/teams` | 201 team | 409, 422, 503 |
+| PATCH | `/teams/{id}` | 200 team | 403, 404, 422 |
+| POST | `/teams/{id}/members` | 201 invites | 403, 404, 409, 422 |
+| PATCH | `/team-members/{id}` | 200 member | 403, 404, 409, 422 |
+| DELETE | `/team-members/{id}` | 204 | 403, 404, 409, 422 |
+| POST | `/team-invites/{token}/accept` | 200 team | 404, 409 |
 
 `GET /me` declares no 4xx: there is no authentication yet, the current user is the seeded default.
 
@@ -201,6 +227,67 @@ fails that action. Kinds: `meeting_created` (upload, paste or manual), `meeting_
 (a live Capture), `calendar_connected`, `summary_regenerated`, `action_item_assigned` (an item
 newly assigned to a participant linked to the current user) and `invite_accepted` (emitted by
 the Team flow through `NotificationService.notify_invite_accepted`).
+
+### Tasks
+
+`GET /action-items` lists tasks across meetings plus standalone ones (no meeting), soonest
+due date first, undated last. Tasks of soft-deleted meetings are left out. Query:
+
+- `scope`: `all` (default) or `mine` (assigned to me, created by me, or assigned to a participant
+  linked to me).
+- `status`: `open` or `completed`.
+- `due`: `overdue`, `today`, `week` (the six days after today), `later` (after that) or `none`
+  (no due date). Days are calendar days in `tz` (IANA zone, default `UTC`; unknown is
+  `422 INVALID_TIMEZONE`).
+- `q`: substring of the task text. Plus `page` and `page_size`.
+
+`POST /action-items` creates a task; `meeting_id` is optional, and an unknown or deleted meeting is
+`404` / `410`. Items have `assignee` (a participant of the meeting) and `assignee_user` (a user,
+for standalone tasks). `PATCH` and `DELETE /action-items/{id}` work on both kinds.
+
+### AskFred chats
+
+A chat is a saved thread of messages. `POST /chats` `{question, meeting_id?, skill?}` creates the
+thread, titled after the question, and answers it; `POST /chats/{id}/messages` asks a follow-up.
+Both return `{thread, user_message, assistant_message}`. Messages carry `citations`
+(`meeting_id`, `meeting_title`, `segment_id`, `start_ms`, `quote`), and the answering `provider`
+and `model`. `meeting_id` is the `@meeting` context: summaries and questions focus on that
+meeting (`404` / `410` when it is missing or deleted). `skill` is one of `ask` (default),
+`summarize`, `action-items`, `prepare`, `digest`; when it is omitted the server picks one from the
+wording (for example a leading "summarize"). `GET /chat-skills` lists them with their `/` command.
+`GET /chats?q=` matches the title or any message and lists the most recently active first. The
+question is saved first, the AI runs with no transaction open, and the answer is saved after, so a
+failed AI call keeps the question. For a first message that means the thread already exists, so
+retrying it creates a second thread (known limitation). As for the other AI routes, a 429 is only returned when the skill will
+call the AI.
+
+### Analytics
+
+`GET /analytics/overview?range=7d|30d|90d|all&tz=` (default `30d`, `UTC`) returns totals
+(meetings, duration, participants, action items created and completed, completion rate),
+meetings per week (Monday start in `tz`), talk-time shares (top 8 plus one "other" row), top
+keywords, an activity heatmap with the busiest weekday and hour, and counts by meeting source.
+The window has no upper bound. It is computed on read with no AI call.
+
+### Integrations (simulated)
+
+`GET /integrations?category=&q=&connected=` returns the catalogue with the current user's
+connection state; `/integrations/categories` returns categories with counts.
+`PUT /integrations/{key}/connection` records a connection and `DELETE` removes it; both are
+idempotent and an unknown key is `404`. Nothing is sent to the third party.
+
+### Teams (simulated invites)
+
+One team per user, enforced by the database. `POST /teams` makes the caller the owner (`409
+TEAM_EXISTS` if they already belong to one); `GET /teams/me` is `404 NO_TEAM` without one.
+Roles are `owner`, `admin`, `member`. Owners and admins invite with
+`POST /teams/{id}/members` `{emails}`, which returns an invite link per new email and lists the
+skipped ones; no email is sent. `POST /team-invites/{token}/accept` activates the seat for the
+current (demo) user without any authentication. Only an owner can grant, revoke or remove
+ownership; the last owner cannot be demoted or removed (`409 LAST_OWNER`); non-managers get `403`.
+`GET /meetings?scope=shared` includes meetings hosted by an active teammate. `PATCH /me`
+updates the name or job title; `PUT /me/onboarding` saves the onboarding answers (and can invite
+co-workers); `GET /me/usage` returns free-plan meeting and storage figures.
 
 ## Worked examples
 

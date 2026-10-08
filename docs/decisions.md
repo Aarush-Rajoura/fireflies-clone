@@ -72,7 +72,7 @@ Short records of choices that shape the codebase. Add a new ADR when a decision 
 - **Context:** the current Fireflies app (per the reference screenshots) is dark by default, and dark mode is a bonus item.
 - **Decision:** design tokens are CSS variables with the dark palette as the default and a light theme as the alternative, toggled from the profile menu.
 - **Why:** matching the real product's look is graded; building on tokens from day one makes the toggle a variable swap rather than a restyle.
-- **Consequences:** every component must use tokens, never raw colours. Status: the app shell that carries the toggle is still being built; the backend is unaffected.
+- **Consequences:** every component must use tokens, never raw colours. Status: built; the toggle (dark, light, system) is in Settings and the profile menu.
 
 ## ADR-010: Export through an exporter registry
 
@@ -87,3 +87,25 @@ Short records of choices that shape the codebase. Add a new ADR when a decision 
 - **Decision:** `POST /search/ask` retrieves passages with FTS5: the question's content words (question glue dropped) are OR-ed into a safe quoted query, the best 40 segments by bm25 across live meetings (optionally only `meeting_ids`) become passages, followed by those meetings' summary overviews. The same `QuestionAnswerer` serves this and the single-meeting `POST /meetings/{id}/ask` (whose passages are the meeting's lines). In both, passages are read in a short transaction that is closed before the AI call, and only citations that point at a supplied segment survive, with `start_ms` taken from the database.
 - **Why:** reuses the existing index and capability interface with no new infrastructure; OR-ing content words finds relevant lines where the AND query used by `/search` would find none for a whole sentence.
 - **Consequences:** retrieval is lexical: a question phrased with words that never occur in the transcript finds nothing; the API then says so without calling the AI or counting towards the rate limit. Conversation history is not part of the contract yet.
+
+## ADR-012: The app migrates its own database at startup
+
+- **Context:** on PythonAnywhere the Bash console and the web worker run on different hosts that share a network filesystem. Migrating from the console failed with "database is locked" or did not stick for the worker, and WAL does not work across hosts.
+- **Decision:** `create_app` runs `alembic upgrade head` on its own engine when `AUTO_MIGRATE` is on (the default). The deploy script wakes the web app, waits for `/api/health`, and only then seeds. On that host `SQLITE_JOURNAL_MODE=delete`. An unreachable database is logged and `/api/health` reports 503 rather than stopping the app.
+- **Why:** the process that serves the file is the one that should change its schema. Separate console migrations were rejected because they ran on the wrong host.
+- **Consequences:** a deploy needs no manual migrate step; every test still gets a migrated database. Migrations must stay safe to run on a live start, and the head must be linear.
+
+## ADR-013: Gemini behind a fallback provider, plus an outbound proxy
+
+- **Context:** the demo must work offline and without a key, but real answers need an LLM. PythonAnywhere free accounts reach the internet only through a proxy.
+- **Decision:** `AI_PROVIDER=gemini` builds cache -> fallback(Gemini, mock); any provider error falls back to the deterministic mock and the result is re-stamped `mock (llm fallback)`. The default model is `DEFAULT_GEMINI_MODEL` in `app/ai/llm.py`, overridable with `AI_MODEL`. `OUTBOUND_PROXY` (on PythonAnywhere `http://proxy.server:3128`) routes the Gemini call. Summaries and chat answers store and show `provider` and `model`.
+- **Why:** a fallback keeps every screen working when the key, quota or network fails, and showing the provider keeps that honest (see ADR-003).
+- **Consequences:** without a key the app is fully usable but answers are templated; the key lives only in `backend/.env` or the host environment.
+
+## ADR-014: Simulated integrations, calendar and team invites
+
+- **Context:** the product shows integrations, calendars and team invites, but the assignment excludes real OAuth, email and authentication.
+- **Decision:** the integration catalogue lives in code and the database stores only which keys the user "connected"; calendar connections import sample upcoming meetings; team invites create a link and a `team_members` row, and `POST /team-invites/{token}/accept` activates it for the demo user. No email or third-party call is made.
+- **Why:** it shows the real flows and data shapes (roles, shared meetings, notifications) with nothing to configure and no secrets.
+- **Consequences:** accepting an invite is not authenticated, and a stored recap preference has no delivery. Both are listed in the README. Real providers would replace the service behind the same endpoints.
+

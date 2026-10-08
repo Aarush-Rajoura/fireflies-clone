@@ -2,7 +2,9 @@
 
 SQLite, created only by Alembic migrations (`backend/alembic/versions`). Models live in
 `backend/app/models`, one module per aggregate. The history is linear, one head:
-`0001` → `0002` → `0003_onboarding` → `0004_home`.
+`0001` → `0002` → `0003_onboarding` → `0004_home` → `0005_integrations` → `0006_tasks` →
+`0007_chat` → `0008_team`. 24 tables plus the `transcript_fts` virtual table. The app applies
+the migrations itself at startup (see ADR-012).
 
 ```mermaid
 erDiagram
@@ -14,6 +16,16 @@ erDiagram
     users ||--o{ soundbites : created_by
     users ||--o{ calendar_connections : connects
     users ||--o{ notifications : receives
+    users ||--o{ user_tools : uses
+    users ||--o{ integration_connections : connects
+    users ||--o{ chat_threads : owns
+    users ||--o{ action_items : "assignee / creator"
+    users ||--o{ team_members : "seat (optional)"
+    teams ||--o{ team_members : has
+    chat_threads ||--o{ chat_messages : has
+    chat_messages ||--o{ chat_citations : cites
+    meetings ||--o{ chat_citations : cited
+    meetings ||--o{ chat_threads : "context (optional)"
     channels ||--o{ meetings : groups
     meetings ||--o{ participants : has
     meetings ||--o{ speakers : has
@@ -89,8 +101,10 @@ erDiagram
     }
     action_items {
         int id PK
-        int meeting_id FK
+        int meeting_id FK "nullable"
         int assignee_participant_id FK
+        int assignee_user_id FK
+        int created_by_user_id FK
         string status
         date due_date
     }
@@ -135,6 +149,53 @@ erDiagram
         int user_id FK
         string provider
         datetime connected_at
+    }
+    user_tools {
+        int id PK
+        int user_id FK
+        string tool
+    }
+    integration_connections {
+        int id PK
+        int user_id FK
+        string integration_key
+        datetime connected_at
+    }
+    chat_threads {
+        int id PK
+        int user_id FK
+        string title
+        int meeting_id FK
+        datetime updated_at
+    }
+    chat_messages {
+        int id PK
+        int thread_id FK
+        string role
+        string skill
+        string provider
+        string model
+    }
+    chat_citations {
+        int id PK
+        int message_id FK
+        int meeting_id FK
+        int segment_id FK
+        int start_ms
+    }
+    teams {
+        int id PK
+        string name
+        int created_by FK
+    }
+    team_members {
+        int id PK
+        int team_id FK
+        int user_id FK
+        string email
+        string role
+        string status
+        string invite_token UK
     }
     notifications {
         int id PK
@@ -196,6 +257,25 @@ segment id), so it is not drawn as an ordinary table.
   constraint (the ORM validates it):
   SQLite cannot drop a column named in one, and rebuilding `meetings` would lose its other
   CHECKs, so the migration adds and drops it in place.
+- **Tasks without a meeting.** `action_items.meeting_id` is nullable so a standalone task can
+  exist. `assignee_user_id` (a user) sits beside `assignee_participant_id` (a person in a
+  meeting), and `created_by_user_id` records who made it; both user references are `SET NULL`
+  and indexed. Due dates are plain dates, bucketed into overdue / today / week / later in the
+  viewer's time zone at query time. The migration rebuilds the table in batch mode; its
+  downgrade deletes standalone tasks.
+- **Integrations.** `integration_connections` holds only `(user_id, integration_key)`, unique per
+  pair. The catalogue itself lives in code, not in the database.
+- **AskFred chats.** `chat_threads` (title, optional `meeting_id` context, `updated_at` moved on
+  every exchange), `chat_messages` (role `user|assistant`, optional `skill`, and the answering
+  `provider` and `model`) and `chat_citations`. A citation keeps its `quote` and `start_ms`
+  even if its transcript line is removed (`segment_id` becomes null). Messages and citations
+  cascade with the thread; a deleted meeting only clears the thread's context.
+- **Teams.** `team_members` is both the invite and the seat: `status` is `invited` or `active`,
+  `role` is `owner|admin|member`, and `invite_token` is unique. `user_id` stays null until the
+  invite is accepted. A unique index on `user_id` allows one team per user (nulls repeat, so many
+  pending invites are fine). A unique expression index on `(team_id, lower(email))` stops a
+  duplicate invite. "Shared with me" matches a meeting's host to an active seat on the viewer's
+  team.
 - **Notifications.** `(user_id, read_at)` is indexed for the unread-first list and the bell's
   unread dot. Rows are written after the action they report has committed.
 
