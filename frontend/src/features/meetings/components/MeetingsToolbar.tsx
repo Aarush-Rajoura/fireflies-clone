@@ -40,7 +40,7 @@ export function MeetingsToolbar({
     onScopeChange(params.scope === scope ? "all" : scope);
 
   return (
-    <div className="flex h-[72px] shrink-0 items-center gap-4 border-b border-subtle px-6">
+    <div className="flex h-[88px] shrink-0 items-center gap-3 border-b border-subtle px-4 min-[1400px]:gap-4 min-[1400px]:px-6">
       <ButtonGroup
         label="Meeting ownership"
         items={[
@@ -58,7 +58,7 @@ export function MeetingsToolbar({
           },
         ]}
       />
-      <span aria-hidden className="h-6 w-px bg-divider" />
+      <span aria-hidden className="hidden h-6 w-px bg-divider min-[1400px]:block" />
       <FiltersPopover
         value={{
           participant: params.participant,
@@ -132,7 +132,7 @@ function ExpandingSearch({ value, onSearch }: { value: string; onSearch: (q: str
     );
   }
   return (
-    <div className="w-72 min-w-[160px] shrink">
+    <div className="w-72 min-w-[120px] shrink">
       <SearchInput
         ref={input}
         label="Search meetings"

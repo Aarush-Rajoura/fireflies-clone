@@ -44,12 +44,17 @@ export function useMeetingsParams() {
     [params, write],
   );
 
+  /*
+   * Starting a search is one Back step; refining it while typing replaces that
+   * entry, so Back leaves the search instead of replaying each keystroke.
+   */
   const setSearch = useCallback(
-    (q: string) => update({ q: q.trim() || undefined }, "replace"),
-    [update],
+    (q: string) => update({ q: q.trim() || undefined }, params.q ? "replace" : "push"),
+    [params.q, update],
   );
+  /** `replace` corrects an out-of-range page without leaving a dead history entry. */
   const setPage = useCallback(
-    (page: number) => write({ ...params, page }, "push"),
+    (page: number, mode: UpdateMode = "push") => write({ ...params, page }, mode),
     [params, write],
   );
   /** A sidebar view: a scope, or a channel (which clears the scope's ownership filter). */

@@ -20,7 +20,7 @@ function useInvalidate() {
   return () =>
     Promise.all([
       client.invalidateQueries({ queryKey: qk.channels() }),
-      client.invalidateQueries({ queryKey: qk.meetings.lists() }),
+      client.invalidateQueries({ queryKey: qk.meetings.all }),
     ]);
 }
 
@@ -28,7 +28,7 @@ export function useCreateChannel() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: (name: string) => createChannel(name),
-    meta: { silent: true },
+    meta: { errorToast: false },
     onSuccess: async (channel) => {
       toast.success(`Created #${channel.name}`);
       await invalidate();
@@ -40,7 +40,7 @@ export function useRenameChannel() {
   const invalidate = useInvalidate();
   return useMutation({
     mutationFn: ({ id, name }: { id: number; name: string }) => renameChannel(id, name),
-    meta: { silent: true },
+    meta: { errorToast: false },
     onSuccess: async () => {
       toast.success("Channel renamed");
       await invalidate();

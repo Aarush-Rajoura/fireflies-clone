@@ -7,6 +7,7 @@ import {
   Hash,
   ListChecks,
   MoreHorizontal,
+  Pencil,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -25,6 +26,7 @@ export type MeetingRowProps = {
   /** Targets for "Move to channel". */
   channels: readonly ChannelOption[];
   onOpen: (id: number) => void;
+  onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onMove: (id: number, channel: ChannelOption | null) => void;
   /** Injectable for tests; the viewer's zone otherwise. */
@@ -44,31 +46,25 @@ const tileFills = [
 ] as const;
 
 const MAX_KEYWORDS = 3;
+const SHOWN_AVATARS = 3;
 
-/**
- * One 82px library row. Purely presentational: data and actions arrive as
- * props, so a page of rows issues no requests of its own.
- */
-export function MeetingRow({
-  meeting,
-  channels,
-  onOpen,
-  onDelete,
-  onMove,
-  timeZone,
-}: MeetingRowProps) {
-  const openItems = meeting.action_item_counts.open;
-  const names = meeting.participants.map((p) => p.display_name);
-  const SHOWN = 3;
-  // The API embeds at most five participants; the count covers everyone.
-  const hiddenParticipants = Math.max(0, meeting.participant_count - Math.min(names.length, SHOWN));
-
-  const menuItems: MenuItem[] = [
+function rowMenu(
+  meeting: MeetingListItem,
+  channels: readonly ChannelOption[],
+  {
+    onOpen,
+    onEdit,
+    onDelete,
+    onMove,
+  }: Pick<MeetingRowProps, "onOpen" | "onEdit" | "onDelete" | "onMove">,
+): MenuItem[] {
+  return [
     {
       label: "Open",
       icon: <ExternalLink strokeWidth={1.75} />,
       onSelect: () => onOpen(meeting.id),
     },
+    { label: "Edit", icon: <Pencil strokeWidth={1.75} />, onSelect: () => onEdit(meeting.id) },
     { type: "separator" },
     { type: "label", label: "Move to channel" },
     ...channels.map((c) => ({
@@ -95,9 +91,31 @@ export function MeetingRow({
       onSelect: () => onDelete(meeting.id),
     },
   ];
+}
+
+/**
+ * One 82px library row. Purely presentational: data and actions arrive as
+ * props, so a page of rows issues no requests of its own.
+ */
+export function MeetingRow({ meeting, channels, timeZone, ...actions }: MeetingRowProps) {
+  const openItems = meeting.action_item_counts.open;
+  const names = meeting.participants.map((p) => p.display_name);
+  // The API embeds at most five participants; the count covers everyone.
+  const hiddenParticipants = Math.max(
+    0,
+    meeting.participant_count - Math.min(names.length, SHOWN_AVATARS),
+  );
+  const itemsLabel = `${openItems} open action ${openItems === 1 ? "item" : "items"}`;
+
+  const channelTag = meeting.channel && (
+    <>
+      <Hash aria-hidden strokeWidth={1.75} className="size-3.5 shrink-0" />
+      <span className="truncate">{meeting.channel.name}</span>
+    </>
+  );
 
   return (
-    <article className="group relative flex h-[82px] items-center gap-4 rounded-panel px-4 transition-colors duration-fast hover:bg-surface-1 focus-within:bg-surface-1">
+    <article className="group relative flex h-[82px] items-center gap-3 rounded-panel px-4 transition-colors duration-fast focus-within:bg-surface-1 hover:bg-surface-1">
       <span
         aria-hidden
         className={cn(
@@ -108,8 +126,8 @@ export function MeetingRow({
         {initials(meeting.host.name)}
       </span>
 
-      {/* The title column keeps a real minimum; keywords are what give way on narrow lists. */}
-      <div className="flex min-w-[260px] flex-[1_1_340px] flex-col gap-1">
+      {/* The title column takes every spare pixel; everything to its right is fixed-size. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h3 className="flex min-w-0 items-center gap-1 text-title-row text-primary">
           {/* Stretched link: the whole row opens the meeting, while the kebab stays its own control. */}
           <Link
@@ -120,11 +138,22 @@ export function MeetingRow({
           </Link>
           <ChevronRight aria-hidden strokeWidth={1.75} className="size-4 shrink-0 text-muted" />
         </h3>
-        <p className="tnum truncate text-meta text-muted">{formatMeetingMeta(meeting, timeZone)}</p>
+        <p className="tnum flex min-w-0 items-center gap-1 text-meta text-muted">
+          <span className="truncate">{formatMeetingMeta(meeting, timeZone)}</span>
+          {/* Below 2xl the channel joins the meta line instead of taking a column; the meta truncates first. */}
+          {channelTag && (
+            <span className="flex min-w-0 max-w-[45%] shrink-0 items-center gap-1 text-accent 2xl:hidden">
+              <span aria-hidden className="text-muted">
+                ·
+              </span>
+              {channelTag}
+            </span>
+          )}
+        </p>
       </div>
 
       {/* Wraps into a one-line-tall box, so chips that don't fit drop out whole instead of being cut. */}
-      <div className="hidden h-[22px] min-w-0 flex-[0_1_auto] flex-wrap gap-1.5 overflow-hidden 2xl:flex">
+      <div className="hidden h-[22px] min-w-0 max-w-[30%] flex-[0_1_auto] flex-wrap gap-1.5 overflow-hidden 2xl:flex">
         {meeting.keywords.slice(0, MAX_KEYWORDS).map((keyword) => (
           <span
             key={keyword}
@@ -135,10 +164,9 @@ export function MeetingRow({
         ))}
       </div>
 
-      {meeting.channel && (
-        <span className="flex max-w-[140px] shrink-0 items-center gap-1 text-caption text-accent">
-          <Hash aria-hidden strokeWidth={1.75} className="size-3.5 shrink-0" />
-          <span className="truncate">{meeting.channel.name}</span>
+      {channelTag && (
+        <span className="hidden max-w-[140px] shrink-0 items-center gap-1 text-caption text-accent 2xl:flex">
+          {channelTag}
         </span>
       )}
 
@@ -146,27 +174,34 @@ export function MeetingRow({
         <Badge
           tone="accent"
           className="shrink-0 gap-1 normal-case"
-          aria-label={`${openItems} open action ${openItems === 1 ? "item" : "items"}`}
-          title={`${openItems} open action ${openItems === 1 ? "item" : "items"}`}
+          aria-label={itemsLabel}
+          title={itemsLabel}
         >
           <ListChecks aria-hidden strokeWidth={1.75} className="size-3.5" />
           {openItems}
         </Badge>
       )}
 
-      <div className="flex shrink-0 items-center gap-1">
-        <AvatarGroup names={names.slice(0, SHOWN)} max={SHOWN} />
+      <div className="flex shrink-0 items-center gap-1.5">
+        {/* Rings take the row's colour, so overlapping avatars read as cut-outs on hover too. */}
+        <AvatarGroup
+          names={names.slice(0, SHOWN_AVATARS)}
+          max={SHOWN_AVATARS}
+          size="md"
+          className="group-focus-within:[&>*]:ring-surface-1 group-hover:[&>*]:ring-surface-1"
+        />
         {hiddenParticipants > 0 && (
           <span
             className="tnum text-caption text-muted"
-            title={names.slice(SHOWN).join(", ") || undefined}
+            title={names.slice(SHOWN_AVATARS).join(", ") || undefined}
           >
             +{hiddenParticipants}
           </span>
         )}
       </div>
 
-      <div className="relative z-[1] shrink-0 opacity-0 transition-opacity duration-fast focus-within:opacity-100 group-hover:opacity-100 has-[[data-state=open]]:opacity-100">
+      {/* Overlays the row's right edge on hover, so it reserves no width. */}
+      <div className="absolute right-3 top-1/2 z-[1] -translate-y-1/2 rounded-control bg-surface-1 opacity-0 shadow-hairline transition-opacity duration-fast focus-within:opacity-100 group-hover:opacity-100 has-[[data-state=open]]:opacity-100">
         <Menu
           trigger={
             <IconButton
@@ -176,7 +211,7 @@ export function MeetingRow({
               icon={<MoreHorizontal strokeWidth={1.75} />}
             />
           }
-          items={menuItems}
+          items={rowMenu(meeting, channels, actions)}
         />
       </div>
     </article>

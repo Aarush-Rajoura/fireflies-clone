@@ -14,6 +14,7 @@ const renderRow = (overrides: Parameters<typeof meetingFixture>[0] = {}) =>
         meeting={meetingFixture(overrides)}
         channels={[{ id: 9, name: "product" }]}
         onOpen={vi.fn()}
+        onEdit={vi.fn()}
         onDelete={vi.fn()}
         onMove={vi.fn()}
         timeZone="UTC"
@@ -47,13 +48,14 @@ describe("MeetingRow", () => {
     expect(screen.getByText("roadmap")).toBeTruthy();
     expect(screen.getByText("hiring")).toBeTruthy();
     expect(screen.queryByText("launch")).toBeNull();
-    expect(screen.getByText("product")).toBeTruthy();
+    // In the meta line below 2xl and in its own column above; CSS shows one.
+    expect(screen.getAllByText("product").length).toBeGreaterThan(0);
   });
 
   it("omits the badge when nothing is open", () => {
     renderRow({ action_item_counts: { open: 0, completed: 2 }, channel: null, channel_id: null });
     expect(screen.queryByLabelText(/open action/)).toBeNull();
-    expect(screen.queryByText("product")).toBeNull();
+    expect(screen.queryAllByText("product")).toHaveLength(0);
   });
 
   it("offers a labelled actions menu", () => {

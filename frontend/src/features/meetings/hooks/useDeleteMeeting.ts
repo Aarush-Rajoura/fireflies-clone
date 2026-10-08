@@ -13,7 +13,15 @@ type Snapshot = [QueryKey, Page<MeetingListItem> | undefined][];
 
 function withoutMeeting(page: Page<MeetingListItem> | undefined, id: number) {
   if (!page || !page.items.some((m) => m.id === id)) return page;
-  return { ...page, items: page.items.filter((m) => m.id !== id), total: page.total - 1 };
+  const total = Math.max(0, page.total - 1);
+  const totalPages = Math.ceil(total / page.page_size);
+  return {
+    ...page,
+    items: page.items.filter((m) => m.id !== id),
+    total,
+    total_pages: totalPages,
+    has_next: page.page < totalPages,
+  };
 }
 
 /**

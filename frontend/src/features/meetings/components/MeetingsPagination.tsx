@@ -7,6 +7,8 @@ import { IconButton } from "@/components/ui";
 export type MeetingsPaginationProps = {
   page: number;
   pageSize: number;
+  /** Rows actually on this page; the last page is usually short. */
+  itemCount: number;
   total: number;
   totalPages: number;
   onPageChange: (page: number) => void;
@@ -16,13 +18,15 @@ export type MeetingsPaginationProps = {
 export function MeetingsPagination({
   page,
   pageSize,
+  itemCount,
   total,
   totalPages,
   onPageChange,
 }: MeetingsPaginationProps) {
-  if (total === 0) return null;
+  // Nothing to count on an empty or out-of-range page (the hub is clamping it).
+  if (total === 0 || itemCount === 0) return null;
   const first = (page - 1) * pageSize + 1;
-  const last = Math.min(page * pageSize, total);
+  const last = Math.min(first + itemCount - 1, total);
   return (
     <nav
       aria-label="Pagination"

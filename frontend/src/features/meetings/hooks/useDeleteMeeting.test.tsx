@@ -36,10 +36,15 @@ describe("useDeleteMeeting", () => {
   it("removes the row at once, then Undo restores it", async () => {
     vi.mocked(api.deleteMeeting).mockResolvedValue(undefined);
     vi.mocked(api.restoreMeeting).mockResolvedValue({} as never);
-    const { hook, ids } = setup();
+    const { client, hook, ids } = setup();
 
     act(() => hook.result.current.mutate(1));
     await waitFor(() => expect(ids()).toEqual([2]));
+    expect(client.getQueryData<Page<MeetingListItem>>(LIST_KEY)).toMatchObject({
+      total: 1,
+      total_pages: 1,
+      has_next: false,
+    });
     await waitFor(() => expect(hook.result.current.isSuccess).toBe(true));
     expect(api.deleteMeeting).toHaveBeenCalledWith(1);
 

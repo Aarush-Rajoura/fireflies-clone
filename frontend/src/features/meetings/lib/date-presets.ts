@@ -22,7 +22,13 @@ function daysAgo(now: Date, days: number): Date {
 
 export type DateRange = { date_from?: string; date_to?: string };
 
-/** "Last 7 days" is six days back plus today; both ends inclusive. */
+/**
+ * "Last 7 days" is six days back plus today; both ends inclusive.
+ *
+ * Days are the viewer's local calendar, while the API reads date_from/date_to
+ * as UTC days, so a range can be off by one near midnight. Accepted until the
+ * API takes a time-zone parameter.
+ */
 export function presetRange(preset: DatePreset, now: Date = new Date()): DateRange {
   const today = isoDay(now);
   switch (preset) {

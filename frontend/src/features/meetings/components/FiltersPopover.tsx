@@ -3,7 +3,7 @@
 import { ListFilter } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { Badge, Button, DatePicker, Input, Popover } from "@/components/ui";
+import { Badge, Button, Chip, DatePicker, Input, Popover } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 import { DATE_PRESETS, presetRange, recognizePreset, type DatePreset } from "../lib/date-presets";
@@ -32,7 +32,8 @@ export function FiltersPopover({ value, activeCount, onApply }: FiltersPopoverPr
           aria-label={activeCount ? `Filters, ${activeCount} active` : "Filters"}
           className={cn(activeCount > 0 && "border-accent-border text-accent")}
         >
-          Filters
+          {/* Icon-only on narrower lists, where the open search box needs the room. */}
+          <span className="hidden min-[1400px]:inline">Filters</span>
           {activeCount > 0 && <Badge tone="accent">{activeCount}</Badge>}
         </Button>
       }
@@ -88,27 +89,16 @@ function FiltersForm({
 
       <fieldset className="flex flex-col gap-1.5">
         <legend className="mb-1.5 text-label text-secondary">Date</legend>
-        <div className="flex flex-wrap gap-1.5">
+        <div role="group" aria-label="Date range" className="flex flex-wrap gap-1.5">
           {DATE_PRESETS.map((p) => (
-            <label
+            <Chip
               key={p.id}
-              className={cn(
-                "flex h-btn-sm cursor-pointer items-center rounded-control border px-2.5 text-meta transition-colors duration-fast has-[:focus-visible]:shadow-focus",
-                preset === p.id
-                  ? "border-accent-border bg-accent-subtle text-accent"
-                  : "border-control bg-surface-2 text-secondary hover:text-primary",
-              )}
+              selected={preset === p.id}
+              onClick={() => setPreset(p.id)}
+              className="h-btn-sm px-2.5 text-meta"
             >
-              <input
-                type="radio"
-                name="date-preset"
-                value={p.id}
-                checked={preset === p.id}
-                onChange={() => setPreset(p.id)}
-                className="sr-only"
-              />
               {p.label}
-            </label>
+            </Chip>
           ))}
         </div>
         {preset === "custom" && (

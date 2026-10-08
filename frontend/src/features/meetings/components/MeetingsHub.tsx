@@ -6,11 +6,13 @@ import { SkeletonRow, StateView } from "@/components/ui";
 import { ChannelSidebar, useChannels } from "@/features/channels";
 import { cn } from "@/lib/utils/cn";
 
+import { useClampPage } from "../hooks/useClampPage";
 import { useDeleteMeeting } from "../hooks/useDeleteMeeting";
 import { useMeetings } from "../hooks/useMeetings";
 import { useMeetingsParams } from "../hooks/useMeetingsParams";
 import { useMoveMeeting } from "../hooks/useMoveMeeting";
-import { isNarrowed, PAGE_SIZE } from "../lib/params";
+import { emptyCopy } from "../lib/empty-copy";
+import { PAGE_SIZE } from "../lib/params";
 
 import { AskFredPanel } from "./AskFredPanel";
 import { MeetingGroupList } from "./MeetingGroupList";
@@ -34,6 +36,7 @@ export function MeetingsHub() {
   const channels = useChannels();
   const remove = useDeleteMeeting();
   const move = useMoveMeeting();
+  useClampPage(meetings.data, meetings.isPlaceholderData, url.setPage);
 
   const channelOptions = (channels.data ?? []).map((c) => ({ id: c.id, name: c.name }));
   const activeChannel = channelOptions.find((c) => c.id === params.channel);
@@ -72,13 +75,17 @@ export function MeetingsHub() {
         >
           <StateView
             query={meetings}
-            isEmpty={(page) => page.items.length === 0}
+            // By total, not items: an empty page past the end is clamped, not "no meetings".
+            isEmpty={(page) => page.total === 0}
             errorMessage="Your meetings couldn't be loaded. Check your connection and try again."
             loading={Array.from({ length: 6 }, (_, i) => (
               <SkeletonRow key={i} className="h-[82px] px-4" />
             ))}
             empty={
-              <MeetingsEmpty narrowed={isNarrowed(params)} onClearFilters={url.clearFilters} />
+              <MeetingsEmpty
+                copy={emptyCopy(params, activeChannel?.name)}
+                onClearFilters={url.clearFilters}
+              />
             }
           >
             {(page) => (
@@ -86,6 +93,8 @@ export function MeetingsHub() {
                 meetings={page.items}
                 channels={channelOptions}
                 onOpen={(id) => router.push(`/meetings/${id}`)}
+                // The meeting page opens its edit dialog from this param.
+                onEdit={(id) => router.push(`/meetings/${id}?edit=1`)}
                 onDelete={(id) => remove.mutate(id)}
                 onMove={(id, channel) =>
                   move.mutate({ id, channelId: channel?.id ?? null, channelName: channel?.name })
@@ -99,9 +108,10 @@ export function MeetingsHub() {
           <MeetingsPagination
             page={meetings.data.page}
             pageSize={meetings.data.page_size || PAGE_SIZE}
+            itemCount={meetings.data.items.length}
             total={meetings.data.total}
             totalPages={meetings.data.total_pages}
-            onPageChange={url.setPage}
+            onPageChange={(page) => url.setPage(page)}
           />
         )}
       </section>

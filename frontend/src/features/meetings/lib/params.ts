@@ -49,6 +49,7 @@ export function parseMeetingsParams(search: URLSearchParams): MeetingsParams {
     date_from: day("date_from"),
     date_to: day("date_to"),
     channel: positiveInt(search.get("channel")),
+    // Deliberately "all": a bare /meetings lights "All Meetings"; "My Meetings" is the explicit scope=hosted.
     scope: SCOPES.includes(scope as MeetingScope) ? (scope as MeetingScope) : "all",
     sort: SORTS.includes(sort as MeetingSort) ? (sort as MeetingSort) : DEFAULT_SORT,
     page: positiveInt(search.get("page")) ?? 1,

@@ -5,48 +5,43 @@ import { Plus } from "lucide-react";
 import { Button, EmptyState, SkeletonCardsIllustration } from "@/components/ui";
 import { useComingSoon } from "@/features/shell";
 
+import type { EmptyCopy } from "../lib/empty-copy";
+
 export type MeetingsEmptyProps = {
-  /** True when a search or filter could be what is hiding meetings. */
-  narrowed: boolean;
+  copy: EmptyCopy;
   onClearFilters: () => void;
 };
 
-/**
- * The empty library, as in the reference. When the view is narrowed the same
- * picture says so and offers the way back, instead of claiming nothing exists.
- */
-export function MeetingsEmpty({ narrowed, onClearFilters }: MeetingsEmptyProps) {
+/** The empty library, as in the reference, worded for the view that is empty. */
+export function MeetingsEmpty({ copy, onClearFilters }: MeetingsEmptyProps) {
   const soon = useComingSoon();
-  if (narrowed) {
-    return (
-      <EmptyState
-        illustration={<SkeletonCardsIllustration />}
-        title="No meetings match this view"
-        description="Try a different search, or clear the filters to see all your meetings."
-        action={<Button onClick={onClearFilters}>Clear filters</Button>}
-      />
-    );
-  }
+  const capture = copy.kind === "first-run" || copy.kind === "hosted" || copy.kind === "uploads";
+
+  const action =
+    copy.kind === "filtered" ? (
+      <Button onClick={onClearFilters}>Clear filters</Button>
+    ) : capture ? (
+      <Button
+        variant="primary"
+        leadingIcon={<Plus strokeWidth={1.75} />}
+        onClick={() =>
+          soon.show({
+            title: "Capture",
+            message: "Recording and uploading meetings is coming soon.",
+          })
+        }
+      >
+        Capture
+      </Button>
+    ) : undefined;
+
   return (
     <>
       <EmptyState
         illustration={<SkeletonCardsIllustration />}
-        title="Looks like you haven't recorded a meeting yet"
-        description="Once you record your first meeting with Fireflies, it'll show up right here."
-        action={
-          <Button
-            variant="primary"
-            leadingIcon={<Plus strokeWidth={1.75} />}
-            onClick={() =>
-              soon.show({
-                title: "Capture",
-                message: "Recording and uploading meetings is coming soon.",
-              })
-            }
-          >
-            Capture
-          </Button>
-        }
+        title={copy.title}
+        description={copy.description}
+        action={action}
       />
       {soon.dialog}
     </>

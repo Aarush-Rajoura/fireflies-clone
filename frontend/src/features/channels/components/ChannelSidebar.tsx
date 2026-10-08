@@ -1,11 +1,11 @@
 "use client";
 
 import { Files, Hash, Plus, Upload } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
 import { Badge, Button, SearchInput, Skeleton } from "@/components/ui";
+import { NavItem } from "@/components/ui/nav-item";
 import type { Channel } from "@/lib/api";
-import { cn } from "@/lib/utils/cn";
 
 import { useChannels } from "../hooks/useChannels";
 
@@ -24,34 +24,6 @@ export type ChannelSidebarProps = {
   /** Lets the caller leave a view whose channel no longer exists. */
   onChannelDeleted?: (id: number) => void;
 };
-
-const itemBase =
-  "group flex h-10 w-full items-center gap-3 rounded-item px-3 text-left text-body transition-colors duration-fast [&_svg]:size-4 [&_svg]:shrink-0";
-const itemLook = (active: boolean) =>
-  active
-    ? "bg-accent-subtle text-accent"
-    : "text-secondary hover:bg-surface-hover hover:text-primary";
-
-function ViewItem(props: {
-  label: string;
-  icon: ReactNode;
-  active: boolean;
-  onClick: () => void;
-  badge?: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-current={props.active ? "page" : undefined}
-      onClick={props.onClick}
-      className={cn(itemBase, itemLook(props.active))}
-    >
-      {props.icon}
-      <span className="truncate">{props.label}</span>
-      {props.badge}
-    </button>
-  );
-}
 
 /**
  * The Meetings hub's left column: built-in views, then the user's channels.
@@ -90,21 +62,21 @@ export function ChannelSidebar({
 
       <nav
         aria-label="Meeting views"
-        className="flex flex-col gap-1 border-b border-subtle px-3 pb-4"
+        className="flex flex-col gap-1 border-b border-subtle px-3 pb-5"
       >
-        <ViewItem
+        <NavItem
           label="My Meetings"
           icon={<Hash strokeWidth={1.75} />}
           active={scopeActive("hosted")}
           onClick={() => onSelectScope("hosted")}
         />
-        <ViewItem
+        <NavItem
           label="All Meetings"
           icon={<Files strokeWidth={1.75} />}
           active={scopeActive("all")}
           onClick={() => onSelectScope("all")}
         />
-        <ViewItem
+        <NavItem
           label="Uploads"
           icon={<Upload strokeWidth={1.75} />}
           active={scopeActive("uploads")}
@@ -113,8 +85,8 @@ export function ChannelSidebar({
         />
       </nav>
 
-      <section aria-labelledby="all-channels" className="flex flex-col gap-1 px-3 py-4">
-        <h2 id="all-channels" className="px-3 pb-2 text-body-strong text-primary">
+      <section aria-labelledby="all-channels" className="flex flex-col gap-1 px-3 pb-4 pt-7">
+        <h2 id="all-channels" className="px-3 pb-3 text-body-strong text-primary">
           All channels
         </h2>
         {channels.isLoading ? (
@@ -125,13 +97,9 @@ export function ChannelSidebar({
         ) : channels.isError ? (
           <p className="px-3 text-meta text-muted">
             Couldn&apos;t load channels.{" "}
-            <button
-              type="button"
-              className="text-accent hover:underline"
-              onClick={() => channels.refetch()}
-            >
+            <Button variant="ghost" size="sm" onClick={() => channels.refetch()}>
               Retry
-            </button>
+            </Button>
           </p>
         ) : (channels.data ?? []).length === 0 ? (
           <div className="flex flex-col items-center gap-3 px-3 py-2 text-center">
@@ -184,19 +152,19 @@ function ChannelItem({
   onDeleted?: (id: number) => void;
 }) {
   return (
-    <li className={cn("group relative flex items-center rounded-item", itemLook(active))}>
-      <button
-        type="button"
-        aria-current={active ? "page" : undefined}
+    <li className="group relative flex items-center">
+      <NavItem
+        label={channel.name}
+        icon={<Hash strokeWidth={1.75} />}
+        active={active}
         onClick={onSelect}
-        className={cn(itemBase, "pr-10 hover:bg-transparent")}
-      >
-        <Hash strokeWidth={1.75} />
-        <span className="truncate">{channel.name}</span>
-        <span className="tnum ml-auto text-caption text-muted group-hover:invisible group-focus-within:invisible">
-          {channel.meeting_count}
-        </span>
-      </button>
+        className="pr-10"
+        trailing={
+          <span className="tnum text-caption text-muted group-focus-within:invisible group-hover:invisible">
+            {channel.meeting_count}
+          </span>
+        }
+      />
       <span className="absolute right-1.5 opacity-0 transition-opacity duration-fast focus-within:opacity-100 group-hover:opacity-100 has-[[data-state=open]]:opacity-100">
         <ChannelMenu channel={channel} onDeleted={onDeleted} />
       </span>

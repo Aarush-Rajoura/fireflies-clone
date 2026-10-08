@@ -80,11 +80,21 @@ describe("useMeetingsParams", () => {
     expect(result.current.activeFilterCount).toBe(1);
   });
 
-  it("replaces history while typing, so each keystroke isn't a Back step", () => {
-    const { result } = renderHook(() => useMeetingsParams());
-    act(() => result.current.setSearch("  roadmap "));
+  it("pushes when a search starts, then replaces while it is refined", () => {
+    const { result, rerender } = renderHook(() => useMeetingsParams());
+    act(() => result.current.setSearch("  road "));
+    expect(nav.push).toHaveBeenCalledWith("/meetings?q=road", { scroll: false });
+    rerender();
+    act(() => result.current.setSearch("roadmap"));
     expect(nav.replace).toHaveBeenCalledWith("/meetings?q=roadmap", { scroll: false });
-    expect(nav.push).not.toHaveBeenCalled();
+    expect(nav.push).toHaveBeenCalledTimes(1);
+  });
+
+  it("can correct the page without a history entry", () => {
+    nav.search = "page=9";
+    const { result } = renderHook(() => useMeetingsParams());
+    act(() => result.current.setPage(2, "replace"));
+    expect(nav.replace).toHaveBeenCalledWith("/meetings?page=2", { scroll: false });
   });
 
   it("selects a channel or a scope as mutually exclusive views", () => {
