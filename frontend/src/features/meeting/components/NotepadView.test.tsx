@@ -47,6 +47,35 @@ const summary: Summary = {
 };
 
 const emptyPage = { items: [], page: 1, page_size: 100, total: 0, total_pages: 0, has_next: false };
+const page = <T,>(items: T[]) => ({ ...emptyPage, items, total: items.length, total_pages: 1 });
+
+const annotationComment = {
+  id: 1,
+  meeting_id: 7,
+  segment_id: 101,
+  author: { id: 3, name: "Sarah Watts", avatar_url: null },
+  body: "Is this the final launch date?",
+  created_at: "2026-03-15T12:00:00Z",
+  updated_at: "2026-03-15T12:00:00Z",
+};
+const annotationHighlight = {
+  id: 4,
+  meeting_id: 7,
+  segment_id: 102,
+  start_offset: 7,
+  end_offset: 12,
+  color: "blue",
+  created_by: 3,
+};
+const annotationClip = {
+  id: 9,
+  meeting_id: 7,
+  title: "Launch call",
+  start_ms: 3_000,
+  end_ms: 8_000,
+  duration_ms: 5_000,
+  created_by: 3,
+};
 
 const meetingRoutes =
   (detail: () => Response): Route =>
@@ -60,6 +89,14 @@ const meetingRoutes =
         return json(summary);
       case "/api/v1/meetings/7/action-items":
         return json(emptyPage);
+      case "/api/v1/meetings/7/comments":
+        return json(page([annotationComment]));
+      case "/api/v1/meetings/7/highlights":
+        return json(page([annotationHighlight]));
+      case "/api/v1/meetings/7/soundbites":
+        return json(page([annotationClip]));
+      case "/api/v1/me":
+        return json({ id: 3, name: "Sarah Watts", email: "s@example.com", avatar_url: null });
       case "/api/v1/meetings/7/restore":
         return req.method === "POST" ? json(meeting) : undefined;
     }
@@ -166,5 +203,39 @@ describe("NotepadView", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     expect(replace).toHaveBeenCalledWith("/meetings/7?t=12&ref=mail", { scroll: false });
+  });
+
+  it("composes highlights, comment badges and the tool rail's flyouts", async () => {
+    renderView(meetingRoutes(() => json(meeting)));
+    await screen.findByText("Line 1 about the launch.");
+
+    // Highlight on line 3 ("Line 3 about the launch." -> "about"), badge on line 2.
+    await waitFor(() =>
+      expect(document.querySelector('mark[data-range-id="4"]')?.textContent).toBe("about"),
+    );
+    const badge = await screen.findByRole("button", { name: "1 comment on this line" });
+    expect(badge.closest("[data-segment-index]")?.getAttribute("data-segment-index")).toBe("1");
+
+    const rail = screen.getByRole("navigation", { name: "Meeting tools" });
+    fireEvent.click(within(rail).getByRole("button", { name: "Soundbites (1)" }));
+    const clips = await screen.findByRole("complementary", { name: "Soundbites" });
+    expect(within(clips).getByText("Launch call")).toBeTruthy();
+
+    // The badge opens that line's thread, ready to reply at its timestamp.
+    fireEvent.click(badge);
+    const comments = await screen.findByRole("complementary", { name: "Comments" });
+    expect(within(comments).getByText("Is this the final launch date?")).toBeTruthy();
+    expect(within(comments).getByText("Line at 0:03")).toBeTruthy();
+    expect(clips.parentElement?.className).toContain("hidden");
+
+    // Its timestamp chip seeks the shared player.
+    fireEvent.click(within(comments).getByRole("button", { name: "Jump to 0:03" }));
+    await waitFor(() => expect(engine?.currentMs).toBe(3_000));
+
+    fireEvent.click(within(rail).getByRole("button", { name: "Comments (1)" }));
+    expect(comments.parentElement?.parentElement?.className).toContain("hidden");
+
+    fireEvent.click(within(rail).getByRole("button", { name: "Search transcript" }));
+    expect(document.activeElement).toBe(screen.getByRole("searchbox"));
   });
 });

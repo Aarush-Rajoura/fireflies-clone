@@ -14,12 +14,14 @@ import {
   type CreateEngine,
 } from "@/features/player";
 import { SummaryPanel } from "@/features/summary";
-import { TranscriptPanel } from "@/features/transcript";
-import type { MeetingDetail } from "@/lib/api";
+import { useTranscript, type TranscriptPanelHandle } from "@/features/transcript";
+import type { MeetingDetail, Segment } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
 import { meetingMediaUrl } from "../api";
 import { isMeetingDeleted, isMeetingNotFound, useMeeting } from "../hooks/useMeeting";
+import { useNotepadFlyouts } from "../hooks/useNotepadFlyouts";
+import { AnnotatedTranscript } from "./AnnotatedTranscript";
 import { DeleteMeetingDialog } from "./DeleteMeetingDialog";
 import { EditMeetingModal, type EditMode } from "./EditMeetingModal";
 import {
@@ -29,6 +31,9 @@ import {
   NotepadSkeleton,
 } from "./MeetingStates";
 import { NotepadHeader } from "./NotepadHeader";
+import { NotepadSummarySide } from "./NotepadSummarySide";
+
+const NO_SEGMENTS: Segment[] = [];
 
 export type NotepadViewProps = {
   meetingId: number;
@@ -86,6 +91,9 @@ function LoadedNotepad({
   const [askOpen, setAskOpen] = useState(false);
   const askPanelId = useId();
   const askToggleRef = useRef<HTMLButtonElement>(null);
+  const flyouts = useNotepadFlyouts();
+  const transcript = useRef<TranscriptPanelHandle>(null);
+  const segments = useTranscript(meeting.id).data?.segments ?? NO_SEGMENTS;
 
   const participants = useMemo(
     () => meeting.participants.map((p) => ({ id: p.id, display_name: p.display_name })),
@@ -130,16 +138,23 @@ function LoadedNotepad({
           storageKey="notepad.split"
           label="Resize summary and transcript"
           start={
-            <div className="px-8 pb-10 pt-5">
-              <SummaryPanel
-                meetingId={meeting.id}
-                durationMs={meeting.duration_ms}
-                meetingTitle={meeting.title}
-                actionItemsSlot={
-                  <ActionItemList meetingId={meeting.id} participants={participants} />
-                }
-              />
-            </div>
+            <NotepadSummarySide
+              meetingId={meeting.id}
+              segments={segments}
+              flyouts={flyouts}
+              onSearch={() => transcript.current?.focusFind()}
+            >
+              <div className="px-8 pb-10 pt-5">
+                <SummaryPanel
+                  meetingId={meeting.id}
+                  durationMs={meeting.duration_ms}
+                  meetingTitle={meeting.title}
+                  actionItemsSlot={
+                    <ActionItemList meetingId={meeting.id} participants={participants} />
+                  }
+                />
+              </div>
+            </NotepadSummarySide>
           }
           end={
             <div className="relative flex h-full min-h-0 flex-col">
@@ -148,7 +163,13 @@ function LoadedNotepad({
                 <PlayerCard />
               </div>
               <div className="min-h-0 flex-1">
-                <TranscriptPanel meetingId={meeting.id} />
+                <AnnotatedTranscript
+                  meeting={meeting}
+                  segments={segments}
+                  handleRef={transcript}
+                  onCommentLine={flyouts.focusComments}
+                  onSoundbiteCreated={() => flyouts.show("soundbites")}
+                />
               </div>
               <MeetingAskFlyout
                 meetingId={meeting.id}
