@@ -9,8 +9,9 @@ from app.api.responses import CONFLICT, GONE, NOT_FOUND, SERVICE_UNAVAILABLE, VA
 from app.core.deps import get_meeting_creation_service, get_meeting_service
 from app.schemas.common import Page
 from app.schemas.meeting import MeetingCreate, MeetingDetail, MeetingListItem, MeetingUpdate
+from app.schemas.meeting_filters import MeetingSort
 from app.services.meeting_creation import MeetingCreationService
-from app.services.meetings import MeetingService, MeetingSort
+from app.services.meetings import MeetingService
 
 router = APIRouter(prefix="/meetings", tags=["meetings"])
 

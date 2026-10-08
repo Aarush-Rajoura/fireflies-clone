@@ -64,6 +64,12 @@ def test_list_item_serialises_without_transcript() -> None:
         has_media=False,
         participants=[],
         overview_preview=None,
+        status="completed",
+        channel_id=None,
+        channel=None,
+        meeting_url=None,
+        platform=None,
+        language="en",
     )
     assert "segments" not in item.model_dump()
     assert "segments" not in Meeting.__mapper__.relationships.keys()

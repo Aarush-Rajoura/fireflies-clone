@@ -1,34 +1,13 @@
 """Meeting list filters as composable WHERE builders (query code only)."""
 
-from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
-from enum import StrEnum
-from typing import Literal
 
 from sqlalchemy import ColumnElement, and_, exists, or_, select
 
-from app.models import Meeting, MeetingTag, Participant
+from app.db.search import transcript_matches
+from app.models import Meeting, MeetingTag, Participant, Summary
 from app.models.enums import MeetingSource, MeetingStatus
-
-
-class MeetingSort(StrEnum):
-    NEWEST = "-started_at"
-    OLDEST = "started_at"
-    TITLE = "title"
-    LONGEST = "-duration_ms"
-
-
-@dataclass(frozen=True)
-class MeetingFilters:
-    q: str | None = None
-    participant: str | None = None
-    date_from: date | None = None  # inclusive, whole day (UTC)
-    date_to: date | None = None  # inclusive, whole day (UTC)
-    tag_ids: tuple[int, ...] = ()
-    host_id: int | None = None
-    channel_id: int | None = None
-    scope: Literal["all", "hosted", "shared", "uploads"] = "all"
-    status: Literal["completed", "upcoming"] = "completed"
+from app.schemas.meeting_filters import MeetingFilters
 
 
 def _name_matches(term: str) -> ColumnElement[bool]:
@@ -36,6 +15,23 @@ def _name_matches(term: str) -> ColumnElement[bool]:
         Participant.meeting_id == Meeting.id,
         Participant.display_name.icontains(term, autoescape=True),
     )
+
+
+def _text_matches(term: str) -> ColumnElement[bool]:
+    """Title, participant name or summary overview contains `term`, or the transcript
+    contains all its words (FTS5, last word as prefix)."""
+    clauses: list[ColumnElement[bool]] = [
+        Meeting.title.icontains(term, autoescape=True),
+        _name_matches(term),
+        exists().where(
+            Summary.meeting_id == Meeting.id,
+            Summary.overview.icontains(term, autoescape=True),
+        ),
+    ]
+    transcript = transcript_matches(Meeting.id, term)
+    if transcript is not None:
+        clauses.append(transcript)
+    return or_(*clauses)
 
 
 def _day_start(day: date) -> datetime:
@@ -61,7 +57,7 @@ def build_conditions(
     conds: list[ColumnElement[bool]] = [Meeting.not_deleted()]
     if filters.q and filters.q.strip():
         term = filters.q.strip()
-        conds.append(or_(Meeting.title.icontains(term, autoescape=True), _name_matches(term)))
+        conds.append(_text_matches(term))
     if filters.participant and filters.participant.strip():
         conds.append(_name_matches(filters.participant.strip()))
     if filters.date_from:
@@ -83,6 +79,9 @@ def build_conditions(
     scope = _scope_clause(filters.scope, current_user_id)
     if scope is not None:
         conds.append(scope)
-    upcoming = and_(Meeting.status == MeetingStatus.SCHEDULED, Meeting.started_at > now)
-    conds.append(upcoming if filters.status == "upcoming" else ~upcoming)
+    if filters.status == "upcoming":
+        conds.append(and_(Meeting.status == MeetingStatus.SCHEDULED, Meeting.started_at > now))
+    else:
+        # Only finished meetings: a scheduled meeting whose time passed is not "completed".
+        conds.append(Meeting.status == MeetingStatus.COMPLETED)
     return conds

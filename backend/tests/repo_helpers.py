@@ -8,8 +8,9 @@ from typing import Any
 from sqlalchemy import Engine, event
 
 from app.models import Meeting
-from app.repositories.meetings import MeetingFilters, MeetingRepository, MeetingSort
+from app.repositories.meetings import MeetingRepository
 from app.schemas.common import PageParams
+from app.schemas.meeting_filters import MeetingFilters, MeetingSort
 
 PAGE = PageParams()
 

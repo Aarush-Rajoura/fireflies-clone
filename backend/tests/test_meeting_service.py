@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.core.exceptions import GoneError, NotFoundError, ValidationFailedError
 from app.models import ActionItem, Channel
-from app.repositories.meeting_filters import MeetingFilters, MeetingSort
 from app.schemas.common import PageParams
 from app.schemas.meeting import MeetingUpdate
+from app.schemas.meeting_filters import MeetingFilters, MeetingSort
 from app.services.meetings import MeetingService
 from tests import factories as f
 from tests.service_helpers import seeded

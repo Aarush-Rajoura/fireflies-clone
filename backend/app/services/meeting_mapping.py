@@ -2,10 +2,12 @@
 
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from app.db.unit_of_work import UnitOfWork
 from app.models import Meeting
 from app.models.enums import MediaType
+from app.schemas.channel import ChannelRef
 from app.schemas.meeting import (
     ActionItemCountsRead,
     MeetingDetail,
@@ -41,6 +43,26 @@ def _preview(overview: str | None) -> str | None:
     )
 
 
+def _common(meeting: Meeting) -> dict[str, Any]:
+    """Fields shared by list rows and the detail view."""
+    return {
+        "id": meeting.id,
+        "title": meeting.title,
+        "started_at": meeting.started_at,
+        "duration_ms": meeting.duration_ms,
+        "host": UserRef.model_validate(meeting.host),
+        "participant_count": len(meeting.participants),
+        "tags": [TagRead.model_validate(t) for t in meeting.tags],
+        "has_media": _has_media(meeting),
+        "status": meeting.status,
+        "channel_id": meeting.channel_id,
+        "channel": ChannelRef.model_validate(meeting.channel) if meeting.channel else None,
+        "meeting_url": meeting.meeting_url,
+        "platform": meeting.platform,
+        "language": meeting.language,
+    }
+
+
 def list_items(uow: UnitOfWork, meetings: Sequence[Meeting]) -> list[MeetingListItem]:
     ids = [m.id for m in meetings]
     counts = uow.meetings.action_item_counts(ids)
@@ -51,22 +73,15 @@ def list_items(uow: UnitOfWork, meetings: Sequence[Meeting]) -> list[MeetingList
         c = counts.get(m.id)
         items.append(
             MeetingListItem(
-                id=m.id,
-                title=m.title,
-                started_at=m.started_at,
-                duration_ms=m.duration_ms,
-                host=UserRef.model_validate(m.host),
+                **_common(m),
                 participants=[
                     ParticipantRef.model_validate(p) for p in m.participants[:LIST_PARTICIPANTS]
                 ],
-                participant_count=len(m.participants),
                 action_item_counts=ActionItemCountsRead(
                     open=c.open if c else 0, completed=c.completed if c else 0
                 ),
                 keywords=keywords.get(m.id, [])[:LIST_KEYWORDS],
-                tags=[TagRead.model_validate(t) for t in m.tags],
                 overview_preview=_preview(overviews.get(m.id)),
-                has_media=_has_media(m),
             )
         )
     return items
@@ -88,24 +103,15 @@ def detail(uow: UnitOfWork, meeting: Meeting) -> MeetingDetail:
     tag_names = {t.name.lower() for t in meeting.tags}
     by_id = {p.id: p for p in meeting.participants}
     return MeetingDetail(
-        id=meeting.id,
-        title=meeting.title,
+        **_common(meeting),
         description=meeting.description,
-        started_at=meeting.started_at,
-        duration_ms=meeting.duration_ms,
-        host=UserRef.model_validate(meeting.host),
         participants=[ParticipantRead.model_validate(p) for p in meeting.participants],
-        participant_count=len(meeting.participants),
         speakers=[speaker_read(s, by_id) for s in uow.transcript.speakers(meeting.id)],
         action_item_counts=ActionItemCountsRead(
             open=counts.open if counts else 0, completed=counts.completed if counts else 0
         ),
         keywords=terms,
-        tags=[TagRead.model_validate(t) for t in meeting.tags],
-        has_media=_has_media(meeting),
-        channel_id=meeting.channel_id,
         source=meeting.source,
-        status=meeting.status,
         media_type=meeting.media_type,
         summary_status=_summary_status(uow, meeting.id),
         suggested_tags=[t for t in terms if t.lower() not in tag_names][:SUGGESTED_TAGS],

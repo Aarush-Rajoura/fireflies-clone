@@ -4,7 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.models.enums import MediaType
+from app.models.enums import MediaType, MeetingStatus, Platform
 from tests import factories as f
 
 V1 = "/api/v1"
@@ -79,3 +79,34 @@ def test_media_missing_is_404_envelope(api: TestClient) -> None:
     mid = api.post(f"{V1}/meetings", json={"title": "No audio"}).json()["id"]
     r = api.get(f"{V1}/meetings/{mid}/media")
     assert r.status_code == 404 and r.json()["error"]["code"] == "MEDIA_NOT_FOUND"
+
+
+def test_list_and_detail_carry_status_channel_and_join_fields(
+    app: FastAPI, api: TestClient
+) -> None:
+    channel = api.post(f"{V1}/channels", json={"name": "Sales"}).json()
+    done = api.post(f"{V1}/meetings", json={"title": "Done", "channel_id": channel["id"]}).json()
+    assert done["status"] == "completed" and done["language"] == "en"
+    assert done["channel"] == {"id": channel["id"], "name": "Sales", "slug": channel["slug"]}
+    with app.state.session_factory() as db:
+        scheduled = f.make_meeting(
+            db,
+            title="Planning",
+            status=MeetingStatus.SCHEDULED,
+            started_at=datetime(2099, 1, 1, tzinfo=UTC),
+        )
+        scheduled.meeting_url = "https://meet.example/abc"
+        scheduled.platform = Platform.MEET
+        db.commit()
+
+    items = api.get(f"{V1}/meetings").json()["items"]
+    assert [i["title"] for i in items] == ["Done"]
+    assert items[0]["channel_id"] == channel["id"] and items[0]["channel"]["name"] == "Sales"
+
+    upcoming = api.get(f"{V1}/meetings", params={"status": "upcoming"}).json()["items"]
+    assert len(upcoming) == 1
+    row = upcoming[0]
+    assert row["status"] == "scheduled" and row["platform"] == "meet"
+    assert row["meeting_url"] == "https://meet.example/abc" and row["channel"] is None
+    detail = api.get(f"{V1}/meetings/{row['id']}").json()
+    assert detail["meeting_url"] == "https://meet.example/abc" and detail["platform"] == "meet"

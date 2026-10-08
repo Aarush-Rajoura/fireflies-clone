@@ -302,6 +302,29 @@
         "title": "ChannelRead",
         "type": "object"
       },
+      "ChannelRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ],
+        "title": "ChannelRef",
+        "type": "object"
+      },
       "ChannelUpdate": {
         "additionalProperties": false,
         "properties": {
@@ -492,6 +515,16 @@
           "action_item_counts": {
             "$ref": "#/components/schemas/ActionItemCountsRead"
           },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "channel_id": {
             "anyOf": [
               {
@@ -536,8 +569,23 @@
             "title": "Keywords",
             "type": "array"
           },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
           "media_type": {
             "$ref": "#/components/schemas/MediaType"
+          },
+          "meeting_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Url"
           },
           "participant_count": {
             "title": "Participant Count",
@@ -549,6 +597,16 @@
             },
             "title": "Participants",
             "type": "array"
+          },
+          "platform": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Platform"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "source": {
             "$ref": "#/components/schemas/MeetingSource"
@@ -608,12 +666,16 @@
           "keywords",
           "tags",
           "has_media",
+          "status",
+          "channel_id",
+          "channel",
+          "meeting_url",
+          "platform",
+          "language",
           "description",
           "participants",
           "speakers",
-          "channel_id",
           "source",
-          "status",
           "media_type",
           "summary_status",
           "suggested_tags"
@@ -626,6 +688,27 @@
         "properties": {
           "action_item_counts": {
             "$ref": "#/components/schemas/ActionItemCountsRead"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ChannelRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "channel_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel Id"
           },
           "duration_ms": {
             "title": "Duration Ms",
@@ -648,6 +731,21 @@
             },
             "title": "Keywords",
             "type": "array"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "meeting_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Url"
           },
           "overview_preview": {
             "anyOf": [
@@ -672,10 +770,23 @@
             "title": "Participants",
             "type": "array"
           },
+          "platform": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Platform"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "started_at": {
             "format": "date-time",
             "title": "Started At",
             "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MeetingStatus"
           },
           "tags": {
             "items": {
@@ -700,6 +811,12 @@
           "keywords",
           "tags",
           "has_media",
+          "status",
+          "channel_id",
+          "channel",
+          "meeting_url",
+          "platform",
+          "language",
           "participants",
           "overview_preview"
         ],
@@ -1171,6 +1288,16 @@
           "attendee"
         ],
         "title": "ParticipantRole",
+        "type": "string"
+      },
+      "Platform": {
+        "enum": [
+          "zoom",
+          "meet",
+          "teams",
+          "other"
+        ],
+        "title": "Platform",
         "type": "string"
       },
       "SearchHit": {
@@ -2075,7 +2202,7 @@
             }
           },
           {
-            "description": "Matches title, overview, people, transcript.",
+            "description": "Case-insensitive substring of the title, a participant name or the summary overview; or every word in the transcript (last word as a prefix).",
             "in": "query",
             "name": "q",
             "required": false,
@@ -2088,7 +2215,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Matches title, overview, people, transcript.",
+              "description": "Case-insensitive substring of the title, a participant name or the summary overview; or every word in the transcript (last word as a prefix).",
               "title": "Q"
             }
           },

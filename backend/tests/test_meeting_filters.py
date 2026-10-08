@@ -3,10 +3,11 @@ from datetime import UTC, date, datetime
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import Channel
+from app.models import Channel, Summary
 from app.models.enums import MeetingSource, MeetingStatus
-from app.repositories.meetings import MeetingRepository, MeetingSort
+from app.repositories.meetings import MeetingRepository
 from app.schemas.common import PageParams
+from app.schemas.meeting_filters import MeetingSort
 from tests import factories as f
 from tests.repo_helpers import at, run, titles
 
@@ -145,9 +146,36 @@ def test_upcoming_vs_completed(db_session: Session, repo: MeetingRepository):
         db_session, host=host, title="stale", status=MeetingStatus.SCHEDULED, started_at=at(1)
     )
     f.make_meeting(db_session, host=host, title="done")
+    f.make_meeting(db_session, host=host, title="live", status=MeetingStatus.LIVE)
+    f.make_meeting(db_session, host=host, title="proc", status=MeetingStatus.PROCESSING)
     assert titles(run(repo, status="upcoming", now=now)[0]) == ["future"]
-    assert sorted(titles(run(repo, status="completed", now=now)[0])) == ["done", "stale"]
-    assert sorted(titles(run(repo, now=now)[0])) == ["done", "stale"]
+    # A scheduled meeting whose time passed is neither upcoming nor completed.
+    assert titles(run(repo, status="completed", now=now)[0]) == ["done"]
+    assert titles(run(repo, now=now)[0]) == ["done"]
+
+
+def test_q_matches_summary_overview(db_session: Session, repo: MeetingRepository):
+    host = f.make_user(db_session)
+    m = f.make_meeting(db_session, host=host, title="x")
+    db_session.add(Summary(meeting_id=m.id, overview="We agreed on the Zanzibar rollout."))
+    f.make_meeting(db_session, host=host, title="y")
+    db_session.flush()
+    assert titles(run(repo, q="zanzibar")[0]) == ["x"]
+
+
+def test_q_matches_transcript_only_word(db_session: Session, repo: MeetingRepository):
+    host = f.make_user(db_session)
+    m = f.make_meeting(db_session, host=host, title="x")
+    sp = f.make_speaker(db_session, m)
+    f.make_segment(db_session, m, sp, "The quokka budget needs another look.")
+    other = f.make_meeting(db_session, host=host, title="y")
+    f.make_segment(db_session, other, f.make_speaker(db_session, other), "Nothing here.")
+    assert titles(run(repo, q="quokka")[0]) == ["x"]
+    assert titles(run(repo, q="quok")[0]) == ["x"]  # last word is a prefix
+    assert titles(run(repo, q="quokka budget")[0]) == ["x"]
+    assert run(repo, q="quokka unicorn")[1] == 0
+    # FTS syntax in user input is treated as text, not operators.
+    assert titles(run(repo, q='"quokka" OR*')[0]) == []
 
 
 def test_channel_filter(db_session: Session, repo: MeetingRepository):

@@ -19,6 +19,7 @@ from app.models.enums import MediaType, MeetingSource, MeetingStatus, Platform
 from app.models.types import enum_check, enum_column
 
 if TYPE_CHECKING:
+    from app.models.channel import Channel
     from app.models.participant import Participant
     from app.models.tag import Tag
     from app.models.user import User
@@ -63,6 +64,7 @@ class Meeting(TimestampMixin, Base):
 
     # Read-side relationships for eager loading; writes go through repositories.
     host: Mapped["User"] = relationship(lazy="raise")
+    channel: Mapped["Channel | None"] = relationship(lazy="raise", viewonly=True)
     participants: Mapped[list["Participant"]] = relationship(
         order_by="Participant.id", lazy="raise", viewonly=True
     )

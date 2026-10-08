@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, ConfigDict, StringConstraints
 
 from app.schemas.common import InputModel
 
@@ -21,3 +21,11 @@ class ChannelRead(BaseModel):
     slug: str
     is_private: bool
     meeting_count: int
+
+
+class ChannelRef(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    slug: str

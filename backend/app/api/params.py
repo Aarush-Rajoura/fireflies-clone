@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from fastapi import Depends, Query
 
 from app.schemas.common import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, PageParams
-from app.services.meetings import MeetingFilters, MeetingSort
+from app.schemas.meeting_filters import MeetingFilters, MeetingSort
 
 
 def paging(
@@ -24,7 +24,13 @@ Paging = Annotated[PageParams, Depends(paging)]
 
 def meeting_filters(
     q: Annotated[
-        str | None, Query(description="Matches title, overview, people, transcript.")
+        str | None,
+        Query(
+            description=(
+                "Case-insensitive substring of the title, a participant name or the summary"
+                " overview; or every word in the transcript (last word as a prefix)."
+            )
+        ),
     ] = None,
     participant: Annotated[str | None, Query(description="Participant name contains.")] = None,
     date_from: Annotated[date | None, Query(description="Inclusive, UTC day.")] = None,

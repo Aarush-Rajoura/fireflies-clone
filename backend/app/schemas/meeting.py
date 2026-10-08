@@ -9,7 +9,8 @@ from pydantic import (
     field_validator,
 )
 
-from app.models.enums import MediaType, MeetingSource, MeetingStatus, ParticipantRole
+from app.models.enums import MediaType, MeetingSource, MeetingStatus, ParticipantRole, Platform
+from app.schemas.channel import ChannelRef
 from app.schemas.common import InputModel
 from app.schemas.transcript import SegmentIn, SpeakerRead
 from app.schemas.user import UserRef
@@ -115,6 +116,13 @@ class _MeetingBase(BaseModel):
     keywords: list[str]
     tags: list[TagRead]
     has_media: bool
+    status: MeetingStatus
+    channel_id: int | None
+    channel: ChannelRef | None
+    # Join link and platform for scheduled meetings; null for uploads and pastes.
+    meeting_url: str | None
+    platform: Platform | None
+    language: str
 
 
 class MeetingListItem(_MeetingBase):
@@ -128,9 +136,7 @@ class MeetingDetail(_MeetingBase):
     description: str | None
     participants: list[ParticipantRead]
     speakers: list[SpeakerRead]
-    channel_id: int | None
     source: MeetingSource
-    status: MeetingStatus
     media_type: MediaType
     summary_status: SummaryStatus
     suggested_tags: list[str]

@@ -11,10 +11,11 @@ from sqlalchemy.orm import selectinload
 from app.models import ActionItem, Meeting
 from app.models.enums import ActionItemStatus
 from app.repositories.base import Repository
-from app.repositories.meeting_filters import MeetingFilters, MeetingSort, build_conditions
+from app.repositories.meeting_filters import build_conditions
 from app.schemas.common import PageParams
+from app.schemas.meeting_filters import MeetingFilters, MeetingSort
 
-__all__ = ["ActionItemCounts", "MeetingFilters", "MeetingRepository", "MeetingSort"]
+__all__ = ["ActionItemCounts", "MeetingRepository"]
 
 
 @dataclass(frozen=True)
@@ -92,6 +93,7 @@ class MeetingRepository(Repository[Meeting]):
 
 _LOAD_OPTIONS = (
     selectinload(Meeting.host),
+    selectinload(Meeting.channel),
     selectinload(Meeting.participants),
     selectinload(Meeting.tags),
 )

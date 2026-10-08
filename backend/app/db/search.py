@@ -8,8 +8,8 @@ deleted_at; that join lives only here.
 import re
 from dataclasses import dataclass
 
-from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy import ColumnElement, column, exists, literal_column, select, table, text
+from sqlalchemy.orm import InstrumentedAttribute, Session
 
 # FTS5 syntax characters (quotes, *, -, :, parentheses) are user text, not operators.
 _TOKEN = re.compile(r"\w+", re.UNICODE)
@@ -68,6 +68,28 @@ def to_fts_query(raw: str) -> str:
     quoted = [f'"{t}"' for t in tokens]
     quoted[-1] += "*"
     return " ".join(quoted)
+
+
+_FTS = table("transcript_fts", column("rowid"))
+_SEGMENTS = table("transcript_segments", column("id"), column("meeting_id"))
+
+
+def transcript_matches(
+    meeting_id: ColumnElement[int] | InstrumentedAttribute[int], raw: str
+) -> ColumnElement[bool] | None:
+    """EXISTS clause: some segment of the meeting matches `raw` (same safe query as search).
+
+    None when `raw` has no searchable tokens. The caller filters soft-deleted meetings.
+    """
+    match = to_fts_query(raw)
+    if not match:
+        return None
+    return exists(
+        select(_SEGMENTS.c.id)
+        .select_from(_FTS.join(_SEGMENTS, _SEGMENTS.c.id == _FTS.c.rowid))
+        .where(_SEGMENTS.c.meeting_id == meeting_id)
+        .where(literal_column("transcript_fts").op("MATCH")(match))
+    )
 
 
 def search_segments(

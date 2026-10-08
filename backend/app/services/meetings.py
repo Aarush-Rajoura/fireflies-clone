@@ -12,13 +12,11 @@ from app.core.exceptions import (
 from app.db.unit_of_work import UnitOfWork
 from app.models import Meeting, Participant
 from app.models.enums import ParticipantRole
-from app.repositories.meeting_filters import MeetingFilters, MeetingSort
 from app.schemas.common import Page, PageParams
 from app.schemas.meeting import MeetingDetail, MeetingListItem, MeetingUpdate, ParticipantInput
+from app.schemas.meeting_filters import MeetingFilters, MeetingSort
 from app.services import meeting_mapping
 from app.services.guards import meeting_not_found, require_active_meeting
-
-__all__ = ["MeetingFilters", "MeetingService", "MeetingSort"]
 
 
 class MeetingService:
