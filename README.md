@@ -62,7 +62,11 @@ Legend: **Done (API)** means the backend and its tests are finished and the endp
 - `uv` for dependencies; `pytest`, `ruff` (lint + format), `mypy --strict`
 
 **Frontend**
-- Next.js with TypeScript (strict), Tailwind CSS, Vitest, ESLint
+- Next.js 16 (App Router) with TypeScript (`strict`, `noUncheckedIndexedAccess`), React 19
+- Tailwind CSS v3 on design tokens (`src/styles/tokens.css`), Radix UI primitives, `lucide-react` icons
+- TanStack Query v5 for server state; `openapi-fetch` client typed by `openapi-typescript` from
+  `docs/openapi.json`
+- Vitest + Testing Library, ESLint (with import-boundary rules), Prettier
 
 **Hosting and CI:** Vercel (frontend), PythonAnywhere (API + SQLite on its persistent disk),
 GitHub Actions.
@@ -97,6 +101,31 @@ flowchart TD
 - **One error format:** domain exceptions carry no HTTP knowledge; `core/errors.py` is the single
   map to statuses and the `{"error": {"code", "message", "details"}}` envelope.
 - `create_app(settings)` builds the app, so every test runs against its own migrated database.
+
+### Frontend layers
+
+The frontend mirrors the backend's layering:
+
+| Backend | Frontend | Rule |
+|---|---|---|
+| `api/` routers | `app/**/page.tsx` | Compose features only; no fetching, no business logic |
+| `services/` | `features/*/hooks/*` | Logic and data flow; call only the feature's `api.ts` |
+| `repositories/` | `lib/api/client.ts` + `features/*/api.ts` | The only code that does HTTP, typed by the generated OpenAPI types |
+| `schemas/` | `types/api.d.ts` (generated) + `lib/api/types.ts` (readable aliases) | Never hand-edit generated types (`make types`) |
+| `core/deps.py` | `app/providers.tsx` | The only place app-wide singletons (query client, theme, toaster) are created |
+| Protocols | `ApiClient`, each feature's `index.ts` | Swappable implementations behind small interfaces |
+| `check_layering.py` | ESLint `no-restricted-imports` | No deep feature imports; `components/ui` never imports features; only `lib/api` and `features/*/api.ts` import the HTTP client; pages never import the client |
+
+- **Same-origin API:** the browser only calls its own origin; `next.config.ts` rewrites `/api/*`
+  to `BACKEND_URL`, so there is no CORS or cross-site cookie to manage.
+- **One error path:** `unwrap()` turns the backend's error envelope (or a network failure) into a
+  typed `ApiError`; queries retry once only for network/5xx errors, and any failed mutation shows
+  an error toast with **Retry** when retrying can help.
+- **Query keys** come from one factory (`lib/api/query-keys.ts`), nested per meeting so a single
+  invalidation covers a meeting's transcript, summary and action items.
+- **Shell:** `features/shell` (icon rail, top bar, profile and capture menus, help button) wraps
+  every page in the `(app)` route group; screens not built yet render a visible Coming Soon
+  placeholder rather than a dead link.
 
 Design decisions with their reasoning are in [docs/decisions.md](docs/decisions.md).
 
@@ -152,11 +181,12 @@ npm install
 npm run dev                      # http://localhost:3000
 ```
 
-Set `NEXT_PUBLIC_API_URL` / `BACKEND_URL` in `frontend/.env.local` if the API is not on
-`http://localhost:8000`.
+Set `BACKEND_URL` in `frontend/.env.local` if the API is not on `http://localhost:8000`; the
+Next.js `/api` rewrite proxies to it (on Vercel, set it before building).
 
 **Useful targets:** `make seed-reset` (wipe and re-seed), `make seed-refresh` (move past
-seeded upcoming meetings back into the future), `make types` (export OpenAPI),
+seeded upcoming meetings back into the future), `make types` (export OpenAPI and regenerate the
+frontend client types),
 `make requirements` (regenerate `backend/requirements.txt` for PythonAnywhere).
 
 **Checks**

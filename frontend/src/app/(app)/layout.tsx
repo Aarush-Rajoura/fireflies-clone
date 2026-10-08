@@ -1,8 +1,14 @@
 import type { ReactNode } from "react";
 
-import { AppProviders } from "@/components/ui";
+import { AppShell } from "@/features/shell";
 
-/** Every signed-in app screen renders inside the themed scope (dark by default). */
+import { Providers } from "../providers";
+
+/** Every signed-in screen: app-wide providers, then the rail + top bar shell. */
 export default function AppLayout({ children }: { children: ReactNode }) {
-  return <AppProviders>{children}</AppProviders>;
+  return (
+    <Providers>
+      <AppShell>{children}</AppShell>
+    </Providers>
+  );
 }
