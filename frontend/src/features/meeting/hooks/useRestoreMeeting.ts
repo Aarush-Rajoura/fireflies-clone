@@ -15,6 +15,8 @@ export function applyRestored(client: QueryClient, meeting: MeetingDetail): void
     predicate: (q) => q.queryKey[1] !== meeting.id || q.queryKey.length > 2,
   });
   void client.invalidateQueries({ queryKey: qk.channels() });
+  // Its action items return to the cross-meeting task list.
+  void client.invalidateQueries({ queryKey: qk.tasks.all });
 }
 
 export function useRestoreMeeting(id: number) {

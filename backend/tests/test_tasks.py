@@ -221,3 +221,22 @@ def test_create_task_validation(api: TestClient, body: dict[str, Any]) -> None:
 def test_create_task_unknown_meeting_is_404(api: TestClient) -> None:
     res = api.post("/api/v1/action-items", json={"text": "x", "meeting_id": 9999})
     assert res.status_code == 404 and res.json()["error"]["code"] == "MEETING_NOT_FOUND"
+
+
+def test_tasks_api_pages_with_the_list_envelope(api: TestClient) -> None:
+    for i in range(3):
+        api.post("/api/v1/action-items", json={"text": f"Task {i}"})
+    first = api.get("/api/v1/action-items", params={"page_size": 2}).json()
+    assert {k: first[k] for k in ("page", "page_size", "total", "total_pages", "has_next")} == {
+        "page": 1,
+        "page_size": 2,
+        "total": 3,
+        "total_pages": 2,
+        "has_next": True,
+    }
+    second = api.get("/api/v1/action-items", params={"page_size": 2, "page": 2}).json()
+    assert len(second["items"]) == 1 and second["has_next"] is False
+    seen = {i["id"] for i in first["items"]} | {i["id"] for i in second["items"]}
+    assert len(seen) == 3
+    clamped = api.get("/api/v1/action-items", params={"page_size": 500}).json()
+    assert clamped["page_size"] == 100

@@ -56,6 +56,27 @@ describe("meeting mutations", () => {
     expect(keys()).toContain(JSON.stringify(qk.actionItems(7)));
   });
 
+  it("refreshes the task list on title edits, delete and restore", async () => {
+    const { client, wrapper } = setup();
+    const spy = vi.spyOn(client, "invalidateQueries");
+    const tasksInvalidations = () =>
+      spy.mock.calls.filter((c) => JSON.stringify(c[0]?.queryKey) === JSON.stringify(qk.tasks.all))
+        .length;
+    const update = renderHook(() => useUpdateMeeting(7), { wrapper }).result;
+    await act(() => update.current.mutateAsync({ description: "x" }));
+    expect(tasksInvalidations()).toBe(0);
+    await act(() => update.current.mutateAsync({ title: "New" }));
+    expect(tasksInvalidations()).toBe(1);
+
+    const remove = renderHook(() => useDeleteMeeting(7), { wrapper }).result;
+    await act(() => remove.current.mutateAsync());
+    expect(tasksInvalidations()).toBe(2);
+    getToasts()
+      .find((t) => t.action?.label === "Undo")!
+      .action!.onClick();
+    await waitFor(() => expect(tasksInvalidations()).toBe(3));
+  });
+
   it("delete navigates away; Undo restores once and offers View", async () => {
     const { wrapper } = setup();
     const { result } = renderHook(() => useDeleteMeeting(7), { wrapper });

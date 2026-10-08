@@ -55,6 +55,8 @@ export function useDeleteMeeting() {
       Promise.all([
         client.invalidateQueries({ queryKey: qk.meetings.lists() }),
         client.invalidateQueries({ queryKey: qk.channels() }),
+        // A deleted meeting's action items leave the task list.
+        client.invalidateQueries({ queryKey: qk.tasks.all }),
       ]),
   });
 }

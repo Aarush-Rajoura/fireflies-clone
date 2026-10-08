@@ -58,6 +58,22 @@ describe("useDeleteMeeting", () => {
     );
   });
 
+  it("marks the task list stale on delete and on undo", async () => {
+    vi.mocked(api.deleteMeeting).mockResolvedValue(undefined);
+    vi.mocked(api.restoreMeeting).mockResolvedValue({} as never);
+    const { client, hook } = setup();
+    client.setQueryData(qk.tasks.list({ scope: "all" }), []);
+    const stale = () => client.getQueryState(qk.tasks.list({ scope: "all" }))?.isInvalidated;
+
+    act(() => hook.result.current.mutate(1));
+    await waitFor(() => expect(stale()).toBe(true));
+
+    client.setQueryData(qk.tasks.list({ scope: "all" }), []);
+    expect(stale()).toBe(false);
+    act(() => runAction(getToasts().find((t) => t.action?.label === "Undo")!));
+    await waitFor(() => expect(stale()).toBe(true));
+  });
+
   it("puts the row back when the delete fails", async () => {
     vi.mocked(api.deleteMeeting).mockRejectedValue(new Error("boom"));
     const { hook, ids } = setup();

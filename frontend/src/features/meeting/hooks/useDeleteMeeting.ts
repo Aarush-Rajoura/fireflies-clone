@@ -28,6 +28,8 @@ export function useDeleteMeeting(id: number) {
       void client.invalidateQueries({ queryKey: ["meetings", id], refetchType: "none" });
       void client.invalidateQueries({ queryKey: qk.meetings.lists() });
       void client.invalidateQueries({ queryKey: qk.channels() });
+      // Its action items leave the cross-meeting task list.
+      void client.invalidateQueries({ queryKey: qk.tasks.all });
       // The toast dismisses on click, but a fast double click can land twice.
       let restoring = false;
       toast.undo("Meeting deleted", () => {

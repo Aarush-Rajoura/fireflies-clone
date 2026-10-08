@@ -23,6 +23,10 @@ export function useUpdateMeeting(id: number) {
         void client.invalidateQueries({ queryKey: qk.transcript(id) });
         void client.invalidateQueries({ queryKey: qk.actionItems(id) });
       }
+      // Tasks show the meeting title and assignee names.
+      if ("title" in body || body.participants) {
+        void client.invalidateQueries({ queryKey: qk.tasks.all });
+      }
       // Channel meeting counts.
       if ("channel_id" in body) void client.invalidateQueries({ queryKey: qk.channels() });
     },

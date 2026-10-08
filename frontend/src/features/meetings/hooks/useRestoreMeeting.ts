@@ -20,6 +20,7 @@ export function useRestoreMeeting() {
       await Promise.all([
         client.invalidateQueries({ queryKey: qk.meetings.all }),
         client.invalidateQueries({ queryKey: qk.channels() }),
+        client.invalidateQueries({ queryKey: qk.tasks.all }),
       ]);
     },
   });

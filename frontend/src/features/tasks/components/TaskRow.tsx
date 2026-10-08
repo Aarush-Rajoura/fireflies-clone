@@ -27,9 +27,10 @@ const dueTones: Record<DueTone, BadgeTone> = {
   upcoming: "neutral",
 };
 
-// Row actions stay out of the way until the row is hovered or holds focus.
+// Row actions stay out of the way until the row is hovered or holds focus;
+// touch screens cannot hover, so there they are always shown.
 const revealOnHover =
-  "opacity-0 transition-opacity duration-fast group-focus-within:opacity-100 group-hover:opacity-100";
+  "opacity-0 transition-opacity duration-fast group-focus-within:opacity-100 group-hover:opacity-100 [@media(pointer:coarse)]:opacity-100";
 
 export function assigneeName(item: ActionItem): string | null {
   return item.assignee?.display_name ?? item.assignee_user?.name ?? null;

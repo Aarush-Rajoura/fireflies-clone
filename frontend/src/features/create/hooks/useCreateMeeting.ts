@@ -27,6 +27,8 @@ export function useCreateMeeting() {
       void client.invalidateQueries({ queryKey: qk.meetings.lists() });
       // Creating a meeting writes a notification for the bell.
       void client.invalidateQueries({ queryKey: qk.notifications() });
+      // AI-extracted action items show up on the Tasks page.
+      void client.invalidateQueries({ queryKey: qk.tasks.all });
       toast.success("Meeting created");
       closeCreateMeeting();
       router.push(`/meetings/${meeting.id}`);
