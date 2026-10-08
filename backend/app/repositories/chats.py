@@ -51,6 +51,15 @@ class ChatRepository(Repository[ChatThread]):
         )
         return list(self.session.scalars(stmt))
 
+    def last_message(self, thread_id: int) -> ChatMessage | None:
+        stmt = (
+            select(ChatMessage)
+            .where(ChatMessage.thread_id == thread_id)
+            .order_by(ChatMessage.created_at.desc(), ChatMessage.id.desc())
+            .limit(1)
+        )
+        return self.session.scalars(stmt).first()
+
     def page_messages(
         self, thread_id: int, limit: int, offset: int
     ) -> tuple[list[ChatMessage], int]:

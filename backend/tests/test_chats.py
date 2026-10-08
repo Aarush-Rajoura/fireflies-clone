@@ -160,6 +160,10 @@ def test_provider_failure_keeps_the_question(api: TestClient, api_app: FastAPI) 
     follow = api.post(f"{V1}/chats/{thread['id']}/messages", json={"question": "launch day?"})
     assert follow.status_code == 503
     assert _count(api_app, ChatMessage) == 2
+    # Retrying the same failed follow-up reuses the saved question instead of duplicating it.
+    retry = api.post(f"{V1}/chats/{thread['id']}/messages", json={"question": "launch day?"})
+    assert retry.status_code == 503
+    assert _count(api_app, ChatMessage) == 2
     # Rejected before the AI (validation, unknown meeting): nothing is saved.
     api.post(f"{V1}/chats", json={"question": "q", "meeting_id": 999})
     assert _count(api_app, ChatThread) == 1

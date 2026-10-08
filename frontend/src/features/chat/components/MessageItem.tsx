@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { formatTimestamp } from "@/components/ui";
 import type { ChatCitation, ChatMessage } from "@/lib/api";
+import { aiProviderLabel } from "@/lib/utils/ai-provider";
 
 import { chatCitationHref } from "../lib/history";
 import { RichText } from "./RichText";
@@ -16,6 +17,7 @@ export function MessageItem({ message }: { message: ChatMessage }) {
       </p>
     );
   }
+  const answeredBy = aiProviderLabel(message.provider);
   return (
     <article aria-label="AskFred's answer" className="flex gap-3">
       <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-subtle text-accent">
@@ -24,6 +26,7 @@ export function MessageItem({ message }: { message: ChatMessage }) {
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <RichText source={message.content} citations={message.citations} />
         {message.citations.length > 0 && <Sources citations={message.citations} />}
+        {answeredBy && <p className="text-meta text-muted">{answeredBy}</p>}
       </div>
     </article>
   );

@@ -124,4 +124,14 @@ describe("MessageItem", () => {
     const source = screen.getByRole("link", { name: /^Source 1: Launch Go\/No-Go at/ });
     expect(source.getAttribute("href")).toBe("/meetings/3?t=75");
   });
+
+  it("says who answered, and stays quiet when no model was involved", () => {
+    wrap(<MessageItem message={{ ...message("Hi"), provider: "gemini" }} />);
+    expect(screen.getByText("Answered by Gemini")).toBeTruthy();
+  });
+
+  it("shows no label for stored-data answers", () => {
+    wrap(<MessageItem message={message("Hi")} />);
+    expect(screen.queryByText(/Answered by|Demo AI/)).toBeNull();
+  });
 });

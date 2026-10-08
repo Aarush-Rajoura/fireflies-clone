@@ -206,9 +206,14 @@ class ChatService:
             thread.updated_at = now
             if data.meeting_id is not None:
                 thread.meeting_id = data.meeting_id
-        asked = self.uow.chats.add_message(
-            ChatMessage(thread_id=thread.id, role=ChatRole.USER, content=data.question)
-        )
+        # A retry after a failed answer re-sends the same question: reuse the unanswered one.
+        last = self.uow.chats.last_message(thread.id) if thread_id is not None else None
+        if last is not None and last.role == ChatRole.USER and last.content == data.question:
+            asked = last
+        else:
+            asked = self.uow.chats.add_message(
+                ChatMessage(thread_id=thread.id, role=ChatRole.USER, content=data.question)
+            )
         self.uow.commit()
         return thread, asked
 
