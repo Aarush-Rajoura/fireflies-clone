@@ -23,9 +23,12 @@ export function useHighlightRanges(meetingId: number): ReadonlyMap<number, reado
   return useMemo(() => (data ? toRanges(data) : EMPTY), [data]);
 }
 
+/** Oldest first within a line, so where highlights overlap the newest one shows on top. */
 export function toRanges(highlights: readonly Highlight[]): Map<number, HighlightRange[]> {
   const out = new Map<number, HighlightRange[]>();
-  for (const h of highlights) {
+  // Placeholders (negative ids) are the newest of all.
+  const age = (h: Highlight) => (h.id < 0 ? Number.MAX_SAFE_INTEGER - h.id : h.id);
+  for (const h of [...highlights].sort((a, b) => age(a) - age(b))) {
     const list = out.get(h.segment_id) ?? [];
     list.push({ start: h.start_offset, end: h.end_offset, tone: h.color, id: h.id });
     out.set(h.segment_id, list);

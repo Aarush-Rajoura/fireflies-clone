@@ -1,9 +1,9 @@
 "use client";
 
 import { Bookmark, MessageSquare, Scissors, Search, Sparkles } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
-import { IconButton, toast } from "@/components/ui";
+import { IconButton } from "@/components/ui";
 
 import type { NotepadFlyout } from "../hooks/useNotepadFlyouts";
 
@@ -11,6 +11,8 @@ export type NotepadRailProps = {
   open: NotepadFlyout | null;
   onToggle: (flyout: NotepadFlyout) => void;
   onSearch: () => void;
+  /** Where focus returns when a flyout closes. */
+  triggerRef: (flyout: NotepadFlyout) => Ref<HTMLButtonElement>;
   commentCount: number;
   soundbiteCount: number;
 };
@@ -36,48 +38,44 @@ export function NotepadRail({
   open,
   onToggle,
   onSearch,
+  triggerRef,
   commentCount,
   soundbiteCount,
 }: NotepadRailProps) {
+  const flyout = (id: NotepadFlyout, label: string, icon: ReactNode, count?: number) => {
+    const button = (
+      <IconButton
+        ref={triggerRef(id)}
+        label={label}
+        icon={icon}
+        active={open === id}
+        aria-expanded={open === id}
+        onClick={() => onToggle(id)}
+      />
+    );
+    return count === undefined ? button : <Counted count={count}>{button}</Counted>;
+  };
+
   return (
     <nav
       aria-label="Meeting tools"
       className="flex w-rail-mini shrink-0 flex-col items-center gap-1 border-r border-subtle py-3"
     >
-      <IconButton
-        label="Search transcript"
-        icon={<Search strokeWidth={1.75} />}
-        onClick={onSearch}
-      />
-      <IconButton
-        label="Ask AI"
-        icon={<Sparkles strokeWidth={1.75} />}
-        active={open === "ai"}
-        onClick={() => onToggle("ai")}
-      />
-      <Counted count={soundbiteCount}>
-        <IconButton
-          label={`Soundbites (${soundbiteCount})`}
-          icon={<Scissors strokeWidth={1.75} />}
-          active={open === "soundbites"}
-          onClick={() => onToggle("soundbites")}
-        />
-      </Counted>
-      <Counted count={commentCount}>
-        <IconButton
-          label={`Comments (${commentCount})`}
-          icon={<MessageSquare strokeWidth={1.75} />}
-          active={open === "comments"}
-          onClick={() => onToggle("comments")}
-        />
-      </Counted>
-      <IconButton
-        label="Bookmarks (coming soon)"
-        icon={<Bookmark strokeWidth={1.75} />}
-        aria-disabled
-        className="opacity-50"
-        onClick={() => toast.info("Bookmarks are coming soon.")}
-      />
+      <IconButton label="Search transcript" icon={<Search strokeWidth={1.75} />} onClick={onSearch} />
+      {flyout("ai", "Ask AI", <Sparkles strokeWidth={1.75} />)}
+      {flyout(
+        "soundbites",
+        `Soundbites (${soundbiteCount})`,
+        <Scissors strokeWidth={1.75} />,
+        soundbiteCount,
+      )}
+      {flyout(
+        "comments",
+        `Comments (${commentCount})`,
+        <MessageSquare strokeWidth={1.75} />,
+        commentCount,
+      )}
+      {flyout("bookmarks", "Bookmarks", <Bookmark strokeWidth={1.75} />)}
     </nav>
   );
 }

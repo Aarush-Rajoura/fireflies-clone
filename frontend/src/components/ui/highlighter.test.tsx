@@ -94,17 +94,43 @@ describe("Highlighter", () => {
     expect(container.querySelectorAll('mark[data-range-id="h1"]')).toHaveLength(3);
   });
 
-  test("overlapping highlights render each character once", () => {
+  test("overlapping highlights render each character once, the later one on top", () => {
     const segs = segment("abcdefgh", [
       { start: 1, end: 5, tone: "blue" },
       { start: 3, end: 7, tone: "pink" },
     ]);
     expect(segs).toEqual([
       { text: "a" },
-      { text: "bcde", tone: 0 },
-      { text: "fg", tone: 1 },
+      { text: "bc", tone: 0 },
+      { text: "defg", tone: 1 },
       { text: "h" },
     ]);
+  });
+
+  test("a highlight nested inside an earlier one stays visible", () => {
+    const text = "ship it on Friday please";
+    const ranges = [
+      { start: 0, end: 24, tone: "yellow" as const, id: 1 },
+      { start: 11, end: 17, tone: "pink" as const, id: 2 },
+    ];
+    expect(segment(text, ranges)).toEqual([
+      { text: "ship it on ", tone: 0 },
+      { text: "Friday", tone: 1 },
+      { text: " please", tone: 0 },
+    ]);
+    const { container } = render(<Highlighter text={text} ranges={ranges} />);
+    expect(container.querySelector('mark[data-range-id="2"]')?.textContent).toBe("Friday");
+  });
+
+  test("saved highlights carry a screen-reader label without changing the text", () => {
+    const { container } = render(
+      <Highlighter text="ship it" ranges={[{ start: 0, end: 4, tone: "green", id: 1 }]} />,
+    );
+    const mark = container.querySelector("mark")!;
+    expect(mark.getAttribute("data-sr-label")).toBe(" (highlighted green)");
+    expect(mark.className).toContain("after:content-[attr(data-sr-label)]");
+    // Selections are measured against textContent, so the label must not be a text node.
+    expect(container.textContent).toBe("ship it");
   });
 
   test("no ranges renders plain text", () => {

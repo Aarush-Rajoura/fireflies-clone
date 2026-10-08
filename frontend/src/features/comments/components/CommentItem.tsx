@@ -32,7 +32,8 @@ export function CommentItem({
   const pending = isPending(comment);
   const author = comment.author?.name ?? "Former member";
   const error = draft === null ? null : commentBodyError(draft);
-  // The two stamps are set separately on create, so only a real gap means an edit.
+  // The API has no edited_at, and created_at/updated_at are stamped separately on
+  // create (a few ms apart), so only a real gap between them means an edit.
   const edited = Date.parse(comment.updated_at) - Date.parse(comment.created_at) > 1_000;
 
   const save = () => {

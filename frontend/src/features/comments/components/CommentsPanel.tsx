@@ -26,6 +26,8 @@ export type CommentsPanelProps = {
   segments: readonly Segment[];
   /** Show only this line's thread, and attach new comments to it. */
   focusSegmentId?: number | null;
+  /** Changes on each "comment on this line" request; the composer takes focus each time. */
+  focusRequest?: number;
   onClearFocus?: () => void;
   onClose: () => void;
 };
@@ -35,6 +37,7 @@ export function CommentsPanel({
   meetingId,
   segments,
   focusSegmentId = null,
+  focusRequest = 0,
   onClearFocus,
   onClose,
 }: CommentsPanelProps) {
@@ -106,7 +109,9 @@ export function CommentsPanel({
       title="Comments"
       meta={all.length}
       onClose={onClose}
-      footer={<CommentComposer anchor={anchor} onSubmit={submit} />}
+      footer={
+        <CommentComposer anchor={anchor} focusRequest={focusRequest} onSubmit={submit} />
+      }
     >
       {focusStart !== undefined && (
         <div className="px-4 pt-3">

@@ -60,4 +60,31 @@ describe("CommentComposer", () => {
     await act(async () => fireEvent.click(screen.getByRole("button", { name: "Comment" })));
     expect((box as HTMLTextAreaElement).value).toBe("Keep me");
   });
+
+  it("pins the line at the first keystroke, and re-targets on a new line request", async () => {
+    const onSubmit = vi.fn(() => Promise.resolve());
+    const ui = (startMs: number, request: number) => (
+      <AppProviders>
+        <CommentComposer
+          anchor={{ segmentId: startMs, startMs }}
+          focusRequest={request}
+          onSubmit={onSubmit}
+        />
+      </AppProviders>
+    );
+    const view = render(ui(12_000, 0));
+    const box = screen.getByRole("textbox", { name: "Add a comment" });
+    expect(document.activeElement).not.toBe(box);
+    fireEvent.change(box, { target: { value: "Typing while it plays" } });
+    // The playhead moves on to another line while the user types.
+    view.rerender(ui(30_000, 0));
+    expect(screen.getByRole("button", { name: /Attached to 0:12/ })).toBeTruthy();
+
+    // "Comment on this line" from a badge or the toolbar focuses the box and wins.
+    view.rerender(ui(45_000, 1));
+    expect(document.activeElement).toBe(box);
+    expect(screen.getByRole("button", { name: /Attached to 0:45/ })).toBeTruthy();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Comment" })));
+    expect(onSubmit).toHaveBeenLastCalledWith("Typing while it plays", 45_000);
+  });
 });

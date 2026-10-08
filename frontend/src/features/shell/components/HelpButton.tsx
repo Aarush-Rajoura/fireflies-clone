@@ -7,6 +7,7 @@ import { Kbd, Popover } from "@/components/ui";
 const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["Ctrl", "K"], label: "Search meetings" },
   { keys: ["Esc"], label: "Close a menu or dialog" },
+  { keys: ["Alt", "H"], label: "Annotate selected transcript text" },
 ];
 
 /** Floating "?" in the bottom-right corner: help and keyboard shortcuts. */

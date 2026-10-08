@@ -3,7 +3,7 @@
 import { Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { EmptyState, SidePanel } from "@/components/ui";
+import { ComingSoon, EmptyState, SidePanel } from "@/components/ui";
 import { CommentsPanel } from "@/features/comments";
 import { SoundbitesPanel } from "@/features/soundbites";
 import type { Segment } from "@/lib/api";
@@ -33,6 +33,7 @@ export function NotepadFlyoutHost({ meetingId, segments, flyouts }: NotepadFlyou
           meetingId={meetingId}
           segments={segments}
           focusSegmentId={flyouts.commentFocus}
+          focusRequest={flyouts.commentFocusRequest}
           onClearFocus={flyouts.clearCommentFocus}
           onClose={close}
         />,
@@ -46,6 +47,17 @@ export function NotepadFlyoutHost({ meetingId, segments, flyouts }: NotepadFlyou
             title="Ask about this meeting"
             description="Answers grounded in this transcript are coming soon."
           />
+        </SidePanel>,
+      )}
+      {slot(
+        "bookmarks",
+        <SidePanel title="Bookmarks" onClose={close}>
+          <div className="p-4">
+            <ComingSoon
+              title="Bookmarks"
+              message="Mark moments to come back to. This is on its way."
+            />
+          </div>
         </SidePanel>,
       )}
     </div>

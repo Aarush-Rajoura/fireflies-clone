@@ -17,6 +17,8 @@ export type FloatingToolbarProps = {
   /** Accessible name of the toolbar. */
   label: string;
   children: ReactNode;
+  /** Announced shortcut that moves focus into the toolbar, e.g. "Alt+H". */
+  keyShortcuts?: string;
   className?: string;
 };
 
@@ -29,7 +31,7 @@ const EDGE = 12;
  * collapses the selection it acts on.
  */
 export const FloatingToolbar = forwardRef<HTMLDivElement, FloatingToolbarProps>(
-  function FloatingToolbar({ anchor, label, children, className }, forwarded) {
+  function FloatingToolbar({ anchor, label, children, keyShortcuts, className }, forwarded) {
     const container = usePortalContainer();
     const own = useRef<HTMLDivElement | null>(null);
     const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -55,6 +57,7 @@ export const FloatingToolbar = forwardRef<HTMLDivElement, FloatingToolbarProps>(
         }}
         role="toolbar"
         aria-label={label}
+        aria-keyshortcuts={keyShortcuts}
         onMouseDown={(e) => {
           // Keep the text selection (and the editor's focus) while a button is pressed.
           if (!(e.target as HTMLElement).closest("input, textarea")) e.preventDefault();

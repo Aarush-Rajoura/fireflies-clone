@@ -39,10 +39,10 @@ export const toneClasses: Record<HighlightTone, string> = {
 
 type Interval = { start: number; end: number; index: number };
 
-/** Clamped, non-empty, non-overlapping intervals; on overlap the earlier-starting range keeps the text. */
-function layer(text: string, ranges: readonly HighlightRange[], toned: boolean): Interval[] {
+/** The ranges of one layer (toned or not), clamped to the text; empty and inverted ones dropped. */
+function clean(text: string, ranges: readonly HighlightRange[], toned: boolean): Interval[] {
   const len = text.length;
-  const clean = ranges
+  return ranges
     .map((r, index) => ({
       start: Math.max(0, Math.min(len, Math.floor(r.start))),
       end: Math.max(0, Math.min(len, Math.floor(r.end))),
@@ -53,11 +53,15 @@ function layer(text: string, ranges: readonly HighlightRange[], toned: boolean):
       (r) =>
         r.toned === toned && Number.isFinite(r.start) && Number.isFinite(r.end) && r.end > r.start,
     )
-    .sort((a, b) => a.start - b.start || b.end - a.end);
+    .map(({ start, end, index }) => ({ start, end, index }));
+}
 
+/** Search matches: non-overlapping; on overlap the earlier-starting match keeps the text. */
+function searchLayer(text: string, ranges: readonly HighlightRange[]): Interval[] {
+  const sorted = clean(text, ranges, false).sort((a, b) => a.start - b.start || b.end - a.end);
   const out: Interval[] = [];
   let cursor = 0;
-  for (const r of clean) {
+  for (const r of sorted) {
     const start = Math.max(r.start, cursor);
     if (start >= r.end) continue;
     out.push({ start, end: r.end, index: r.index });
@@ -69,15 +73,23 @@ function layer(text: string, ranges: readonly HighlightRange[], toned: boolean):
 const coveringAt = (intervals: Interval[], at: number) =>
   intervals.find((r) => r.start <= at && at < r.end)?.index;
 
+/** Saved highlights are painted in input order: where they overlap, the later (newer) one shows. */
+const topmostAt = (intervals: Interval[], at: number) => {
+  let top: number | undefined;
+  for (const r of intervals) if (r.start <= at && at < r.end) top = r.index;
+  return top;
+};
+
 /**
  * Splits text into pieces tagged with the search match and the saved highlight
  * covering each. Matches and highlights are two layers that may overlap each
- * other; within a layer overlaps are trimmed, so every character is rendered
- * exactly once. Pure, so it is unit-tested directly.
+ * other. Overlapping matches are trimmed; overlapping highlights show the
+ * later one, so a highlight nested inside another stays visible. Every
+ * character is rendered exactly once. Pure, so it is unit-tested directly.
  */
 export function segment(text: string, ranges: readonly HighlightRange[]): Piece[] {
-  const search = layer(text, ranges, false);
-  const tones = layer(text, ranges, true);
+  const search = searchLayer(text, ranges);
+  const tones = clean(text, ranges, true);
   const cuts = new Set([0, text.length]);
   for (const r of [...search, ...tones]) cuts.add(r.start).add(r.end);
   const points = [...cuts].sort((a, b) => a - b);
@@ -87,7 +99,7 @@ export function segment(text: string, ranges: readonly HighlightRange[]): Piece[
     const from = points[i] as number;
     const to = points[i + 1] as number;
     const match = coveringAt(search, from);
-    const tone = coveringAt(tones, from);
+    const tone = topmostAt(tones, from);
     const last = out[out.length - 1];
     if (last && last.match === match && last.tone === tone) {
       last.text += text.slice(from, to);
@@ -127,9 +139,12 @@ export const Highlighter = memo(function Highlighter({
             data-match-index={s.match}
             data-tone={highlight?.tone}
             data-range-id={highlight?.id}
+            // Generated content, not a text node: the line's textContent must stay its exact text.
+            data-sr-label={highlight?.tone && ` (highlighted ${highlight.tone})`}
             aria-current={isSearch && s.match === activeIndex ? "true" : undefined}
             className={cn(
               "rounded-tag text-strong",
+              highlight?.tone && "after:sr-only after:content-[attr(data-sr-label)]",
               isSearch
                 ? s.match === activeIndex
                   ? "bg-highlight-active"

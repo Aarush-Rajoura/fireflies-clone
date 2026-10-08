@@ -93,6 +93,74 @@ describe("useClipPlayer", () => {
     expect(api.playingId).toBeNull();
   });
 
+  it("a wall-clock backstop ends the clip when no clock publishes arrive (background tab)", () => {
+    vi.useRealTimers();
+    // Animation frames left real (they never run inside advanceTimersByTime), like a hidden tab.
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance", "Date"] });
+    const api = setup();
+    act(() => api.play(clip));
+    act(() => vi.advanceTimersByTime(3_900));
+    expect(api.playingId).toBe(1);
+    act(() => vi.advanceTimersByTime(400));
+    expect(api.playingId).toBeNull();
+    expect(api.clock.isPlaying).toBe(false);
+    // Paused within the grace period of the end, not left running.
+    expect(api.clock.currentMs).toBeGreaterThanOrEqual(14_000);
+    expect(api.clock.currentMs).toBeLessThanOrEqual(14_300);
+  });
+
+  it("the backstop follows the playback rate", () => {
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance", "Date"] });
+    const api = setup();
+    act(() => api.controls.setRate(2));
+    act(() => api.play(clip));
+    act(() => vi.advanceTimersByTime(2_300));
+    expect(api.playingId).toBeNull();
+    expect(api.clock.isPlaying).toBe(false);
+  });
+
+  it("the backstop is cleared when the user takes over", () => {
+    vi.useRealTimers();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance", "Date"] });
+    const api = setup();
+    act(() => api.play(clip));
+    act(() => api.controls.seek(30_000));
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(api.clock.isPlaying).toBe(true);
+  });
+
+  it("pauses an active clip on unmount only when asked to", () => {
+    let api = {} as ReturnType<typeof useClipPlayer> & { clock: PlayerClock };
+    function Probe({ pause }: { pause: boolean }) {
+      Object.assign(api, useClipPlayer({ pauseOnUnmount: pause }));
+      return null;
+    }
+    function Clock() {
+      api.clock = usePlayerClock();
+      return null;
+    }
+    const engineFactory = ({ durationMs }: { durationMs: number }) =>
+      new VirtualClockEngine({ durationMs });
+    for (const pause of [true, false]) {
+      api = {} as typeof api;
+      const view = render(
+        <PlayerProvider durationMs={60_000} createEngine={engineFactory}>
+          <Clock />
+          <Probe pause={pause} />
+        </PlayerProvider>,
+      );
+      act(() => api.play(clip));
+      view.rerender(
+        <PlayerProvider durationMs={60_000} createEngine={engineFactory}>
+          <Clock />
+        </PlayerProvider>,
+      );
+      expect(api.clock.isPlaying).toBe(!pause);
+      view.unmount();
+    }
+  });
+
   it("playing another clip replaces the first watcher", () => {
     const api = setup();
     act(() => api.play(clip));

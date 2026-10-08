@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -17,20 +18,39 @@ vi.mock("../api", () => ({
 const onClose = vi.fn();
 const onCreated = vi.fn();
 
+let engine!: VirtualClockEngine;
+
+/** Owns the draft like the page does, so closing really unmounts the form. */
+function Host({ initial, durationMs }: { initial: SoundbiteDraft; durationMs: number }) {
+  const [draft, setDraft] = useState<SoundbiteDraft | null>(initial);
+  return (
+    <CreateSoundbiteModal
+      meetingId={7}
+      durationMs={durationMs}
+      draft={draft}
+      onClose={() => {
+        onClose();
+        setDraft(null);
+      }}
+      onCreated={onCreated}
+    />
+  );
+}
+
 function renderModal(draft: SoundbiteDraft, durationMs = 60_000) {
   const client = new QueryClient();
   client.setQueryData(qk.soundbites(7), []);
   render(
     <QueryClientProvider client={client}>
       <AppProviders>
-        <PlayerProvider durationMs={durationMs} createEngine={(a) => new VirtualClockEngine(a)}>
-          <CreateSoundbiteModal
-            meetingId={7}
-            durationMs={durationMs}
-            draft={draft}
-            onClose={onClose}
-            onCreated={onCreated}
-          />
+        <PlayerProvider
+          durationMs={durationMs}
+          createEngine={(a) => {
+            engine = new VirtualClockEngine(a);
+            return engine;
+          }}
+        >
+          <Host initial={draft} durationMs={durationMs} />
         </PlayerProvider>
       </AppProviders>
     </QueryClientProvider>,
@@ -106,5 +126,18 @@ describe("CreateSoundbiteModal", () => {
       "A soundbite must end within the recording",
     );
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["Cancel", () => fireEvent.click(screen.getByRole("button", { name: "Cancel" }))],
+    ["Escape", () => fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" })],
+  ])("closing with %s stops a running preview", async (_how, close) => {
+    renderModal({ start_ms: 10_000, end_ms: 15_000 });
+    fireEvent.click(screen.getByRole("button", { name: "Preview" }));
+    expect(engine.isPlaying).toBe(true);
+    expect(screen.getByRole("button", { name: "Stop" })).toBeTruthy();
+    act(close);
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(engine.isPlaying).toBe(false);
   });
 });

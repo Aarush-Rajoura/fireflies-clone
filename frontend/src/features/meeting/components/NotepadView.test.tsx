@@ -235,7 +235,29 @@ describe("NotepadView", () => {
     fireEvent.click(within(rail).getByRole("button", { name: "Comments (1)" }));
     expect(comments.parentElement?.parentElement?.className).toContain("hidden");
 
+    // Closing from the panel hands focus back to the rail button that opened it.
+    const commentsButton = within(rail).getByRole("button", { name: "Comments (1)" });
+    fireEvent.click(commentsButton);
+    fireEvent.click(within(comments).getByRole("button", { name: "Close comments" }));
+    expect(document.activeElement).toBe(commentsButton);
+
+    fireEvent.click(within(rail).getByRole("button", { name: "Bookmarks" }));
+    const bookmarks = await screen.findByRole("complementary", { name: "Bookmarks" });
+    expect(within(bookmarks).getByText("Soon")).toBeTruthy();
+
     fireEvent.click(within(rail).getByRole("button", { name: "Search transcript" }));
     expect(document.activeElement).toBe(screen.getByRole("searchbox"));
+  });
+
+  it("focuses the composer when a line's comments are opened from its badge", async () => {
+    renderView(meetingRoutes(() => json(meeting)));
+    const badge = await screen.findByRole("button", { name: "1 comment on this line" });
+    fireEvent.click(badge);
+    const comments = await screen.findByRole("complementary", { name: "Comments" });
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        within(comments).getByRole("textbox", { name: "Add a comment" }),
+      ),
+    );
   });
 });

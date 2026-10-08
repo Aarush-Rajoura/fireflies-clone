@@ -137,4 +137,16 @@ describe("SelectionToolbar", () => {
     });
     expect(screen.queryByRole("toolbar")).toBeNull();
   });
+
+  it("Alt+H moves focus into the toolbar while text is selected", async () => {
+    setup();
+    fireEvent.keyDown(document, { key: "h", code: "KeyH", altKey: true });
+    expect(document.activeElement).toBe(document.body);
+    const node = textOf(101);
+    await select([node, 0], [node, 5]);
+    const toolbar = screen.getByRole("toolbar", { name: "Annotate selection" });
+    expect(toolbar.getAttribute("aria-keyshortcuts")).toBe("Alt+H");
+    fireEvent.keyDown(document, { key: "˙", code: "KeyH", altKey: true });
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Highlight yellow" }));
+  });
 });

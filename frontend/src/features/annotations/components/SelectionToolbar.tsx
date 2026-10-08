@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, MessageSquarePlus, Scissors } from "lucide-react";
-import type { RefObject } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 
 import {
   FloatingToolbar,
@@ -36,6 +36,20 @@ export function SelectionToolbar({
 }: SelectionToolbarProps) {
   const { state, clear } = useTranscriptSelection(scopeRef);
   const highlight = useCreateHighlight(meetingId);
+  const toolbar = useRef<HTMLDivElement>(null);
+  const hasSelection = state?.kind === "segment";
+
+  // Alt+H moves keyboard focus into the toolbar; a focused button keeps the selection.
+  useEffect(() => {
+    if (!hasSelection) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!e.altKey || e.ctrlKey || e.metaKey || e.code !== "KeyH") return;
+      e.preventDefault();
+      toolbar.current?.querySelector<HTMLElement>("button")?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [hasSelection]);
 
   if (!state) return null;
 
@@ -64,7 +78,12 @@ export function SelectionToolbar({
   };
 
   return (
-    <FloatingToolbar anchor={state.anchor} label="Annotate selection">
+    <FloatingToolbar
+      ref={toolbar}
+      anchor={state.anchor}
+      label="Annotate selection"
+      keyShortcuts="Alt+H"
+    >
       <div role="group" aria-label="Highlight" className="flex items-center gap-1 px-1">
         {HIGHLIGHT_TONES.map((tone) => (
           <ToneSwatch

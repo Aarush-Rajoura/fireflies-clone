@@ -35,6 +35,7 @@ export function NotepadSummarySide({
         open={flyouts.open}
         onToggle={flyouts.toggle}
         onSearch={onSearch}
+        triggerRef={flyouts.triggerRef}
         commentCount={commentCount}
         soundbiteCount={soundbiteCount}
       />

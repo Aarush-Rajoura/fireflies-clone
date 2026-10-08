@@ -80,7 +80,8 @@ function DraftForm({
   const [title, setTitle] = useState(() => (draft.title ?? "").slice(0, MAX_TITLE));
   const [serverError, setServerError] = useState<string | null>(null);
   const create = useCreateSoundbite(meetingId);
-  const preview = useClipPlayer();
+  // Closing the modal any way (Cancel, Esc, overlay) unmounts this form, which ends a preview.
+  const preview = useClipPlayer({ pauseOnUnmount: true });
   const error = clipRangeError(range, durationMs) ?? serverError;
   const previewing = preview.playingId === PREVIEW_ID;
 
@@ -151,7 +152,13 @@ function DraftForm({
         </p>
       )}
       <div className="flex justify-end gap-2 pt-1">
-        <Button variant="ghost" onClick={onDone}>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            preview.stop();
+            onDone();
+          }}
+        >
           Cancel
         </Button>
         <Button type="submit" variant="primary" loading={create.isPending} disabled={Boolean(error)}>
