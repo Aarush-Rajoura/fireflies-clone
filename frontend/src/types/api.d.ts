@@ -21,6 +21,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/action-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tasks across meetings, plus standalone ones */
+        get: operations["list_tasks"];
+        put?: never;
+        /** Create a task, standalone or on a meeting */
+        post: operations["create_task"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/action-items/{item_id}": {
         parameters: {
             query?: never;
@@ -797,14 +815,16 @@ export interface components {
         /** ActionItemRead */
         ActionItemRead: {
             assignee: components["schemas"]["AssigneeRead"] | null;
+            assignee_user: components["schemas"]["AssigneeUserRead"] | null;
             /** Completed At */
             completed_at: string | null;
             /** Due Date */
             due_date: string | null;
             /** Id */
             id: number;
+            meeting: components["schemas"]["MeetingRef"] | null;
             /** Meeting Id */
-            meeting_id: number;
+            meeting_id: number | null;
             source: components["schemas"]["ActionItemSource"];
             /** Start Ms */
             start_ms: number | null;
@@ -829,6 +849,8 @@ export interface components {
         ActionItemUpdate: {
             /** Assignee Participant Id */
             assignee_participant_id?: number | null;
+            /** Assignee User Id */
+            assignee_user_id?: number | null;
             /** Due Date */
             due_date?: string | null;
             status?: components["schemas"]["ActionItemStatus"] | null;
@@ -870,6 +892,13 @@ export interface components {
             display_name: string;
             /** Id */
             id: number;
+        };
+        /** AssigneeUserRead */
+        AssigneeUserRead: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
         };
         /** Body_create_transcript_preview_from_file */
         Body_create_transcript_preview_from_file: {
@@ -1292,6 +1321,13 @@ export interface components {
             status: components["schemas"]["MeetingStatus"];
             /** Tags */
             tags: components["schemas"]["TagRead"][];
+            /** Title */
+            title: string;
+        };
+        /** MeetingRef */
+        MeetingRef: {
+            /** Id */
+            id: number;
             /** Title */
             title: string;
         };
@@ -1826,6 +1862,25 @@ export interface components {
             /** Name */
             name?: string | null;
         };
+        /**
+         * TaskCreate
+         * @description A task from the Tasks page: standalone, or attached to a meeting by `meeting_id`.
+         */
+        TaskCreate: {
+            /**
+             * Assignee Participant Id
+             * @description Must be a participant of `meeting_id`.
+             */
+            assignee_participant_id?: number | null;
+            /** Assignee User Id */
+            assignee_user_id?: number | null;
+            /** Due Date */
+            due_date?: string | null;
+            /** Meeting Id */
+            meeting_id?: number | null;
+            /** Text */
+            text: string;
+        };
         /** TranscriptPreview */
         TranscriptPreview: {
             /** Duration Ms */
@@ -1923,6 +1978,108 @@ export interface operations {
             };
             /** @description A dependency is unavailable, e.g. the database is unseeded. */
             503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_tasks: {
+        parameters: {
+            query?: {
+                /** @description `mine`: assigned to me (directly or via a participant linked to me) or created by me. */
+                scope?: "mine" | "all";
+                status?: ("open" | "completed") | null;
+                /** @description Bucket by local day in `tz`: before today, today, the next six days, after that, or no due date. */
+                due?: ("overdue" | "today" | "week" | "later" | "none") | null;
+                /** @description Case-insensitive substring of the text. */
+                q?: string | null;
+                /** @description IANA time zone that defines today, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`. */
+                tz?: string;
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_ActionItemRead_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_task: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActionItemRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };

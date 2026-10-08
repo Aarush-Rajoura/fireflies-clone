@@ -5,6 +5,7 @@ from typing import Annotated, Literal
 
 from fastapi import Depends, Query
 
+from app.schemas.action_item import TaskDue, TaskFilters, TaskScope, TaskStatus
 from app.schemas.common import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, PageParams
 from app.schemas.meeting_filters import MeetingFilters, MeetingSort
 
@@ -68,3 +69,34 @@ def meeting_filters(
 
 MeetingFilterParams = Annotated[MeetingFilters, Depends(meeting_filters)]
 SortParam = Annotated[MeetingSort, Query(description="Prefix `-` means descending.")]
+
+
+def task_filters(
+    scope: Annotated[
+        TaskScope,
+        Query(
+            description="`mine`: assigned to me (directly or via a participant linked to me) "
+            "or created by me."
+        ),
+    ] = "all",
+    status: TaskStatus | None = None,
+    due: Annotated[
+        TaskDue | None,
+        Query(
+            description="Bucket by local day in `tz`: before today, today, the next six "
+            "days, after that, or no due date."
+        ),
+    ] = None,
+    q: Annotated[str | None, Query(description="Case-insensitive substring of the text.")] = None,
+    tz: Annotated[
+        str,
+        Query(
+            description="IANA time zone that defines today, e.g. `Asia/Kolkata`; "
+            "an unknown name is `422 INVALID_TIMEZONE`."
+        ),
+    ] = "UTC",
+) -> TaskFilters:
+    return TaskFilters(scope=scope, status=status, due=due, q=q, tz=tz)
+
+
+TaskFilterParams = Annotated[TaskFilters, Depends(task_filters)]

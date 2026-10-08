@@ -82,6 +82,12 @@ class MeetingRepository(Repository[Meeting]):
             for mid, opened, total in self.session.execute(stmt)
         }
 
+    def titles(self, meeting_ids: Sequence[int]) -> dict[int, str]:
+        if not meeting_ids:
+            return {}
+        stmt = select(Meeting.id, Meeting.title).where(Meeting.id.in_(meeting_ids))
+        return {mid: title for mid, title in self.session.execute(stmt)}
+
     def soft_delete(self, meeting: Meeting) -> None:
         meeting.deleted_at = datetime.now(UTC)
         self.session.flush()

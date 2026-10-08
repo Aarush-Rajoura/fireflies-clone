@@ -17,6 +17,8 @@ vi.mock("../api", () => ({
 const item = (id: number): ActionItem => ({
   id,
   meeting_id: 1,
+  meeting: null,
+  assignee_user: null,
   text: `Item ${id}`,
   status: "open",
   source: "manual",

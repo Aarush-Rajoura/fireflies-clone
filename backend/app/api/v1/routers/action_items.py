@@ -1,13 +1,19 @@
-"""Action items: collection under the meeting, items at the top level."""
+"""Action items: collection under the meeting, items and the cross-meeting task list at the
+top level."""
 
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Response
 
-from app.api.params import Paging
-from app.api.responses import GONE, NOT_FOUND, VALIDATION
+from app.api.params import Paging, TaskFilterParams
+from app.api.responses import GONE, NOT_FOUND, SERVICE_UNAVAILABLE, VALIDATION
 from app.core.deps import get_action_item_service
-from app.schemas.action_item import ActionItemCreate, ActionItemRead, ActionItemUpdate
+from app.schemas.action_item import (
+    ActionItemCreate,
+    ActionItemRead,
+    ActionItemUpdate,
+    TaskCreate,
+)
 from app.schemas.common import Page
 from app.services.action_items import ActionItemService
 
@@ -35,6 +41,27 @@ def list_action_items(meeting_id: int, page: Paging, service: Items) -> Page[Act
 )
 def create_action_item(meeting_id: int, body: ActionItemCreate, service: Items) -> ActionItemRead:
     return service.create(meeting_id, body)
+
+
+@router.get(
+    "/action-items",
+    response_model=Page[ActionItemRead],
+    summary="List tasks across meetings, plus standalone ones",
+    responses={**VALIDATION, **SERVICE_UNAVAILABLE},
+)
+def list_tasks(filters: TaskFilterParams, page: Paging, service: Items) -> Page[ActionItemRead]:
+    return service.list_tasks(filters, page)
+
+
+@router.post(
+    "/action-items",
+    status_code=201,
+    response_model=ActionItemRead,
+    summary="Create a task, standalone or on a meeting",
+    responses={**NOT_FOUND, **GONE, **VALIDATION},
+)
+def create_task(body: TaskCreate, service: Items) -> ActionItemRead:
+    return service.create_task(body)
 
 
 @router.patch(

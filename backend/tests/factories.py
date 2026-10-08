@@ -1,6 +1,6 @@
 """Plain row factories for repository and service tests. Each flushes, never commits."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from sqlalchemy.orm import Session
 
@@ -109,12 +109,24 @@ def make_segment(
 
 def make_action_item(
     db: Session,
-    meeting: Meeting,
+    meeting: Meeting | None,
     *,
     status: ActionItemStatus = ActionItemStatus.OPEN,
     text: str = "Follow up",
+    due_date: date | None = None,
+    assignee: Participant | None = None,
+    assignee_user: User | None = None,
+    created_by: User | None = None,
 ) -> ActionItem:
-    item = ActionItem(meeting_id=meeting.id, text=text, status=status)
+    item = ActionItem(
+        meeting_id=meeting.id if meeting else None,
+        text=text,
+        status=status,
+        due_date=due_date,
+        assignee_participant_id=assignee.id if assignee else None,
+        assignee_user_id=assignee_user.id if assignee_user else None,
+        created_by_user_id=created_by.id if created_by else None,
+    )
     db.add(item)
     db.flush()
     return item

@@ -82,6 +82,16 @@
               }
             ]
           },
+          "assignee_user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssigneeUserRead"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "completed_at": {
             "anyOf": [
               {
@@ -110,9 +120,26 @@
             "title": "Id",
             "type": "integer"
           },
+          "meeting": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeetingRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "meeting_id": {
-            "title": "Meeting Id",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Id"
           },
           "source": {
             "$ref": "#/components/schemas/ActionItemSource"
@@ -139,9 +166,11 @@
         "required": [
           "id",
           "meeting_id",
+          "meeting",
           "text",
           "status",
           "assignee",
+          "assignee_user",
           "due_date",
           "completed_at",
           "source",
@@ -180,6 +209,17 @@
               }
             ],
             "title": "Assignee Participant Id"
+          },
+          "assignee_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee User Id"
           },
           "due_date": {
             "anyOf": [
@@ -330,6 +370,24 @@
           "display_name"
         ],
         "title": "AssigneeRead",
+        "type": "object"
+      },
+      "AssigneeUserRead": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AssigneeUserRead",
         "type": "object"
       },
       "Body_create_transcript_preview_from_file": {
@@ -1558,6 +1616,24 @@
           "overview_preview"
         ],
         "title": "MeetingListItem",
+        "type": "object"
+      },
+      "MeetingRef": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "MeetingRef",
         "type": "object"
       },
       "MeetingSort": {
@@ -3161,6 +3237,69 @@
         "title": "TagUpdate",
         "type": "object"
       },
+      "TaskCreate": {
+        "additionalProperties": false,
+        "description": "A task from the Tasks page: standalone, or attached to a meeting by `meeting_id`.",
+        "properties": {
+          "assignee_participant_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Must be a participant of `meeting_id`.",
+            "title": "Assignee Participant Id"
+          },
+          "assignee_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignee User Id"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "meeting_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Id"
+          },
+          "text": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TaskCreate",
+        "type": "object"
+      },
       "TranscriptPreview": {
         "properties": {
           "duration_ms": {
@@ -3392,6 +3531,223 @@
         "summary": "Health",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/api/v1/action-items": {
+      "get": {
+        "operationId": "list_tasks",
+        "parameters": [
+          {
+            "description": "`mine`: assigned to me (directly or via a participant linked to me) or created by me.",
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "`mine`: assigned to me (directly or via a participant linked to me) or created by me.",
+              "enum": [
+                "mine",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "open",
+                    "completed"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Bucket by local day in `tz`: before today, today, the next six days, after that, or no due date.",
+            "in": "query",
+            "name": "due",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "overdue",
+                    "today",
+                    "week",
+                    "later",
+                    "none"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Bucket by local day in `tz`: before today, today, the next six days, after that, or no due date.",
+              "title": "Due"
+            }
+          },
+          {
+            "description": "Case-insensitive substring of the text.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Case-insensitive substring of the text.",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "IANA time zone that defines today, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`.",
+            "in": "query",
+            "name": "tz",
+            "required": false,
+            "schema": {
+              "default": "UTC",
+              "description": "IANA time zone that defines today, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`.",
+              "title": "Tz",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Clamped to 100.",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Clamped to 100.",
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ActionItemRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "List tasks across meetings, plus standalone ones",
+        "tags": [
+          "action-items"
+        ]
+      },
+      "post": {
+        "operationId": "create_task",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionItemRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The meeting was soft-deleted; restore it to use it again."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Create a task, standalone or on a meeting",
+        "tags": [
+          "action-items"
         ]
       }
     },

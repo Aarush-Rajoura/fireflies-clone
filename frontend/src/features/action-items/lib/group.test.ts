@@ -7,6 +7,8 @@ import { groupByAssignee } from "./group";
 const item = (id: number, assignee: { id: number; display_name: string } | null): ActionItem => ({
   id,
   meeting_id: 1,
+  meeting: null,
+  assignee_user: null,
   text: `Item ${id}`,
   status: "open",
   source: "ai",

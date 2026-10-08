@@ -29,3 +29,8 @@ class UserRepository(Repository[User]):
         self.session.execute(delete(UserTool).where(UserTool.user_id == user_id))
         self.session.add_all(UserTool(user_id=user_id, tool=t) for t in tools)
         self.session.flush()
+
+    def get_many(self, ids: Sequence[int]) -> dict[int, User]:
+        if not ids:
+            return {}
+        return {u.id: u for u in self.session.scalars(select(User).where(User.id.in_(ids)))}

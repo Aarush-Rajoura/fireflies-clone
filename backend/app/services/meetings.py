@@ -1,7 +1,6 @@
 """Meeting use cases: list, read, edit, soft-delete and restore."""
 
 from collections.abc import Sequence
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy.exc import IntegrityError
 
@@ -17,17 +16,7 @@ from app.schemas.common import Page, PageParams
 from app.schemas.meeting import MeetingDetail, MeetingListItem, MeetingUpdate, ParticipantInput
 from app.schemas.meeting_filters import MeetingFilters, MeetingSort
 from app.services import meeting_mapping
-from app.services.guards import meeting_not_found, require_active_meeting
-
-
-def _check_timezone(tz: str) -> None:
-    """Date filters are local days in `tz`; an unknown zone name is a client error."""
-    try:
-        ZoneInfo(tz)
-    except (ZoneInfoNotFoundError, ValueError) as exc:
-        raise ValidationFailedError(
-            "Unknown time zone", code="INVALID_TIMEZONE", details={"tz": tz}
-        ) from exc
+from app.services.guards import check_timezone, meeting_not_found, require_active_meeting
 
 
 class MeetingService:
@@ -37,7 +26,7 @@ class MeetingService:
     def list(
         self, filters: MeetingFilters, page: PageParams, sort: MeetingSort
     ) -> Page[MeetingListItem]:
-        _check_timezone(filters.tz)
+        check_timezone(filters.tz)
         user = self.uow.users.get_default()
         if user is None:
             raise ServiceUnavailableError("Database has not been seeded", code="NOT_SEEDED")

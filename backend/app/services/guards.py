@@ -1,5 +1,7 @@
 """Error constructors shared by services so codes and messages stay identical."""
 
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
 from app.core.exceptions import (
     GoneError,
     NotFoundError,
@@ -48,3 +50,13 @@ def require_current_user(uow: UnitOfWork) -> User:
     if user is None:
         raise ServiceUnavailableError("Database has not been seeded", code="NOT_SEEDED")
     return user
+
+
+def check_timezone(tz: str) -> ZoneInfo:
+    """Date filters are local days in `tz`; an unknown zone name is a client error."""
+    try:
+        return ZoneInfo(tz)
+    except (ZoneInfoNotFoundError, ValueError) as exc:
+        raise ValidationFailedError(
+            "Unknown time zone", code="INVALID_TIMEZONE", details={"tz": tz}
+        ) from exc

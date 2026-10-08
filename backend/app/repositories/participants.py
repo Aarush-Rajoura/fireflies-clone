@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from sqlalchemy import func, select
 
 from app.models import Meeting, Participant
@@ -21,6 +23,12 @@ class ParticipantRepository(Repository[Participant]):
             select(Participant).where(Participant.meeting_id == meeting_id).order_by(Participant.id)
         )
         return list(self.session.scalars(stmt))
+
+    def get_many(self, ids: Sequence[int]) -> dict[int, Participant]:
+        if not ids:
+            return {}
+        stmt = select(Participant).where(Participant.id.in_(ids))
+        return {p.id: p for p in self.session.scalars(stmt)}
 
     def find_by_name(self, meeting_id: int, name: str) -> Participant | None:
         stmt = select(Participant).where(
