@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 
-import { Avatar, SegmentedControl, Skeleton } from "@/components/ui";
+import { SegmentedControl } from "@/components/ui";
 import { useTheme } from "@/features/theme";
-import { useMe } from "@/features/user";
+
+import { ProfileTab } from "./ProfileTab";
 
 type Tab = "profile" | "appearance";
 
@@ -12,20 +13,6 @@ const TABS = [
   { value: "profile", label: "Profile" },
   { value: "appearance", label: "Appearance" },
 ] as const;
-
-function ProfileTab() {
-  const { data: me, isLoading } = useMe();
-  if (isLoading || !me) return <Skeleton className="h-16 w-full" />;
-  return (
-    <div className="flex items-center gap-4 rounded-card border border-subtle bg-surface-1 p-5">
-      <Avatar name={me.name} src={me.avatar_url ?? undefined} size="lg" />
-      <div className="min-w-0">
-        <p className="truncate text-h3 text-strong">{me.name}</p>
-        <p className="truncate text-meta text-muted">{me.email}</p>
-      </div>
-    </div>
-  );
-}
 
 const THEME_OPTIONS = [
   { value: "dark", label: "Dark" },

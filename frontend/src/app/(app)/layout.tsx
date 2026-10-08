@@ -1,14 +1,17 @@
 import type { ReactNode } from "react";
 
+import { OnboardingGate } from "@/features/onboarding";
 import { AppShell } from "@/features/shell";
 
 import { Providers } from "../providers";
 
-/** Every signed-in screen: app-wide providers, then the rail + top bar shell. */
+/** Every signed-in screen: app-wide providers, the onboarding gate, then the rail + top bar shell. */
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <Providers>
-      <AppShell>{children}</AppShell>
+      <OnboardingGate>
+        <AppShell>{children}</AppShell>
+      </OnboardingGate>
     </Providers>
   );
 }

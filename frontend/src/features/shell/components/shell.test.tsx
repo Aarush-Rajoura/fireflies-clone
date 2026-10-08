@@ -16,6 +16,14 @@ vi.mock("@/features/user", () => ({
   useMe: () => ({
     data: { id: 1, name: "Ada Lovelace", email: "ada@example.com", avatar_url: null },
   }),
+  useUsage: () => ({
+    data: {
+      free_meetings_left: 3,
+      free_meetings_total: 3,
+      storage_minutes_used: 42,
+      storage_minutes_total: 400,
+    },
+  }),
 }));
 
 const renderInApp = (ui: React.ReactElement) => render(<ThemeProvider>{ui}</ThemeProvider>);
@@ -53,7 +61,7 @@ describe("ProfileMenu", () => {
     expect(screen.getByText("Hi Ada Lovelace")).toBeTruthy();
     expect(screen.getByText("ada@example.com")).toBeTruthy();
     expect(screen.getByText("3 left / 3 free meetings")).toBeTruthy();
-    expect(screen.getByText("0 / 400 mins")).toBeTruthy();
+    expect(screen.getByText("42 / 400 mins")).toBeTruthy();
     for (const row of [
       "Playlist",
       "Settings",

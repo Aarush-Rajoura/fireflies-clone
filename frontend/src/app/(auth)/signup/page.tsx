@@ -1,7 +1,7 @@
-import { AuthPlaceholder } from "@/features/auth";
+import { AuthScreen } from "@/features/auth";
 
 export const metadata = { title: "Sign up · Fireflies.ai Clone" };
 
 export default function SignupPage() {
-  return <AuthPlaceholder mode="signup" />;
+  return <AuthScreen mode="signup" />;
 }

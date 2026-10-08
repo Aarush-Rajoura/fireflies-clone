@@ -7,6 +7,8 @@ import type { MeetingListParams, SearchParams } from "./types";
  */
 export const qk = {
   me: () => ["me"] as const,
+  // Not under ['me']: profile edits must not refetch usage, and vice versa.
+  usage: () => ["usage"] as const,
   meetings: {
     all: ["meetings"] as const,
     lists: () => ["meetings", "list"] as const,

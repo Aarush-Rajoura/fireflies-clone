@@ -6,9 +6,8 @@ import type { ReactNode } from "react";
 
 import { Badge, Button, toast } from "@/components/ui";
 import { nextPreference, useTheme } from "@/features/theme";
+import type { Usage } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
-
-import { FREE_MEETINGS, STORAGE_MINUTES as STORAGE } from "../plan";
 
 const soon = (what: string) => () => toast.info(`${what} is coming soon.`);
 
@@ -34,16 +33,25 @@ function Section({ children, className }: { children: ReactNode; className?: str
   return <div className={cn("border-b border-subtle px-5 py-4", className)}>{children}</div>;
 }
 
+const ratio = (part: number, whole: number) => (whole > 0 ? Math.min(part / whole, 1) : 0);
+
 export function AccountPanel({
   name,
   email,
+  usage,
   onNavigate,
 }: {
   name: string;
   email: string;
+  /** Undefined while loading: the meters render empty rather than guessing. */
+  usage: Usage | undefined;
   onNavigate: () => void;
 }) {
   const { preference, setPreference } = useTheme();
+  const left = usage?.free_meetings_left ?? 0;
+  const total = usage?.free_meetings_total ?? 0;
+  const used = usage?.storage_minutes_used ?? 0;
+  const storage = usage?.storage_minutes_total ?? 0;
   return (
     <div className="w-[320px] overflow-hidden rounded-panel border border-subtle bg-surface-2">
       <Section>
@@ -52,9 +60,9 @@ export function AccountPanel({
       </Section>
       <Section className="flex flex-col gap-3">
         <p className="text-body-strong text-primary">Free</p>
-        <Meter value={FREE_MEETINGS.left / FREE_MEETINGS.total} label="Free meetings left" />
+        <Meter value={ratio(left, total)} label="Free meetings left" />
         <p className="text-meta text-muted">
-          {FREE_MEETINGS.left} left / {FREE_MEETINGS.total} free meetings
+          {usage ? `${left} left / ${total} free meetings` : "Loading plan…"}
         </p>
         <Button
           variant="upgrade"
@@ -66,9 +74,9 @@ export function AccountPanel({
       </Section>
       <Section className="flex flex-col gap-3">
         <p className="text-body-strong text-primary">Storage</p>
-        <Meter value={STORAGE.used / STORAGE.total} label="Storage used" />
+        <Meter value={ratio(used, storage)} label="Storage used" />
         <p className="tnum text-meta text-muted">
-          {STORAGE.used} / {STORAGE.total} mins
+          {usage ? `${used} / ${storage} mins` : "Loading storage…"}
         </p>
       </Section>
       <div className="border-b border-subtle py-1">

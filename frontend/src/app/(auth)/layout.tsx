@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 
-import { ThemeProvider } from "@/features/theme";
+import { Providers } from "../providers";
 
+/**
+ * Sign-in and onboarding: the app's providers (query client for the wizard's
+ * /me reads and writes, plus the theme scope) without the shell.
+ */
 export default function AuthLayout({ children }: { children: ReactNode }) {
-  return <ThemeProvider>{children}</ThemeProvider>;
+  return <Providers>{children}</Providers>;
 }

@@ -1,1 +1,1 @@
-export { AuthPlaceholder } from "./AuthPlaceholder";
+export { AuthScreen } from "./components/AuthScreen";

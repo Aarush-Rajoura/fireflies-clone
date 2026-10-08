@@ -9,6 +9,14 @@ type Schemas = components["schemas"];
 export type ErrorResponse = Schemas["ErrorResponse"];
 
 export type User = Schemas["UserRead"];
+/** The current user with onboarding answers (GET/PATCH /me). */
+export type Me = Schemas["MeRead"];
+export type ProfileUpdate = Schemas["ProfileUpdate"];
+export type OnboardingInput = Schemas["OnboardingInput"];
+export type OnboardingResult = Schemas["OnboardingResult"];
+export type JoinPreference = Schemas["JoinPreference"];
+export type RecapPreference = Schemas["RecapPreference"];
+export type Usage = Schemas["UsageRead"];
 export type UserRef = Schemas["UserRef"];
 
 export type MeetingListItem = Schemas["MeetingListItem"];
