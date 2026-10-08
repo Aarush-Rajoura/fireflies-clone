@@ -74,3 +74,69 @@ class NotificationService:
         except Exception:
             self.uow.rollback()
             logger.warning("Could not record %s notification", kind, exc_info=True)
+
+    # One method per event, so the wording lives here and callers only report facts.
+
+    def notify_meeting_created(self, meeting_id: int, title: str, *, summarised: bool) -> None:
+        body = "Transcript and AI summary are ready." if summarised else "Your meeting was added."
+        self.record(
+            NotificationKind.MEETING_CREATED, f"{title} is ready", body, _meeting(meeting_id)
+        )
+
+    def notify_meeting_captured(self, meeting_id: int, title: str) -> None:
+        self.record(
+            NotificationKind.MEETING_CAPTURED,
+            f"Fred is joining {title} (demo)",
+            "No bot really joins in the demo; upload a transcript afterwards.",
+            _meeting(meeting_id),
+        )
+
+    def notify_calendar_connected(self, provider_name: str, imported: int) -> None:
+        self.record(
+            NotificationKind.CALENDAR_CONNECTED,
+            f"{provider_name} connected",
+            f"Demo connection: {imported} sample meetings imported.",
+            "/home?tab=upcoming",
+        )
+
+    def notify_summary_regenerated(self, meeting_id: int, title: str) -> None:
+        self.record(
+            NotificationKind.SUMMARY_REGENERATED,
+            f"Summary updated for {title}",
+            "Fred regenerated the AI summary.",
+            _meeting(meeting_id),
+        )
+
+    def notify_action_item_assigned(
+        self, meeting_id: int, meeting_title: str, text: str, assignee_participant_id: int
+    ) -> None:
+        """Only when the assignee is linked to the current user; other people get no bell."""
+        try:
+            who = self.uow.participants.get(assignee_participant_id)
+            me = self.uow.users.get_default()
+            mine = who is not None and me is not None and who.user_id == me.id
+        except Exception:
+            self.uow.rollback()
+            logger.warning("Could not check the action item assignee", exc_info=True)
+            return
+        if mine:
+            self.record(
+                NotificationKind.ACTION_ITEM_ASSIGNED,
+                f"New action item for you in {meeting_title}",
+                text,
+                _meeting(meeting_id),
+            )
+
+    def notify_invite_accepted(self, name: str, email: str | None = None) -> None:
+        """Hook for the Team module: call after an invite is accepted (demo)."""
+        who = f"{name} ({email})" if email else name
+        self.record(
+            NotificationKind.INVITE_ACCEPTED,
+            f"{name} joined your team",
+            f"{who} accepted your invite (demo).",
+            "/team",
+        )
+
+
+def _meeting(meeting_id: int) -> str:
+    return f"/meetings/{meeting_id}"

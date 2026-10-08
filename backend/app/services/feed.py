@@ -1,6 +1,8 @@
 """The Home "AI Feed": items derived on read from summaries, action items and keywords.
 
 The AI already ran when those rows were written, so reading the feed never calls it.
+Scope: the app is single-tenant, so summaries and trending keywords cover every meeting
+in the workspace; action items are narrowed to the ones assigned to the current user.
 """
 
 import re

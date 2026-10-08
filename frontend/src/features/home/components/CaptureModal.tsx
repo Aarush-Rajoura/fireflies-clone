@@ -41,7 +41,7 @@ function CaptureBody({ onDone }: { onDone: () => void }) {
   const [formError, setFormError] = useState<string | null>(null);
   const create = useCreateMeeting({
     onSuccess: (meeting) => {
-      toast.info("Fred is joining… (demo)");
+      toast.info("Capture started (demo) — opening the meeting");
       onDone();
       router.push(`/meetings/${meeting.id}`);
     },

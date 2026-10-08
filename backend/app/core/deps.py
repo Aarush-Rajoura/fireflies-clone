@@ -71,14 +71,21 @@ def get_search_service(uow: Uow) -> SearchService:
     return SearchService(uow)
 
 
+def get_notification_service(uow: Uow) -> NotificationService:
+    return NotificationService(uow)
+
+
+Notifier = Annotated[NotificationService, Depends(get_notification_service)]
+
+
 def get_summary_service(
-    uow: Uow, summarizer: Annotated[Summarizer, Depends(get_summarizer)]
+    uow: Uow, summarizer: Annotated[Summarizer, Depends(get_summarizer)], notifications: Notifier
 ) -> SummaryService:
-    return SummaryService(uow, summarizer)
+    return SummaryService(uow, summarizer, notifications=notifications)
 
 
-def get_action_item_service(uow: Uow) -> ActionItemService:
-    return ActionItemService(uow)
+def get_action_item_service(uow: Uow, notifications: Notifier) -> ActionItemService:
+    return ActionItemService(uow, notifications=notifications)
 
 
 def get_meeting_creation_service(
@@ -86,6 +93,7 @@ def get_meeting_creation_service(
     settings: AppSettings,
     summarizer: Annotated[Summarizer, Depends(get_summarizer)],
     extractor: Annotated[ActionItemExtractor, Depends(get_action_item_extractor)],
+    notifications: Notifier,
 ) -> MeetingCreationService:
     return MeetingCreationService(
         uow,
@@ -94,6 +102,7 @@ def get_meeting_creation_service(
         extractor,
         SummaryService(uow, summarizer),
         max_upload_mb=settings.max_upload_mb,
+        notifications=notifications,
     )
 
 
@@ -127,12 +136,8 @@ def get_health_service(uow: Uow) -> HealthService:
     return HealthService(uow)
 
 
-def get_notification_service(uow: Uow) -> NotificationService:
-    return NotificationService(uow)
-
-
-def get_calendar_service(uow: Uow) -> CalendarService:
-    return CalendarService(uow, NotificationService(uow))
+def get_calendar_service(uow: Uow, notifications: Notifier) -> CalendarService:
+    return CalendarService(uow, notifications)
 
 
 def get_feed_service(uow: Uow) -> FeedService:

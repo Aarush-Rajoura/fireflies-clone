@@ -38,6 +38,7 @@ export function meetingFixture(overrides: Partial<MeetingDetail> = {}): MeetingD
     action_item_counts: { open: 0, completed: 0 },
     keywords: [],
     language: "en",
+    auto_join: false,
     meeting_url: null,
     platform: null,
     source: "upload",

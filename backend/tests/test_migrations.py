@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from conftest import alembic_config
 from sqlalchemy import Engine, inspect, text
 
@@ -91,3 +92,10 @@ def test_fts_triggers_exist(migrated_engine: Engine) -> None:
             r[0] for r in c.execute(text("SELECT name FROM sqlite_master WHERE type='trigger'"))
         }
     assert {"transcript_segments_ai", "transcript_segments_au", "transcript_segments_ad"} <= names
+
+
+def test_history_is_linear_with_a_single_head() -> None:
+    script = ScriptDirectory.from_config(alembic_config())
+    assert len(script.get_heads()) == 1
+    home = script.get_revision("0004_home")
+    assert home is not None and home.down_revision == "0003_onboarding"

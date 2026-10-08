@@ -50,10 +50,10 @@ export function QuickStartCards({ onSchedule, onUpload, onCapture }: QuickStartC
   const handlers = { schedule: onSchedule, upload: onUpload, capture: onCapture };
   return (
     <section aria-labelledby="quick-start-heading" className="flex flex-col gap-2">
-      <h2 id="quick-start-heading" className="text-[20px] font-semibold leading-7 text-strong">
+      <h2 id="quick-start-heading" className="text-h2 text-strong">
         Quick Start
       </h2>
-      <p className="text-[16px] leading-6 text-secondary">
+      <p className="text-lead text-secondary">
         Capture your first meeting or upload a recording to see Fireflies in action.
       </p>
       <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -62,7 +62,7 @@ export function QuickStartCards({ onSchedule, onUpload, onCapture }: QuickStartC
             <Pressable
               onClick={handlers[card.key]}
               className={cn(
-                "group flex h-[66px] w-full items-center gap-3 rounded-panel border border-subtle px-5 text-[17px] font-medium text-strong hover:border-strong",
+                "group flex h-[66px] w-full items-center gap-3 rounded-panel border border-subtle px-5 text-lead-strong text-strong hover:border-strong",
                 card.fill,
               )}
             >

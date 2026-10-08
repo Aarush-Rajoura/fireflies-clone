@@ -125,7 +125,9 @@ describe("CaptureModal", () => {
       meeting_url: "https://meet.google.com/abc",
       language: "en",
     });
-    expect(getToasts().map((t) => t.message)).toContain("Fred is joining… (demo)");
+    expect(getToasts().map((t) => t.message)).toContain(
+      "Capture started (demo) — opening the meeting",
+    );
   });
 
   it("requires a link before calling the API", async () => {

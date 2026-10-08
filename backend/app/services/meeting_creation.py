@@ -19,7 +19,6 @@ from app.models.enums import (
     MediaType,
     MeetingSource,
     MeetingStatus,
-    NotificationKind,
     ParticipantRole,
     Platform,
 )
@@ -63,6 +62,7 @@ class MeetingCreationService:
         *,
         max_upload_mb: int | None = None,
         clock: Callable[[], datetime] = lambda: datetime.now(UTC),
+        notifications: NotificationService | None = None,
     ) -> None:
         self.uow = uow
         self.parsers = parsers
@@ -74,7 +74,7 @@ class MeetingCreationService:
         )
         self.clock = clock
         self._meetings = MeetingService(uow)
-        self._notifications = NotificationService(uow)
+        self.notifications = notifications
 
     def preview(self, content: str, filename: str | None) -> TranscriptPreview:
         size = len(content.encode("utf-8"))
@@ -102,16 +102,17 @@ class MeetingCreationService:
         except BaseException:
             self.uow.rollback()
             raise
-        if data.status is None:
-            self._notifications.record(
-                NotificationKind.MEETING_CREATED,
-                f"{data.title} is ready",
-                "Transcript and AI summary are ready."
-                if ai is not None
-                else "Your meeting was added.",
-                f"/meetings/{meeting_id}",
-            )
+        self._notify(data, meeting_id, summarised=ai is not None)
         return self._meetings.get(meeting_id)
+
+    def _notify(self, data: MeetingCreate, meeting_id: int, *, summarised: bool) -> None:
+        # A scheduled meeting has nothing to report yet; the Upcoming tab shows it.
+        if self.notifications is None or data.status == "scheduled":
+            return
+        if data.status == "live":
+            self.notifications.notify_meeting_captured(meeting_id, data.title)
+        else:
+            self.notifications.notify_meeting_created(meeting_id, data.title, summarised=summarised)
 
     def _precheck(self, data: MeetingCreate) -> _Host:
         """Cheap reads that would fail step 2, done first so a bad request costs no AI call.

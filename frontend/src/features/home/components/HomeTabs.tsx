@@ -38,11 +38,11 @@ export function HomeTabs({ onSchedule }: { onSchedule: () => void }) {
           options={OPTIONS}
           value={tab}
           onChange={select}
-          className="h-10 [&>button]:h-8 [&>button]:text-[16px]"
+          className="h-10 [&>button]:h-8 [&>button]:text-lead"
         />
         <Link
           href="/settings"
-          className="flex items-center gap-1.5 rounded-control px-1 text-[16px] font-medium text-secondary hover:text-primary"
+          className="flex items-center gap-1.5 rounded-control px-1 text-lead-strong text-secondary hover:text-primary"
         >
           <CalendarCog className="size-4" strokeWidth={1.75} aria-hidden />
           Settings

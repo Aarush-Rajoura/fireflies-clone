@@ -39,6 +39,44 @@ export interface paths {
         patch: operations["update_action_item"];
         trace?: never;
     };
+    "/api/v1/calendar-connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List calendar connections */
+        get: operations["list_calendar_connections"];
+        put?: never;
+        /**
+         * Connect a calendar (simulated; imports 3 sample meetings)
+         * @description Idempotent: connecting an already connected provider returns it with 200 and imports nothing.
+         */
+        post: operations["connect_calendar"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/calendar-connections/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Disconnect a calendar and remove only the meetings it imported */
+        delete: operations["disconnect_calendar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/channels": {
         parameters: {
             query?: never;
@@ -91,6 +129,26 @@ export interface paths {
         head?: never;
         /** Edit a comment */
         patch: operations["update_comment"];
+        trace?: never;
+    };
+    "/api/v1/feed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * AI feed derived from summaries, action items and keywords
+         * @description Read-only and derived from stored data: no AI call is made.
+         */
+        get: operations["get_feed"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/v1/highlights/{highlight_id}": {
@@ -433,6 +491,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List notifications, unread first */
+        get: operations["list_notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark every notification read */
+        post: operations["mark_all_notifications_read"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notifications/{notification_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark a notification read or unread */
+        patch: operations["update_notification"];
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -715,6 +824,26 @@ export interface components {
              */
             file: string;
         };
+        /** CalendarConnectionCreate */
+        CalendarConnectionCreate: {
+            provider: components["schemas"]["CalendarProvider"];
+        };
+        /** CalendarConnectionRead */
+        CalendarConnectionRead: {
+            /**
+             * Connected At
+             * Format: date-time
+             */
+            connected_at: string;
+            /** Id */
+            id: number;
+            provider: components["schemas"]["CalendarProvider"];
+        };
+        /**
+         * CalendarProvider
+         * @enum {string}
+         */
+        CalendarProvider: "google" | "outlook";
         /** ChannelCreate */
         ChannelCreate: {
             /** Name */
@@ -802,6 +931,28 @@ export interface components {
         /** ErrorResponse */
         ErrorResponse: {
             error: components["schemas"]["ErrorDetail"];
+        };
+        /**
+         * FeedItem
+         * @description Derived from stored data on read; no AI call and no row of its own.
+         */
+        FeedItem: {
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "summary" | "action_item" | "trending";
+            /** Meeting Id */
+            meeting_id: number | null;
+            /** Title */
+            title: string;
         };
         /** HealthResponse */
         HealthResponse: {
@@ -932,12 +1083,25 @@ export interface components {
         MediaType: "audio" | "video" | "none";
         /** MeetingCreate */
         MeetingCreate: {
+            /**
+             * Auto Join
+             * @default false
+             */
+            auto_join: boolean;
             /** Channel Id */
             channel_id?: number | null;
             /** Description */
             description?: string | null;
+            /**
+             * Language
+             * @default en
+             */
+            language: string;
+            /** Meeting Url */
+            meeting_url?: string | null;
             /** Participants */
             participants?: string[];
+            platform?: components["schemas"]["Platform"] | null;
             /** Segments */
             segments?: components["schemas"]["SegmentIn"][] | null;
             /**
@@ -948,12 +1112,16 @@ export interface components {
             source: "upload" | "paste" | "manual";
             /** Started At */
             started_at?: string | null;
+            /** Status */
+            status?: ("scheduled" | "live") | null;
             /** Title */
             title: string;
         };
         /** MeetingDetail */
         MeetingDetail: {
             action_item_counts: components["schemas"]["ActionItemCountsRead"];
+            /** Auto Join */
+            auto_join: boolean;
             channel: components["schemas"]["ChannelRef"] | null;
             /** Channel Id */
             channel_id: number | null;
@@ -1005,6 +1173,8 @@ export interface components {
          */
         MeetingListItem: {
             action_item_counts: components["schemas"]["ActionItemCountsRead"];
+            /** Auto Join */
+            auto_join: boolean;
             channel: components["schemas"]["ChannelRef"] | null;
             /** Channel Id */
             channel_id: number | null;
@@ -1085,6 +1255,35 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * NotificationKind
+         * @enum {string}
+         */
+        NotificationKind: "meeting_created" | "meeting_captured" | "calendar_connected" | "summary_regenerated" | "action_item_assigned" | "invite_accepted";
+        /** NotificationRead */
+        NotificationRead: {
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            kind: components["schemas"]["NotificationKind"];
+            /** Link */
+            link: string | null;
+            /** Read At */
+            read_at: string | null;
+            /** Title */
+            title: string;
+        };
+        /** NotificationUpdate */
+        NotificationUpdate: {
+            /** Read */
+            read: boolean;
+        };
         /** OnboardingInput */
         OnboardingInput: {
             /** Invite Emails */
@@ -1149,6 +1348,21 @@ export interface components {
             /** Total Pages */
             readonly total_pages: number;
         };
+        /** Page[CalendarConnectionRead] */
+        Page_CalendarConnectionRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["CalendarConnectionRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
         /** Page[ChannelRead] */
         Page_ChannelRead_: {
             /** Has Next */
@@ -1179,6 +1393,21 @@ export interface components {
             /** Total Pages */
             readonly total_pages: number;
         };
+        /** Page[FeedItem] */
+        Page_FeedItem_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["FeedItem"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
         /** Page[HighlightRead] */
         Page_HighlightRead_: {
             /** Has Next */
@@ -1200,6 +1429,21 @@ export interface components {
             readonly has_next: boolean;
             /** Items */
             items: components["schemas"]["MeetingListItem"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[NotificationRead] */
+        Page_NotificationRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["NotificationRead"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -1672,6 +1916,146 @@ export interface operations {
             };
         };
     };
+    list_calendar_connections: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CalendarConnectionRead_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    connect_calendar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CalendarConnectionCreate"];
+            };
+        };
+        responses: {
+            /** @description Already connected. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarConnectionRead"];
+                };
+            };
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CalendarConnectionRead"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    disconnect_calendar: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: components["schemas"]["CalendarProvider"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_channels: {
         parameters: {
             query?: {
@@ -1929,6 +2313,48 @@ export interface operations {
             };
             /** @description Invalid input; `details.errors[].loc` is the field path. */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_feed: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_FeedItem_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2227,6 +2653,7 @@ export interface operations {
                 /** @description Channel id. */
                 channel?: number | null;
                 scope?: "all" | "hosted" | "shared" | "uploads";
+                /** @description `completed` lists finished meetings and live captures; `upcoming` lists scheduled meetings that have not started. */
                 status?: "completed" | "upcoming";
                 page?: number;
                 /** @description Clamped to 100. */
@@ -3370,6 +3797,137 @@ export interface operations {
             };
             /** @description Invalid input; `details.errors[].loc` is the field path. */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_notifications: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_NotificationRead_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_all_notifications_read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_notification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notification_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };

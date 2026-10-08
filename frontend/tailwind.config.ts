@@ -113,7 +113,12 @@ const config: Config = {
       },
       fontSize: {
         display: ["28px", { lineHeight: "36px", fontWeight: "600", letterSpacing: "-0.01em" }],
+        // Home's larger scale: the welcome title, then lead copy and list rows.
+        h1: ["24px", { lineHeight: "32px", fontWeight: "600" }],
         h2: ["20px", { lineHeight: "28px", fontWeight: "600" }],
+        lead: ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "lead-strong": ["16px", { lineHeight: "24px", fontWeight: "500" }],
+        "meta-lg": ["15px", { lineHeight: "24px", fontWeight: "400" }],
         h3: ["16px", { lineHeight: "24px", fontWeight: "600" }],
         body: ["14px", { lineHeight: "22px", fontWeight: "400" }],
         "body-strong": ["14px", { lineHeight: "22px", fontWeight: "500" }],
@@ -182,7 +187,10 @@ const config: Config = {
         },
         "fade-in": { from: { opacity: "0" }, to: { opacity: "1" } },
         // Product-demo placeholder: a sweeping playhead and rows that type in.
-        "demo-sweep": { from: { transform: "translateX(-100%)" }, to: { transform: "translateX(400%)" } },
+        "demo-sweep": {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(400%)" },
+        },
         "demo-grow": { "0%": { transform: "scaleX(0)" }, "60%, 100%": { transform: "scaleX(1)" } },
       },
       animation: {

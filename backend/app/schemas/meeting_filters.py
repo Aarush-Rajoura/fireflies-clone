@@ -25,6 +25,6 @@ class MeetingFilters:
     host_id: int | None = None
     channel_id: int | None = None
     scope: Literal["all", "hosted", "shared", "uploads"] = "all"
-    # completed = status "completed" (the library); upcoming = scheduled and in the future.
-    # Live/processing meetings appear in neither list.
+    # completed = the library: status "completed" or "live" (a capture in progress);
+    # upcoming = scheduled and in the future. Processing meetings appear in neither list.
     status: Literal["completed", "upcoming"] = "completed"

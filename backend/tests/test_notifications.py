@@ -41,15 +41,75 @@ def test_use_cases_write_notifications(api: TestClient) -> None:
     assert all(i["read_at"] is None for i in items)
 
 
-def test_scheduled_and_live_meetings_do_not_notify(api: TestClient) -> None:
-    api.post(
+def test_capture_notifies_but_schedule_and_repeat_connect_do_not(api: TestClient) -> None:
+    cap = api.post(
         f"{V1}/meetings",
         json={"title": "Cap", "status": "live", "meeting_url": "https://zoom.us/j/1"},
+    ).json()
+    api.post(
+        f"{V1}/meetings",
+        json={"title": "Later", "status": "scheduled", "started_at": "2999-01-01T10:00:00Z"},
     )
     # A repeat connect imports nothing, so it does not notify again either.
     api.post(f"{V1}/calendar-connections", json={"provider": "outlook"})
     api.post(f"{V1}/calendar-connections", json={"provider": "outlook"})
-    assert [i["kind"] for i in _list(api)] == ["calendar_connected"]
+    items = _list(api)
+    assert [i["kind"] for i in items] == ["calendar_connected", "meeting_captured"]
+    assert items[1]["title"] == "Fred is joining Cap (demo)"
+    assert items[1]["link"] == f"/meetings/{cap['id']}"
+
+
+def _kinds(api: TestClient, kind: str) -> list[dict[str, object]]:
+    return [i for i in _list(api) if i["kind"] == kind]
+
+
+def test_action_item_assigned_to_me_notifies_once(api: TestClient) -> None:
+    mid = api.post(f"{V1}/meetings", json={"title": "Sync", "participants": ["Bob"]}).json()["id"]
+    people = api.get(f"{V1}/meetings/{mid}").json()["participants"]
+    me = next(p["id"] for p in people if p["user_id"] is not None)
+    bob = next(p["id"] for p in people if p["display_name"] == "Bob")
+    items = f"{V1}/meetings/{mid}/action-items"
+
+    api.post(items, json={"text": "Bob's task", "assignee_participant_id": bob})
+    api.post(items, json={"text": "Unassigned"})
+    assert _kinds(api, "action_item_assigned") == []
+
+    mine = api.post(items, json={"text": "Send the deck", "assignee_participant_id": me}).json()
+    got = _kinds(api, "action_item_assigned")
+    assert [(n["title"], n["body"]) for n in got] == [
+        ("New action item for you in Sync", "Send the deck")
+    ]
+
+    # Editing it without changing the assignee does not ring again.
+    api.patch(f"{V1}/action-items/{mine['id']}", json={"text": "Send the final deck"})
+    assert len(_kinds(api, "action_item_assigned")) == 1
+
+    # Re-assigning someone else's item to me does.
+    bobs = next(i for i in api.get(items).json()["items"] if i["text"] == "Bob's task")
+    api.patch(f"{V1}/action-items/{bobs['id']}", json={"assignee_participant_id": me})
+    assert len(_kinds(api, "action_item_assigned")) == 2
+
+
+def test_invite_accepted_hook(db_session: Session) -> None:
+    uow, _, _ = seeded(db_session)
+    service = NotificationService(uow)
+    service.notify_invite_accepted("Grace Hopper", "grace@example.com")
+    service.notify_invite_accepted("Alan")
+    rows = service.list(PageParams()).items
+    assert [(n.kind, n.title, n.body, n.link) for n in rows] == [
+        (
+            NotificationKind.INVITE_ACCEPTED,
+            "Alan joined your team",
+            "Alan accepted your invite (demo).",
+            "/team",
+        ),
+        (
+            NotificationKind.INVITE_ACCEPTED,
+            "Grace Hopper joined your team",
+            "Grace Hopper (grace@example.com) accepted your invite (demo).",
+            "/team",
+        ),
+    ]
 
 
 def test_mark_read_unread_and_read_all(api: TestClient) -> None:

@@ -54,6 +54,9 @@ export function buildMeetingCreate(
     segments: preview ? preview.segments : null,
     source,
     channel_id: details.channelId,
+    // A finished meeting: no join link, so no bot to send.
+    language: "en",
+    auto_join: false,
   };
 }
 

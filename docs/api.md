@@ -174,6 +174,10 @@ Interactive docs: `/docs` on a running server.
 - `"live"` (Capture): needs `meeting_url`, no `segments`; `started_at` is set to now and
   `source` to `capture`.
 
+`GET /meetings?status=completed` (the default) lists finished meetings and live captures, so a
+capture can be reopened from Home and the Meetings hub; `status=upcoming` lists scheduled
+meetings that have not started.
+
 `platform` is detected from the `meeting_url` host when omitted (`zoom.us` → zoom,
 `meet.google.com` → meet, `teams.microsoft.com` → teams, anything else → other).
 `meeting_url`, `platform` and `auto_join` without a `status` are a 422.
@@ -183,14 +187,20 @@ Interactive docs: `/docs` on a running server.
 There is no OAuth. Connecting a provider records it and imports three sample upcoming
 meetings (`source: calendar`, description starts with "(demo import)"). Connecting again
 returns the existing connection with 200 and imports nothing. Disconnecting soft-deletes only
-the meetings that provider imported.
+the meetings that provider imported and the user has not edited since (an edit bumps
+`updated_at` past `created_at`, which marks the meeting as the user's own).
 
 ### Feed and notifications
 
 `GET /feed` is derived on read (no AI call): the first sentence of the newest summaries, open
 action items assigned to the current user, and keywords raised by two or more meetings in the
-last 7 days. Notifications are written after a meeting is created (upload, paste or manual), a
-calendar is connected, or a summary is regenerated; writing one never fails the action itself.
+last 7 days. Summaries and keywords span the whole (single-tenant) workspace.
+
+Notifications are written after the action they report has committed, and writing one never
+fails that action. Kinds: `meeting_created` (upload, paste or manual), `meeting_captured`
+(a live Capture), `calendar_connected`, `summary_regenerated`, `action_item_assigned` (an item
+newly assigned to a participant linked to the current user) and `invite_accepted` (emitted by
+the Team flow through `NotificationService.notify_invite_accepted`).
 
 ## Worked examples
 

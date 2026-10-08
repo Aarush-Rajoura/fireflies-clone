@@ -4,15 +4,15 @@ import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
 import { SkeletonRow } from "@/components/ui";
+import { openCreateMeeting } from "@/features/create";
 
 import { CaptureModal } from "./CaptureModal";
 import { HomeTabs } from "./HomeTabs";
 import { QuickStartCards } from "./QuickStartCards";
 import { ScheduleModal } from "./ScheduleModal";
-import { UploadSoonModal } from "./UploadSoonModal";
 import { WelcomeBanner } from "./WelcomeBanner";
 
-type Flow = "schedule" | "upload" | "capture" | null;
+type Flow = "schedule" | "capture" | null;
 
 /** /home: welcome banner, Quick Start, then Recent | Upcoming | AI Feed. */
 export function HomeView() {
@@ -28,7 +28,7 @@ export function HomeView() {
         <WelcomeBanner />
         <QuickStartCards
           onSchedule={() => setFlow("schedule")}
-          onUpload={() => setFlow("upload")}
+          onUpload={() => openCreateMeeting("upload")}
           onCapture={() => setFlow("capture")}
         />
         {/* useSearchParams needs a Suspense boundary so the route can still prerender. */}
@@ -42,7 +42,6 @@ export function HomeView() {
         onScheduled={() => router.replace(`${pathname}?tab=upcoming`, { scroll: false })}
       />
       <CaptureModal open={flow === "capture"} onOpenChange={close} />
-      <UploadSoonModal open={flow === "upload"} onOpenChange={close} />
     </div>
   );
 }

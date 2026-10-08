@@ -76,6 +76,18 @@ def test_disconnect_removes_only_that_providers_imports(api: TestClient) -> None
         assert api.get(f"{V1}/meetings/{mid}").status_code == 410
 
 
+def test_disconnect_keeps_imports_the_user_edited(api: TestClient) -> None:
+    api.post(f"{V1}/calendar-connections", json={"provider": "google"})
+    first, *rest = _upcoming(api)
+    r = api.patch(f"{V1}/meetings/{first['id']}", json={"title": "Design review (mine now)"})
+    assert r.status_code == 200
+
+    assert api.delete(f"{V1}/calendar-connections/google").status_code == 204
+    assert [m["title"] for m in _upcoming(api)] == ["Design review (mine now)"]
+    for m in rest:
+        assert api.get(f"{V1}/meetings/{m['id']}").status_code == 410
+
+
 def test_disconnect_unknown_is_404_and_bad_provider_is_422(api: TestClient) -> None:
     r = api.delete(f"{V1}/calendar-connections/google")
     assert r.status_code == 404

@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, BellOff, CalendarCheck, FileText, Sparkles } from "lucide-react";
+import {
+  Bell,
+  BellOff,
+  CalendarCheck,
+  FileText,
+  ListChecks,
+  Sparkles,
+  UserPlus,
+  Video,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -18,8 +27,11 @@ import {
 
 const KIND_ICON: Record<Notification["kind"], React.ReactNode> = {
   meeting_created: <FileText strokeWidth={1.75} />,
+  meeting_captured: <Video strokeWidth={1.75} />,
   calendar_connected: <CalendarCheck strokeWidth={1.75} />,
   summary_regenerated: <Sparkles strokeWidth={1.75} />,
+  action_item_assigned: <ListChecks strokeWidth={1.75} />,
+  invite_accepted: <UserPlus strokeWidth={1.75} />,
 };
 
 /** Top-bar bell: a red dot while anything is unread, the list in a popover. */
@@ -124,7 +136,10 @@ function NotificationRow({
         <span className="text-caption text-muted">{relativeTime(n.created_at)}</span>
       </span>
       {isUnread && (
-        <span className="mt-2 size-2 shrink-0 rounded-full bg-accent" aria-label="Unread" />
+        <>
+          <span aria-hidden className="mt-2 size-2 shrink-0 rounded-full bg-accent" />
+          <span className="sr-only">Unread</span>
+        </>
       )}
     </>
   );

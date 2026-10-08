@@ -873,6 +873,16 @@
         "title": "HighlightUpdate",
         "type": "object"
       },
+      "JoinPreference": {
+        "enum": [
+          "owned",
+          "all",
+          "team",
+          "invited"
+        ],
+        "title": "JoinPreference",
+        "type": "string"
+      },
       "MatchRange": {
         "description": "Half-open character offsets into the snippet; the client wraps them, never raw HTML.",
         "properties": {
@@ -890,6 +900,103 @@
           "end"
         ],
         "title": "MatchRange",
+        "type": "object"
+      },
+      "MeRead": {
+        "description": "The current user, with their onboarding answers.",
+        "properties": {
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "job_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Title"
+          },
+          "join_preference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinPreference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "onboarded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Onboarded At"
+          },
+          "recap_preference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecapPreference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "title": "MeRead",
         "type": "object"
       },
       "MediaType": {
@@ -1503,8 +1610,11 @@
       "NotificationKind": {
         "enum": [
           "meeting_created",
+          "meeting_captured",
           "calendar_connected",
-          "summary_regenerated"
+          "summary_regenerated",
+          "action_item_assigned",
+          "invite_accepted"
         ],
         "title": "NotificationKind",
         "type": "string"
@@ -1579,6 +1689,155 @@
           "read"
         ],
         "title": "NotificationUpdate",
+        "type": "object"
+      },
+      "OnboardingInput": {
+        "additionalProperties": false,
+        "properties": {
+          "invite_emails": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Invite Emails",
+            "type": "array"
+          },
+          "job_title": {
+            "default": "",
+            "maxLength": 150,
+            "title": "Job Title",
+            "type": "string"
+          },
+          "join_preference": {
+            "$ref": "#/components/schemas/JoinPreference"
+          },
+          "recap_preference": {
+            "$ref": "#/components/schemas/RecapPreference"
+          },
+          "role": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Role",
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "maxLength": 50,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "join_preference",
+          "recap_preference",
+          "role"
+        ],
+        "title": "OnboardingInput",
+        "type": "object"
+      },
+      "OnboardingResult": {
+        "properties": {
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "invites_sent": {
+            "title": "Invites Sent",
+            "type": "integer"
+          },
+          "job_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Title"
+          },
+          "join_preference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/JoinPreference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "onboarded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Onboarded At"
+          },
+          "recap_preference": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RecapPreference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "tools": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "invites_sent"
+        ],
+        "title": "OnboardingResult",
         "type": "object"
       },
       "OutlineEntryRead": {
@@ -2237,6 +2496,47 @@
         "title": "Platform",
         "type": "string"
       },
+      "ProfileUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "job_title": {
+            "anyOf": [
+              {
+                "maxLength": 150,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Title"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "ProfileUpdate",
+        "type": "object"
+      },
+      "RecapPreference": {
+        "enum": [
+          "me",
+          "everyone",
+          "team"
+        ],
+        "title": "RecapPreference",
+        "type": "string"
+      },
       "SearchHit": {
         "properties": {
           "meeting_id": {
@@ -2782,6 +3082,34 @@
           "text"
         ],
         "title": "TranscriptTextIn",
+        "type": "object"
+      },
+      "UsageRead": {
+        "properties": {
+          "free_meetings_left": {
+            "title": "Free Meetings Left",
+            "type": "integer"
+          },
+          "free_meetings_total": {
+            "title": "Free Meetings Total",
+            "type": "integer"
+          },
+          "storage_minutes_total": {
+            "title": "Storage Minutes Total",
+            "type": "integer"
+          },
+          "storage_minutes_used": {
+            "title": "Storage Minutes Used",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "free_meetings_left",
+          "free_meetings_total",
+          "storage_minutes_used",
+          "storage_minutes_total"
+        ],
+        "title": "UsageRead",
         "type": "object"
       },
       "UserRead": {
@@ -3740,7 +4068,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserRead"
+                  "$ref": "#/components/schemas/MeRead"
                 }
               }
             },
@@ -3758,6 +4086,160 @@
           }
         },
         "summary": "The current user",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "update_me",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Update the current user's name or job title",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/onboarding": {
+      "delete": {
+        "operationId": "restart_onboarding",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Restart onboarding (clears onboarded_at; answers are kept)",
+        "tags": [
+          "users"
+        ]
+      },
+      "put": {
+        "description": "`tools` is the complete set (deduplicated, at most 20). `invite_emails` are validated and counted in `invites_sent`; they are not stored yet.",
+        "operationId": "complete_onboarding",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnboardingInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Save onboarding answers and mark onboarding complete",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/v1/me/usage": {
+      "get": {
+        "operationId": "get_usage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Free-plan usage: meetings left and storage minutes",
         "tags": [
           "users"
         ]
@@ -3920,11 +4402,13 @@
             }
           },
           {
+            "description": "`completed` lists finished meetings and live captures; `upcoming` lists scheduled meetings that have not started.",
             "in": "query",
             "name": "status",
             "required": false,
             "schema": {
               "default": "completed",
+              "description": "`completed` lists finished meetings and live captures; `upcoming` lists scheduled meetings that have not started.",
               "enum": [
                 "completed",
                 "upcoming"

@@ -10,7 +10,10 @@ export function isJoiningPhase(startedAt: string, now: number): boolean {
   return now - new Date(startedAt).getTime() < LIVE_DEMO_WINDOW_MS;
 }
 
-/** Shown on a Captured (live) meeting: no real bot exists, so say so after a short "joining" beat. */
+/**
+ * The body of a Captured (live) meeting. No real bot exists, so after a short
+ * "joining" beat it says so and points at uploading a transcript instead.
+ */
 export function LiveDemoNotice({ startedAt }: { startedAt: string }) {
   const [now, setNow] = useState(() => Date.now());
   const joining = isJoiningPhase(startedAt, now);
@@ -25,23 +28,25 @@ export function LiveDemoNotice({ startedAt }: { startedAt: string }) {
   return (
     <div
       role="status"
-      className="mx-6 mt-3 flex items-center gap-2 rounded-panel border border-subtle bg-surface-2 px-4 py-2.5 text-body text-secondary"
+      className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-card border border-subtle bg-surface-1 px-6 py-10 text-center"
     >
       {joining ? (
-        <>
-          <Loader2
-            className="size-4 text-accent motion-safe:animate-spin"
-            strokeWidth={1.75}
-            aria-hidden
-          />
-          Fred is joining… (demo)
-        </>
+        <Loader2
+          className="size-8 text-accent motion-safe:animate-spin"
+          strokeWidth={1.75}
+          aria-hidden
+        />
       ) : (
-        <>
-          <Info className="size-4 text-warning" strokeWidth={1.75} aria-hidden />
-          Bot can&apos;t join in the demo — upload a transcript instead.
-        </>
+        <Info className="size-8 text-warning" strokeWidth={1.75} aria-hidden />
       )}
+      <p className="text-h3 text-strong">
+        {joining ? "Fred is joining… (demo)" : "Bot can't join in the demo"}
+      </p>
+      <p className="text-body text-secondary">
+        {joining
+          ? "In the real product Fred would join the call and transcribe it live."
+          : "Upload a transcript instead to get a summary and action items."}
+      </p>
     </div>
   );
 }

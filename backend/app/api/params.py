@@ -45,7 +45,13 @@ def meeting_filters(
     tag: Annotated[list[int] | None, Query(description="Tag id; repeat for any-of.")] = None,
     channel: Annotated[int | None, Query(description="Channel id.")] = None,
     scope: Literal["all", "hosted", "shared", "uploads"] = "all",
-    status: Literal["completed", "upcoming"] = "completed",
+    status: Annotated[
+        Literal["completed", "upcoming"],
+        Query(
+            description="`completed` lists finished meetings and live captures; "
+            "`upcoming` lists scheduled meetings that have not started."
+        ),
+    ] = "completed",
 ) -> MeetingFilters:
     return MeetingFilters(
         q=q,

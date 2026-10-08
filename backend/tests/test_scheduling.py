@@ -150,8 +150,10 @@ def test_api_capture_returns_live_meeting(api: TestClient) -> None:
     body = r.json()
     assert body["status"] == "live" and body["source"] == "capture"
     assert body["platform"] == "zoom"
-    # A live capture is neither completed nor upcoming.
+    # A live capture is in the library (so it can be reopened), not in Upcoming.
     assert api.get(f"{V1}/meetings", params={"status": "upcoming"}).json()["total"] == 0
+    library = api.get(f"{V1}/meetings").json()["items"]
+    assert [m["id"] for m in library] == [body["id"]]
 
 
 def test_plain_create_path_is_unchanged(api: TestClient) -> None:

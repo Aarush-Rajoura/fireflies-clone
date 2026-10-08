@@ -72,5 +72,8 @@ class CalendarProvider(StrEnum):
 
 class NotificationKind(StrEnum):
     MEETING_CREATED = "meeting_created"
+    MEETING_CAPTURED = "meeting_captured"
     CALENDAR_CONNECTED = "calendar_connected"
     SUMMARY_REGENERATED = "summary_regenerated"
+    ACTION_ITEM_ASSIGNED = "action_item_assigned"
+    INVITE_ACCEPTED = "invite_accepted"

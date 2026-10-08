@@ -23,11 +23,11 @@ export function WelcomeBanner() {
         {isLoading ? (
           <Skeleton className="h-8 w-64" />
         ) : (
-          <h2 id="welcome-heading" className="text-[24px] font-semibold leading-8 text-strong">
+          <h2 id="welcome-heading" className="text-h1 text-strong">
             {`Welcome Aboard${name ? `, ${name}` : ""}!`}
           </h2>
         )}
-        <p className="text-[16px] leading-6 text-secondary">
+        <p className="text-lead text-secondary">
           Fireflies is now ready to automate your meetings and streamline your workflows.
         </p>
       </div>

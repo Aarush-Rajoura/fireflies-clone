@@ -14,6 +14,7 @@ from app.schemas.action_item import (
 )
 from app.schemas.common import Page, PageParams
 from app.services.guards import require_active_meeting
+from app.services.notifications import NotificationService
 
 
 def action_item_read(item: ActionItem, participants: dict[int, Participant]) -> ActionItemRead:
@@ -32,8 +33,11 @@ def action_item_read(item: ActionItem, participants: dict[int, Participant]) -> 
 
 
 class ActionItemService:
-    def __init__(self, uow: UnitOfWork) -> None:
+    def __init__(
+        self, uow: UnitOfWork, *, notifications: NotificationService | None = None
+    ) -> None:
         self.uow = uow
+        self.notifications = notifications
 
     def list(self, meeting_id: int, page: PageParams) -> Page[ActionItemRead]:
         require_active_meeting(self.uow, meeting_id)
@@ -54,7 +58,7 @@ class ActionItemService:
         The next sequence is read-then-written, so two concurrent creates can get the
         same number; nothing is unique on it, and every list orders by (sequence, id).
         """
-        require_active_meeting(self.uow, meeting_id)
+        meeting = require_active_meeting(self.uow, meeting_id)
         self._check_assignee(meeting_id, data.assignee_participant_id)
         item = self.uow.action_items.add(
             ActionItem(
@@ -69,10 +73,12 @@ class ActionItemService:
             )
         )
         self.uow.commit()
+        self._notify_if_mine(item, meeting.title, previous_assignee=None)
         return action_item_read(item, self._participants(meeting_id))
 
     def update(self, item_id: int, data: ActionItemUpdate) -> ActionItemRead:
         item = self._get_writable(item_id)
+        previous_assignee = item.assignee_participant_id
         fields = data.model_fields_set
         if "text" in fields and data.text is not None:
             item.text = data.text
@@ -85,11 +91,25 @@ class ActionItemService:
             self._set_status(item, data.status)
         self.uow.action_items.flush()
         self.uow.commit()
+        meeting = self.uow.meetings.get(item.meeting_id)
+        if meeting is not None:
+            self._notify_if_mine(item, meeting.title, previous_assignee=previous_assignee)
         return action_item_read(item, self._participants(item.meeting_id))
 
     def delete(self, item_id: int) -> None:
         self.uow.action_items.delete(self._get_writable(item_id))
         self.uow.commit()
+
+    def _notify_if_mine(
+        self, item: ActionItem, meeting_title: str, *, previous_assignee: int | None
+    ) -> None:
+        """After commit: the bell rings only when an item newly lands on someone."""
+        assignee = item.assignee_participant_id
+        if self.notifications is None or assignee is None or assignee == previous_assignee:
+            return
+        self.notifications.notify_action_item_assigned(
+            item.meeting_id, meeting_title, item.text, assignee
+        )
 
     def _get_writable(self, item_id: int) -> ActionItem:
         item = self.uow.action_items.get(item_id)

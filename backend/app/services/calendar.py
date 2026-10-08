@@ -2,7 +2,7 @@
 
 No real OAuth: connecting records the connection and imports three labelled sample
 meetings so the Upcoming tab has something to show. Disconnecting removes only the
-meetings that provider imported.
+meetings that provider imported and the user has not edited since.
 """
 
 from dataclasses import dataclass
@@ -18,7 +18,6 @@ from app.models.enums import (
     MediaType,
     MeetingSource,
     MeetingStatus,
-    NotificationKind,
     ParticipantRole,
 )
 from app.schemas.common import Page, PageParams
@@ -103,13 +102,7 @@ class CalendarService:
                 raise
             return ConnectResult(CalendarConnectionRead.model_validate(winner), created=False)
         read = CalendarConnectionRead.model_validate(connection)
-        name = PROVIDER_NAMES[data.provider]
-        self.notifications.record(
-            NotificationKind.CALENDAR_CONNECTED,
-            f"{name} connected",
-            f"Demo connection: {SAMPLE_COUNT} sample meetings imported.",
-            "/home?tab=upcoming",
-        )
+        self.notifications.notify_calendar_connected(PROVIDER_NAMES[data.provider], SAMPLE_COUNT)
         return ConnectResult(read, created=True)
 
     def disconnect(self, provider: CalendarProvider) -> None:
@@ -126,6 +119,8 @@ class CalendarService:
         self, host_id: int, host_name: str, provider: CalendarProvider, now: datetime
     ) -> None:
         today = now.astimezone(UTC).date()
+        # Equal stamps mark a row as untouched; disconnect removes only those.
+        stamp = datetime.now(UTC)
         for sample in _SAMPLES[provider]:
             day = today + timedelta(days=sample.days_ahead)
             meeting = self.uow.meetings.add(
@@ -141,6 +136,8 @@ class CalendarService:
                     platform=detect_platform(sample.url),
                     auto_join=True,
                     calendar_provider=provider,
+                    created_at=stamp,
+                    updated_at=stamp,
                 )
             )
             self.uow.participants.add(

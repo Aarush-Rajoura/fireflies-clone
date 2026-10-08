@@ -85,6 +85,7 @@ def build_conditions(
     if filters.status == "upcoming":
         conds.append(and_(Meeting.status == MeetingStatus.SCHEDULED, Meeting.started_at > now))
     else:
-        # Only finished meetings: a scheduled meeting whose time passed is not "completed".
-        conds.append(Meeting.status == MeetingStatus.COMPLETED)
+        # The library: finished meetings plus live captures, so a capture can be reopened.
+        # A scheduled meeting whose time passed is in neither list.
+        conds.append(Meeting.status.in_([MeetingStatus.COMPLETED, MeetingStatus.LIVE]))
     return conds

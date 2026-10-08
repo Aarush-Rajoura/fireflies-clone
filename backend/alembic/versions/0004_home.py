@@ -1,7 +1,7 @@
 """home dashboard: calendar connections, notifications, imported-meeting marker
 
 Revision ID: 0004_home
-Revises: 0002
+Revises: 0003_onboarding (linear history: no merge revision)
 
 meetings.calendar_provider is added with plain ALTER TABLE (no table rebuild) and has
 no CHECK constraint, so the downgrade can drop it in place too; rebuilding `meetings`
@@ -15,7 +15,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision: str = "0004_home"
-down_revision: str | Sequence[str] | None = "0002"
+down_revision: str | Sequence[str] | None = "0003_onboarding"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -52,8 +52,11 @@ def upgrade() -> None:
             "kind",
             sa.Enum(
                 "meeting_created",
+                "meeting_captured",
                 "calendar_connected",
                 "summary_regenerated",
+                "action_item_assigned",
+                "invite_accepted",
                 name="notificationkind",
                 native_enum=False,
             ),
@@ -65,7 +68,8 @@ def upgrade() -> None:
         sa.Column("read_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.CheckConstraint(
-            "kind IN ('meeting_created', 'calendar_connected', 'summary_regenerated')",
+            "kind IN ('meeting_created', 'meeting_captured', 'calendar_connected',"
+            " 'summary_regenerated', 'action_item_assigned', 'invite_accepted')",
             name=op.f("ck_notifications_kind_valid"),
         ),
         sa.ForeignKeyConstraint(

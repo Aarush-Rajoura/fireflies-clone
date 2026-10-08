@@ -34,13 +34,18 @@ class CalendarConnectionRepository(Repository[CalendarConnection]):
     def soft_delete_imported(
         self, host_id: int, provider: CalendarProvider, deleted_at: datetime
     ) -> int:
-        """Soft-delete the live meetings one provider imported for one host; returns the count."""
+        """Soft-delete one provider's untouched imports for one host; returns the count.
+
+        Imports are written with updated_at == created_at, so a later edit (which bumps
+        updated_at) marks the row as the user's own and it survives the disconnect.
+        """
         result = self.session.execute(
             update(Meeting)
             .where(
                 Meeting.host_id == host_id,
                 Meeting.calendar_provider == provider,
                 Meeting.not_deleted(),
+                Meeting.updated_at <= Meeting.created_at,
             )
             .values(deleted_at=deleted_at)
             .execution_options(synchronize_session="fetch")

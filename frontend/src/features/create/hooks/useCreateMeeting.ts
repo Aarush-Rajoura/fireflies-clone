@@ -25,6 +25,8 @@ export function useCreateMeeting() {
       client.setQueryData(qk.meetings.detail(meeting.id), meeting);
       // Not awaited: the lists refresh in the background while we navigate.
       void client.invalidateQueries({ queryKey: qk.meetings.lists() });
+      // Creating a meeting writes a notification for the bell.
+      void client.invalidateQueries({ queryKey: qk.notifications() });
       toast.success("Meeting created");
       closeCreateMeeting();
       router.push(`/meetings/${meeting.id}`);

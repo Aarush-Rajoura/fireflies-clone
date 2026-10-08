@@ -1,7 +1,8 @@
 # Database schema
 
 SQLite, created only by Alembic migrations (`backend/alembic/versions`). Models live in
-`backend/app/models`, one module per aggregate.
+`backend/app/models`, one module per aggregate. The history is linear, one head:
+`0001` → `0002` → `0003_onboarding` → `0004_home`.
 
 ```mermaid
 erDiagram
@@ -190,7 +191,9 @@ segment id), so it is not drawn as an ordinary table.
 
 - **Simulated calendar imports.** `calendar_connections` is unique per `(user_id, provider)`.
   Meetings a connection imports carry `meetings.calendar_provider`, so disconnecting
-  soft-deletes exactly those. That column has no CHECK constraint (the ORM validates it):
+  soft-deletes exactly those, except imports the user has edited (imports are written with
+  `updated_at == created_at`; an edit moves `updated_at` on). That column has no CHECK
+  constraint (the ORM validates it):
   SQLite cannot drop a column named in one, and rebuilding `meetings` would lose its other
   CHECKs, so the migration adds and drops it in place.
 - **Notifications.** `(user_id, read_at)` is indexed for the unread-first list and the bell's

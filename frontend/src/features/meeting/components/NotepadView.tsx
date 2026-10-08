@@ -126,53 +126,59 @@ function LoadedNotepad({
         onMove={() => setEditMode("move")}
         onDelete={() => setDeleteOpen(true)}
       />
-      {meeting.status === "live" && <LiveDemoNotice startedAt={meeting.started_at} />}
-      <div className="min-h-0 flex-1">
-        <ResizablePanels
-          defaultSize={55}
-          minSize={35}
-          maxSize={65}
-          storageKey="notepad.split"
-          label="Resize summary and transcript"
-          start={
-            <NotepadSummarySide
-              meetingId={meeting.id}
-              meetingTitle={meeting.title}
-              segments={segments}
-              flyouts={flyouts}
-              onSearch={() => transcript.current?.focusFind()}
-            >
-              <div className="px-8 pb-10 pt-5">
-                <SummaryPanel
-                  meetingId={meeting.id}
-                  durationMs={meeting.duration_ms}
-                  meetingTitle={meeting.title}
-                  actionItemsSlot={
-                    <ActionItemList meetingId={meeting.id} participants={participants} />
-                  }
-                />
+      {meeting.status === "live" ? (
+        // Nothing to summarise or play yet: the demo explains the capture instead.
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-10">
+          <LiveDemoNotice startedAt={meeting.started_at} />
+        </div>
+      ) : (
+        <div className="min-h-0 flex-1">
+          <ResizablePanels
+            defaultSize={55}
+            minSize={35}
+            maxSize={65}
+            storageKey="notepad.split"
+            label="Resize summary and transcript"
+            start={
+              <NotepadSummarySide
+                meetingId={meeting.id}
+                meetingTitle={meeting.title}
+                segments={segments}
+                flyouts={flyouts}
+                onSearch={() => transcript.current?.focusFind()}
+              >
+                <div className="px-8 pb-10 pt-5">
+                  <SummaryPanel
+                    meetingId={meeting.id}
+                    durationMs={meeting.duration_ms}
+                    meetingTitle={meeting.title}
+                    actionItemsSlot={
+                      <ActionItemList meetingId={meeting.id} participants={participants} />
+                    }
+                  />
+                </div>
+              </NotepadSummarySide>
+            }
+            end={
+              <div className="flex h-full min-h-0 flex-col">
+                {/* Hidden, not unmounted: playback and keyboard shortcuts carry on. */}
+                <div className={cn("shrink-0 px-4 pt-4", !playerVisible && "hidden")}>
+                  <PlayerCard />
+                </div>
+                <div className="min-h-0 flex-1">
+                  <AnnotatedTranscript
+                    meeting={meeting}
+                    segments={segments}
+                    handleRef={transcript}
+                    onCommentLine={flyouts.focusComments}
+                    onSoundbiteCreated={() => flyouts.show("soundbites")}
+                  />
+                </div>
               </div>
-            </NotepadSummarySide>
-          }
-          end={
-            <div className="flex h-full min-h-0 flex-col">
-              {/* Hidden, not unmounted: playback and keyboard shortcuts carry on. */}
-              <div className={cn("shrink-0 px-4 pt-4", !playerVisible && "hidden")}>
-                <PlayerCard />
-              </div>
-              <div className="min-h-0 flex-1">
-                <AnnotatedTranscript
-                  meeting={meeting}
-                  segments={segments}
-                  handleRef={transcript}
-                  onCommentLine={flyouts.focusComments}
-                  onSoundbiteCreated={() => flyouts.show("soundbites")}
-                />
-              </div>
-            </div>
-          }
-        />
-      </div>
+            }
+          />
+        </div>
+      )}
       <EditMeetingModal meeting={meeting} mode={editMode} onClose={closeEdit} />
       <DeleteMeetingDialog
         meetingId={meeting.id}

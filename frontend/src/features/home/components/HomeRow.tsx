@@ -45,11 +45,11 @@ export function HomeRow({ href, title, meta, tileFrom, icon, trailing }: HomeRow
         {/* The stretched link makes the whole row clickable while trailing controls stay usable. */}
         <Link
           href={href}
-          className="truncate text-[16px] font-medium leading-6 text-primary after:absolute after:inset-0 after:rounded-panel"
+          className="truncate text-lead-strong text-primary after:absolute after:inset-0 after:rounded-panel"
         >
           {title}
         </Link>
-        <div className="truncate text-[15px] leading-6 text-muted">{meta}</div>
+        <div className="truncate text-meta-lg text-muted">{meta}</div>
       </div>
       {trailing && <div className="relative flex shrink-0 items-center gap-2">{trailing}</div>}
     </li>

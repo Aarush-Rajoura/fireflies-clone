@@ -5,6 +5,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppProviders } from "@/components/ui";
 import type { MeetingListParams } from "@/lib/api";
 
+import { openCreateMeeting } from "@/features/create";
+
 import { fetchCalendarConnections, fetchFeed, fetchMeetingList } from "../api";
 import { listItem, page, stubResizeObserver } from "../testing/fixtures";
 
@@ -22,6 +24,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/features/user", () => ({
   useMe: () => ({ data: { id: 1, name: "Ada Lovelace", email: "a@x.io" }, isLoading: false }),
 }));
+vi.mock("@/features/create", () => ({ openCreateMeeting: vi.fn() }));
 vi.mock("../api", () => ({
   fetchMeetingList: vi.fn(),
   fetchFeed: vi.fn(),
@@ -128,7 +131,7 @@ describe("HomeView", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
 
     fireEvent.click(screen.getByRole("button", { name: "Upload File" }));
-    expect(await screen.findByRole("dialog", { name: "Upload a recording" })).toBeTruthy();
+    expect(openCreateMeeting).toHaveBeenCalledWith("upload");
   });
 
   it("opens the looping demo preview from the banner thumbnail", async () => {

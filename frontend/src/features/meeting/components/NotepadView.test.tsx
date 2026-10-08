@@ -273,4 +273,15 @@ describe("NotepadView", () => {
       ),
     );
   });
+  it("shows only the demo notice for a live capture: no summary, transcript or player", async () => {
+    renderView(
+      meetingRoutes(() =>
+        json({ ...meeting, status: "live", started_at: new Date().toISOString() }),
+      ),
+    );
+    expect(await screen.findByText("Fred is joining… (demo)")).toBeTruthy();
+    expect(screen.getByText("Live (demo)")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /generate summary/i })).toBeNull();
+    expect(screen.queryByText("Line 1 about the launch.")).toBeNull();
+  });
 });

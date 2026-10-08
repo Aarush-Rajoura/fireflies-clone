@@ -149,9 +149,10 @@ def test_upcoming_vs_completed(db_session: Session, repo: MeetingRepository):
     f.make_meeting(db_session, host=host, title="live", status=MeetingStatus.LIVE)
     f.make_meeting(db_session, host=host, title="proc", status=MeetingStatus.PROCESSING)
     assert titles(run(repo, status="upcoming", now=now)[0]) == ["future"]
-    # A scheduled meeting whose time passed is neither upcoming nor completed.
-    assert titles(run(repo, status="completed", now=now)[0]) == ["done"]
-    assert titles(run(repo, now=now)[0]) == ["done"]
+    # The library holds finished meetings and live captures; a scheduled meeting whose
+    # time passed is in neither list, and neither is one still processing.
+    assert sorted(titles(run(repo, status="completed", now=now)[0])) == ["done", "live"]
+    assert sorted(titles(run(repo, now=now)[0])) == ["done", "live"]
 
 
 def test_q_matches_summary_overview(db_session: Session, repo: MeetingRepository):
