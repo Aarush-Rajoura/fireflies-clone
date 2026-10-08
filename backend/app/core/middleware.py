@@ -29,8 +29,8 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
         except Exception:
-            # Handled here, not by Starlette's outer error layer, so the 500 still
-            # passes through this middleware and carries the request id header.
+            # 500s are built here, not by Starlette's ServerErrorMiddleware (which sits
+            # outside this one), so they still carry X-Request-ID for log correlation.
             logger.exception("unhandled error request_id=%s", request_id)
             response = internal_error_response(request_id)
         response.headers[HEADER] = request_id

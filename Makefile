@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev-backend dev-frontend migrate seed seed-reset test lint types
+.PHONY: help install dev-backend dev-frontend migrate seed seed-reset seed-refresh test lint types requirements
 
 help: ## Show available targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
@@ -24,12 +24,19 @@ seed: ## Populate demo data
 seed-reset: ## Wipe and re-seed demo data
 	cd backend && uv run python -m app.seed.seed --reset --yes
 
+seed-refresh: ## Move past seeded upcoming meetings back into the future
+	cd backend && uv run python -m app.seed.seed --refresh-upcoming
+
+requirements: ## Regenerate backend/requirements.txt (PythonAnywhere) from uv.lock
+	cd backend && uv export --no-dev --no-hashes --no-emit-project --format requirements-txt -q > requirements.txt
+
 test: ## Run backend and frontend tests
 	cd backend && uv run pytest -q
 	cd frontend && npm test
 
 lint: ## Lint backend and frontend
-	cd backend && uv run ruff check && uv run python ../scripts/check_layering.py
+	cd backend && uv run ruff check && uv run ruff format --check && uv run mypy app \
+		&& uv run python ../scripts/check_layering.py
 	cd frontend && npm run lint && npm run typecheck
 
 types: ## Export docs/openapi.json (client type generation follows)

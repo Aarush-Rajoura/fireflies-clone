@@ -16,7 +16,11 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync
       - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run mypy app
       - run: uv run python ../scripts/check_layering.py
+      - name: requirements.txt matches uv.lock
+        run: uv export --no-dev --no-hashes --no-emit-project --format requirements-txt -q | diff - requirements.txt
       - run: uv run pytest
 
   frontend:

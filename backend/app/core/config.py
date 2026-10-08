@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     max_upload_mb: int = 10
     seed_anchor_date: datetime | None = None
     app_version: str = "0.1.0"
+    log_level: str = "INFO"
 
     @field_validator("cors_origins", mode="before")
     @classmethod

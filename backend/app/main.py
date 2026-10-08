@@ -1,5 +1,7 @@
 """Application factory: wires settings, database, middleware, handlers and routers."""
 
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,9 +13,20 @@ from app.core.rate_limit import build_limiter
 from app.db.session import make_engine, make_session_factory
 
 
+def configure_logging(level: str) -> None:
+    """Root handler for the app's loggers (access log, errors, AI fallbacks).
+
+    basicConfig is a no-op when a handler already exists (pytest, a host's own
+    config), so this never duplicates output; the level is applied regardless.
+    """
+    logging.basicConfig(format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    logging.getLogger("app").setLevel(level.upper())
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     # Settings are injectable so tests build an app against their own database.
     settings = settings or get_settings()
+    configure_logging(settings.log_level)
     app = FastAPI(
         title="Fireflies Clone API",
         version=settings.app_version,

@@ -1,3 +1,6 @@
+import logging
+from pathlib import Path
+
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -11,6 +14,7 @@ from app.core.exceptions import (
     ServiceUnavailableError,
     ValidationFailedError,
 )
+from app.main import create_app
 from app.schemas.common import Page, PageParams
 
 
@@ -104,3 +108,16 @@ def test_invalid_inbound_request_id_is_replaced(client: TestClient, bad: str) ->
 def test_valid_inbound_request_id_is_kept(client: TestClient) -> None:
     r = client.get("/api/health", headers={"X-Request-ID": "abc-1.2_X" + "y" * 119})
     assert r.headers["X-Request-ID"] == "abc-1.2_X" + "y" * 119
+
+
+def test_access_log_line_is_emitted_at_configured_level(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    app = create_app(Settings(database_url=f"sqlite:///{tmp_path / 'l.db'}", log_level="info"))
+    assert logging.getLogger("app").level == logging.INFO
+    with caplog.at_level(logging.INFO, logger="app.request"), TestClient(app) as c:
+        c.get("/api/health")
+    assert any("GET /api/health ->" in r.getMessage() for r in caplog.records)
+    create_app(Settings(database_url=f"sqlite:///{tmp_path / 'l.db'}", log_level="WARNING"))
+    assert logging.getLogger("app").level == logging.WARNING
+    logging.getLogger("app").setLevel(logging.INFO)

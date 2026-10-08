@@ -5,7 +5,7 @@
 set -euo pipefail
 
 BRANCH="${BRANCH:-build}"
-FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-https://fireflies-clone.vercel.app}"
+FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-https://fireflies-clone-rr8h.vercel.app}"
 USER_NAME="$(whoami)"
 DOMAIN="$(echo "$USER_NAME" | tr '[:upper:]' '[:lower:]').pythonanywhere.com"
 REPO="$HOME/fireflies-clone"
@@ -38,7 +38,11 @@ fi
 
 echo "==> Database"
 (cd "$REPO/backend" && "$VENV/bin/alembic" upgrade head)
-if [ -f "$REPO/backend/app/seed/seed.py" ]; then (cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --if-empty) || true; fi
+# Fails loudly: a broken seed must stop the deploy, not leave an empty demo behind.
+# --if-empty also (re)generates the sample recording in MEDIA_DIR when it is missing.
+(cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --if-empty)
+# Seeded "upcoming" meetings drift into the past; move them back to their future offsets.
+(cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --refresh-upcoming)
 
 echo "==> Website ($DOMAIN)"
 CMD="$VENV/bin/uvicorn --app-dir $REPO/backend --uds \${DOMAIN_SOCKET} app.main:app"
