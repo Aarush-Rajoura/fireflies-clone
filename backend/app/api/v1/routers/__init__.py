@@ -4,6 +4,7 @@ from fastapi import APIRouter, FastAPI
 
 from app.api.v1.routers import (
     action_items,
+    ask,
     channels,
     comments,
     exports,
@@ -27,6 +28,7 @@ ROUTERS = (
     highlights,
     soundbites,
     exports,
+    ask,
     search,
     channels,
     tags,

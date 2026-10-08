@@ -220,6 +220,125 @@
         "title": "ActionItemUpdate",
         "type": "object"
       },
+      "AskCitation": {
+        "properties": {
+          "meeting_id": {
+            "title": "Meeting Id",
+            "type": "integer"
+          },
+          "meeting_title": {
+            "title": "Meeting Title",
+            "type": "string"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          },
+          "segment_id": {
+            "title": "Segment Id",
+            "type": "integer"
+          },
+          "start_ms": {
+            "title": "Start Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "meeting_id",
+          "meeting_title",
+          "segment_id",
+          "start_ms",
+          "quote"
+        ],
+        "title": "AskCitation",
+        "type": "object"
+      },
+      "AskRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/AskTurn"
+            },
+            "maxItems": 20,
+            "title": "History",
+            "type": "array"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "AskRequest",
+        "type": "object"
+      },
+      "AskResponse": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "citations": {
+            "items": {
+              "$ref": "#/components/schemas/AskCitation"
+            },
+            "title": "Citations",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "citations",
+          "provider",
+          "model"
+        ],
+        "title": "AskResponse",
+        "type": "object"
+      },
+      "AskTurn": {
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "text"
+        ],
+        "title": "AskTurn",
+        "type": "object"
+      },
       "AssigneeRead": {
         "properties": {
           "display_name": {
@@ -440,6 +559,37 @@
           "body"
         ],
         "title": "CommentUpdate",
+        "type": "object"
+      },
+      "CrossMeetingAskRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "meeting_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Ids"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "CrossMeetingAskRequest",
         "type": "object"
       },
       "ErrorDetail": {
@@ -3653,6 +3803,99 @@
         ]
       }
     },
+    "/api/v1/meetings/{meeting_id}/ask": {
+      "post": {
+        "description": "Answers from the meeting's transcript; each citation is one of its lines. A meeting without a transcript is `422 TRANSCRIPT_EMPTY`.",
+        "operationId": "ask_meeting",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "title": "Meeting Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The meeting was soft-deleted; restore it to use it again."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "AI rate limit exceeded; retry later."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The AI provider failed; `code` is AI_UNAVAILABLE."
+          }
+        },
+        "summary": "Ask a question about a meeting",
+        "tags": [
+          "ask"
+        ]
+      }
+    },
     "/api/v1/meetings/{meeting_id}/comments": {
       "get": {
         "operationId": "list_comments",
@@ -4728,6 +4971,68 @@
         "summary": "Search transcripts",
         "tags": [
           "search"
+        ]
+      }
+    },
+    "/api/v1/search/ask": {
+      "post": {
+        "description": "Answers from the best transcript matches (and those meetings' summaries) across all live meetings, or only `meeting_ids` when given.",
+        "operationId": "ask_across_meetings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrossMeetingAskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "AI rate limit exceeded; retry later."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The AI provider failed; `code` is AI_UNAVAILABLE."
+          }
+        },
+        "summary": "Ask a question across meetings",
+        "tags": [
+          "ask"
         ]
       }
     },

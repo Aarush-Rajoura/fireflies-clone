@@ -44,6 +44,10 @@ def test_every_list_route_returns_the_page_envelope(api: TestClient) -> None:
         "/api/v1/search?q=hello",
         "/api/v1/channels",
         "/api/v1/users",
+        "/api/v1/tags",
+        f"/api/v1/meetings/{mid}/comments",
+        f"/api/v1/meetings/{mid}/highlights",
+        f"/api/v1/meetings/{mid}/soundbites",
     ):
         r = api.get(path)
         assert r.status_code == 200, path
@@ -58,9 +62,19 @@ def test_every_delete_is_204_with_empty_body(api: TestClient) -> None:
     mid = _meeting_id(api)
     item = api.post(f"/api/v1/meetings/{mid}/action-items", json={"text": "Do it"}).json()
     channel = api.post("/api/v1/channels", json={"name": "Sales"}).json()
+    tag = api.post("/api/v1/tags", json={"name": "Sales"}).json()
+    segment = api.get(f"/api/v1/meetings/{mid}/transcript").json()["segments"][0]
+    comment = api.post(f"/api/v1/meetings/{mid}/comments", json={"body": "Hi"}).json()
+    highlight = api.post(
+        f"/api/v1/meetings/{mid}/highlights",
+        json={"segment_id": segment["id"], "start_offset": 0, "end_offset": 1},
+    ).json()
     for path in (
         f"/api/v1/action-items/{item['id']}",
         f"/api/v1/channels/{channel['id']}",
+        f"/api/v1/tags/{tag['id']}",
+        f"/api/v1/comments/{comment['id']}",
+        f"/api/v1/highlights/{highlight['id']}",
         f"/api/v1/meetings/{mid}",
     ):
         r = api.delete(path)

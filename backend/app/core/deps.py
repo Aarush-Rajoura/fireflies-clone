@@ -6,12 +6,13 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.ai.factory import get_action_item_extractor, get_summarizer
-from app.ai.interfaces import ActionItemExtractor, Summarizer
+from app.ai.factory import get_action_item_extractor, get_question_answerer, get_summarizer
+from app.ai.interfaces import ActionItemExtractor, QuestionAnswerer, Summarizer
 from app.core.config import Settings
 from app.db.unit_of_work import UnitOfWork
 from app.parsers import default_registry
 from app.services.action_items import ActionItemService
+from app.services.ask import AskService
 from app.services.channels import ChannelService
 from app.services.comments import CommentService
 from app.services.export import ExportService, default_exporters
@@ -111,6 +112,12 @@ def get_soundbite_service(uow: Uow) -> SoundbiteService:
 
 def get_export_service(uow: Uow) -> ExportService:
     return ExportService(uow, default_exporters())
+
+
+def get_ask_service(
+    uow: Uow, answerer: Annotated[QuestionAnswerer, Depends(get_question_answerer)]
+) -> AskService:
+    return AskService(uow, answerer)
 
 
 def get_health_service(uow: Uow) -> HealthService:

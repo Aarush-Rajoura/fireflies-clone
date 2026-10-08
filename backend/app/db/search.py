@@ -6,9 +6,19 @@ deleted_at; that join lives only here.
 """
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 
-from sqlalchemy import ColumnElement, column, exists, literal_column, select, table, text
+from sqlalchemy import (
+    ColumnElement,
+    bindparam,
+    column,
+    exists,
+    literal_column,
+    select,
+    table,
+    text,
+)
 from sqlalchemy.orm import InstrumentedAttribute, Session
 
 # FTS5 syntax characters (quotes, *, -, :, parentheses) are user text, not operators.
@@ -90,6 +100,57 @@ def transcript_matches(
         .where(_SEGMENTS.c.meeting_id == meeting_id)
         .where(literal_column("transcript_fts").op("MATCH")(match))
     )
+
+
+# Question glue that would match nearly every line if OR-ed in.
+_QUESTION_WORDS = frozenset(
+    """a an and any are as at be by can did do does for from had has have how i in is it its
+    me my of on or our so that the their them there these they this to us was we were what
+    when where which who whom why will with would you your about tell said say""".split()
+)
+
+_ANY_SELECT = """
+    SELECT s.id AS segment_id, s.meeting_id AS meeting_id, m.title AS meeting_title,
+           COALESCE(p.display_name, sp.label) AS speaker_label,
+           s.start_ms AS start_ms, s.text AS text, bm25(transcript_fts) AS rank,
+           s.text AS marked
+    FROM transcript_fts
+    JOIN transcript_segments AS s ON s.id = transcript_fts.rowid
+    JOIN meetings AS m ON m.id = s.meeting_id
+    JOIN speakers AS sp ON sp.id = s.speaker_id
+    LEFT JOIN participants AS p ON p.id = sp.participant_id
+    WHERE transcript_fts MATCH :q AND m.deleted_at IS NULL
+"""
+_ANY_ORDER = " ORDER BY rank, s.id LIMIT :limit"
+_ANY_ROWS = text(_ANY_SELECT + _ANY_ORDER)
+_ANY_ROWS_IN = text(_ANY_SELECT + " AND s.meeting_id IN :ids" + _ANY_ORDER).bindparams(
+    bindparam("ids", expanding=True)
+)
+
+
+def to_any_query(raw: str) -> str:
+    """Natural-language question -> OR of its content words (each quoted, so still safe)."""
+    words = dict.fromkeys(t.lower() for t in query_tokens(raw))
+    content = [w for w in words if w not in _QUESTION_WORDS and len(w) > 1]
+    return " OR ".join(f'"{w}"' for w in content)
+
+
+def search_any_words(
+    session: Session, question: str, *, meeting_ids: Sequence[int] | None = None, limit: int = 40
+) -> list[SegmentHit]:
+    """Best-ranked segments sharing any content word with `question`, across live meetings.
+
+    `marked` is the plain text here: callers of this retrieval need passages, not snippets.
+    """
+    match = to_any_query(question)
+    if not match or (meeting_ids is not None and not meeting_ids):
+        return []
+    params: dict[str, object] = {"q": match, "limit": limit}
+    if meeting_ids is None:
+        rows = session.execute(_ANY_ROWS, params)
+    else:
+        rows = session.execute(_ANY_ROWS_IN, {**params, "ids": list(meeting_ids)})
+    return [SegmentHit(**row) for row in rows.mappings()]
 
 
 def search_segments(

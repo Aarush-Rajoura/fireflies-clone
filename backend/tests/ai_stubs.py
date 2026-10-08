@@ -5,9 +5,12 @@ from collections.abc import Callable
 from app.ai.interfaces import ProviderError
 from app.ai.types import (
     ActionItemDraft,
+    Answer,
+    Citation,
     KeywordResult,
     NoteGroup,
     OutlineEntry,
+    Passage,
     SummaryResult,
     TranscriptForAI,
 )
@@ -64,3 +67,28 @@ class StubExtractor:
         if self.on_call is not None:
             self.on_call(t)
         return self.drafts
+
+
+class StubAnswerer:
+    """Cites the given segment ids (real or invented) and records what it was asked."""
+
+    def __init__(
+        self,
+        cite: list[int] | None = None,
+        *,
+        fail: bool = False,
+        on_call: Callable[[list[Passage]], None] | None = None,
+    ) -> None:
+        self.cite = cite or []
+        self.fail = fail
+        self.on_call = on_call
+        self.calls: list[tuple[str, list[Passage]]] = []
+
+    def answer(self, question: str, passages: list[Passage]) -> Answer:
+        self.calls.append((question, passages))
+        if self.on_call is not None:
+            self.on_call(passages)
+        if self.fail:
+            raise ProviderError("provider down")
+        citations = [Citation(segment_id=s, start_ms=-1, quote="") for s in self.cite]
+        return Answer("stub answer", citations, provider="stub", model="stub-1")
