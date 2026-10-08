@@ -10,6 +10,7 @@ from app.repositories.channels import ChannelRepository
 from app.repositories.comments import CommentRepository
 from app.repositories.feed import FeedRepository
 from app.repositories.highlights import HighlightRepository
+from app.repositories.integrations import IntegrationConnectionRepository
 from app.repositories.meetings import MeetingRepository
 from app.repositories.notifications import NotificationRepository
 from app.repositories.participants import ParticipantRepository
@@ -37,6 +38,7 @@ class UnitOfWork:
         self.calendar_connections = CalendarConnectionRepository(session)
         self.notifications = NotificationRepository(session)
         self.feed = FeedRepository(session)
+        self.integration_connections = IntegrationConnectionRepository(session)
 
     def __enter__(self) -> "UnitOfWork":
         return self

@@ -24,6 +24,7 @@ def test_upgrade_creates_all_domain_tables(migrated_engine: Engine) -> None:
         "summary_sections", "keywords", "action_items", "tags", "meeting_tags", "comments",
         "highlights", "soundbites", "channels", "transcript_fts", "user_tools",
         "calendar_connections", "notifications",
+        "integration_connections",
     }  # fmt: skip
     assert expected <= _tables(migrated_engine)
 

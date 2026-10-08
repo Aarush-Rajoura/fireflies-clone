@@ -11,6 +11,7 @@ from app.api.v1.routers import (
     health,
     highlights,
     home,
+    integrations,
     meetings,
     search,
     soundbites,
@@ -33,6 +34,7 @@ ROUTERS = (
     search,
     channels,
     tags,
+    integrations,
     users,
     home,
 )

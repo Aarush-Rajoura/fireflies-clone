@@ -20,6 +20,7 @@ from app.services.export import ExportService, default_exporters
 from app.services.feed import FeedService
 from app.services.health import HealthService
 from app.services.highlights import HighlightService
+from app.services.integrations import IntegrationService
 from app.services.media import MediaService
 from app.services.meeting_creation import MeetingCreationService
 from app.services.meetings import MeetingService
@@ -142,3 +143,7 @@ def get_calendar_service(uow: Uow, notifications: Notifier) -> CalendarService:
 
 def get_feed_service(uow: Uow) -> FeedService:
     return FeedService(uow)
+
+
+def get_integration_service(uow: Uow) -> IntegrationService:
+    return IntegrationService(uow)
