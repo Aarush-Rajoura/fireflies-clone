@@ -12,6 +12,8 @@ export type AskMessage = {
   role: "user" | "assistant";
   text: string;
   citations: AskCitation[];
+  /** Which AI answered (assistant turns only). */
+  provider?: string | null;
 };
 
 export type AskError = AskFailure & { question: string };
@@ -45,7 +47,12 @@ export function useAsk(scope: AskScope) {
       try {
         const answer = await ask(scope, question);
         if (gen !== generation.current) return;
-        append({ role: "assistant", text: answer.answer, citations: answer.citations });
+        append({
+          role: "assistant",
+          text: answer.answer,
+          citations: answer.citations,
+          provider: answer.provider,
+        });
       } catch (cause) {
         if (gen !== generation.current) return;
         setError({ ...describeAskError(cause), question });

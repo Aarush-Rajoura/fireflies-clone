@@ -4,6 +4,7 @@ import { AlertCircle, Sparkles } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 import { Button, Spinner } from "@/components/ui";
+import { aiProviderLabel } from "@/lib/utils/ai-provider";
 
 import type { AskError, AskMessage } from "../hooks/useAsk";
 import { CitationChip, type CitationMode } from "./CitationChip";
@@ -70,6 +71,7 @@ function AssistantMessage({
   message: AskMessage;
   citationMode: CitationMode;
 }) {
+  const answeredBy = aiProviderLabel(message.provider);
   return (
     <div className="flex gap-2.5">
       <Sparkles aria-hidden strokeWidth={1.75} className="mt-1 size-4 shrink-0 text-accent" />
@@ -84,6 +86,7 @@ function AssistantMessage({
             ))}
           </ul>
         )}
+        {answeredBy && <p className="text-meta text-muted">{answeredBy}</p>}
       </div>
     </div>
   );

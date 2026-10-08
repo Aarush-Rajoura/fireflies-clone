@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     ai_api_key: str = ""
     ai_model: str = ""
     ai_rate_limit: str = "10/minute"
+    # Hosts that only reach the internet through a proxy (PythonAnywhere free:
+    # http://proxy.server:3128) need it for the Gemini call; empty = direct.
+    outbound_proxy: str = ""
     media_dir: Path = Path("./media")
     max_upload_mb: int = 10
     seed_anchor_date: datetime | None = None

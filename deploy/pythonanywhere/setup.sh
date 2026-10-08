@@ -30,6 +30,7 @@ if [ ! -f "$ENV_FILE" ]; then
 DATABASE_URL=sqlite:///$DATA/fireflies.db
 CORS_ORIGINS=$FRONTEND_ORIGIN
 SQLITE_JOURNAL_MODE=delete
+OUTBOUND_PROXY=http://proxy.server:3128
 AI_PROVIDER=mock
 AI_API_KEY=
 MEDIA_DIR=$REPO/backend/media
@@ -38,6 +39,8 @@ ENVEOF
 fi
 # Consoles and the web app run on different machines here, so WAL would lose writes.
 grep -q '^SQLITE_JOURNAL_MODE=' "$ENV_FILE" || echo "SQLITE_JOURNAL_MODE=delete" >> "$ENV_FILE"
+# Free accounts reach the internet (Gemini) only through PythonAnywhere's proxy.
+grep -q '^OUTBOUND_PROXY=' "$ENV_FILE" || echo "OUTBOUND_PROXY=http://proxy.server:3128" >> "$ENV_FILE"
 
 echo "==> Website ($DOMAIN)"
 CMD="$VENV/bin/uvicorn --app-dir $REPO/backend --uds \${DOMAIN_SOCKET} app.main:app"

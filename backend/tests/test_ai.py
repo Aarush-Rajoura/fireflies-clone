@@ -424,6 +424,13 @@ def test_factory_builds_cached_fallback_pipeline_for_gemini() -> None:
     assert provider.name == "gemini" and provider.model == "m"
 
 
+def test_factory_routes_gemini_through_the_outbound_proxy() -> None:
+    settings = Settings(ai_provider="gemini", ai_api_key="k", outbound_proxy="http://proxy:3128")
+    provider = build_ai_provider(settings)
+    client = provider._inner._primary._transport._client  # type: ignore[attr-defined]
+    assert client._mounts, "proxy mounts are registered"
+
+
 _FILLER = {"please", "okay", "yeah", "gonna", "thing", "stuff", "really", "actually", "just"}
 
 

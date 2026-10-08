@@ -13,6 +13,8 @@ typed as only the capability the caller needs.
 
 from functools import cache
 
+import httpx
+
 from app.ai.cache import CachingProvider
 from app.ai.fallback import FallbackProvider
 from app.ai.interfaces import ActionItemExtractor, AIProvider, QuestionAnswerer, Summarizer
@@ -23,7 +25,11 @@ from app.core.config import Settings, get_settings
 
 def build_ai_provider(settings: Settings) -> AIProvider:
     if settings.ai_provider == "gemini" and settings.ai_api_key:
-        gemini = GeminiProvider(settings.ai_api_key, settings.ai_model or DEFAULT_GEMINI_MODEL)
+        gemini = GeminiProvider(
+            settings.ai_api_key,
+            settings.ai_model or DEFAULT_GEMINI_MODEL,
+            client=httpx.Client(proxy=settings.outbound_proxy or None),
+        )
         return CachingProvider(FallbackProvider(gemini, MockProvider()))
     return MockProvider()
 
