@@ -18,5 +18,7 @@ export const qk = {
   actionItems: (id: number) => ["meetings", id, "action-items"] as const,
   channels: () => ["channels"] as const,
   users: () => ["users"] as const,
+  // Not under ['meetings'], so meeting edits do not invalidate it yet; the search
+  // feature owns refreshing its results when meetings change.
   search: (q: string) => ["search", q] as const,
 };

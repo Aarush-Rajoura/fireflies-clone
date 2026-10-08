@@ -7,9 +7,7 @@ import type { ReactNode } from "react";
 import { Badge, Button, toast, useTheme } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
-// Plan and storage are fixed until billing exists; the shape mirrors the product.
-const FREE_MEETINGS = { left: 3, total: 3 };
-const STORAGE = { used: 0, total: 400 };
+import { FREE_MEETINGS, STORAGE_MINUTES as STORAGE } from "../plan";
 
 const soon = (what: string) => () => toast.info(`${what} is coming soon.`);
 
@@ -94,7 +92,12 @@ export function AccountPanel({
           Platform Rules
         </button>
         {/* Switching is wired with the light theme; until then the row reports the current theme. */}
-        <button type="button" className={rowClass} onClick={soon("Light theme")}>
+        <button
+          type="button"
+          aria-label={`Theme: ${theme} (Light theme coming soon)`}
+          className={rowClass}
+          onClick={soon("Light theme")}
+        >
           <span>Theme</span>
           <Badge tone="accent">Beta</Badge>
           <span className="ml-auto capitalize text-muted">{theme}</span>

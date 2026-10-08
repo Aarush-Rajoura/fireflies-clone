@@ -26,7 +26,8 @@ describe("IconRail", () => {
   it("gives every icon an accessible name (also its tooltip text)", () => {
     renderInApp(<IconRail expanded={false} onToggle={() => undefined} />);
     for (const item of [...NAV_GROUPS.flat(), ...NAV_FOOTER]) {
-      expect(screen.getByLabelText(item.label)).toBeTruthy();
+      const name = item.href ? item.label : `${item.label} (Coming soon)`;
+      expect(screen.getByLabelText(name)).toBeTruthy();
     }
     // Collapsed: no visible text labels, names come from aria-label.
     expect(screen.queryByText("Meetings")).toBeNull();

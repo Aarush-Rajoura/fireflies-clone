@@ -63,7 +63,8 @@ export async function unwrap<T>(request: Promise<FetchResult<T>>): Promise<T> {
     result = await request;
   } catch (cause) {
     // Aborts are TanStack Query cancelling a stale request; let them through untouched.
-    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+    // Checked by name: DOMException is not always the class thrown (undici, polyfills).
+    if ((cause as { name?: unknown } | null)?.name === "AbortError") throw cause;
     throw new ApiError(
       NETWORK_ERROR,
       0,

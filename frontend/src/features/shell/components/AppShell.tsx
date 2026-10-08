@@ -10,7 +10,7 @@ import { Topbar } from "./Topbar";
 
 /** Rail on the left, top bar over a scrolling content area. Wraps every signed-in page. */
 export function AppShell({ children }: { children: ReactNode }) {
-  const [expanded, setExpanded] = useRailExpanded();
+  const { expanded, setExpanded, animate } = useRailExpanded();
   return (
     <div className="flex h-screen overflow-hidden">
       <a
@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <IconRail expanded={expanded} onToggle={() => setExpanded(!expanded)} />
+      <IconRail expanded={expanded} animate={animate} onToggle={() => setExpanded(!expanded)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar />
         <main id="main" className="min-h-0 flex-1 overflow-y-auto">

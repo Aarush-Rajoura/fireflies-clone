@@ -7,9 +7,13 @@ import { cn } from "@/lib/utils/cn";
 
 import { usePortalContainer } from "./theme-root";
 
-/** Shared surface for every floating panel so menus, popovers and selects match. */
+/**
+ * Shared surface for every floating panel so menus, popovers and selects match.
+ * Radix focuses the panel itself on open; that focus is never a keyboard target
+ * the user chose, so the panel shows no ring (items carry their own highlight).
+ */
 export const floatingSurface =
-  "z-popover rounded-panel border border-control bg-surface-1 shadow-overlay data-[state=open]:animate-fade-in";
+  "z-popover rounded-panel border border-control bg-surface-1 shadow-overlay outline-none focus-visible:shadow-overlay data-[state=open]:animate-fade-in";
 
 export type MenuItem =
   | {

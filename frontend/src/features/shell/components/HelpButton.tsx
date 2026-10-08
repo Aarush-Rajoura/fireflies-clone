@@ -20,7 +20,7 @@ export function HelpButton() {
         <button
           type="button"
           aria-label="Help and shortcuts"
-          className="fixed bottom-6 right-6 z-topbar flex size-12 items-center justify-center rounded-full border-2 border-accent-border bg-surface-3 text-primary shadow-popover transition-colors duration-fast hover:bg-surface-hover"
+          className="fixed bottom-6 right-6 z-topbar flex size-12 items-center justify-center rounded-full border-2 border-fab-border bg-fab text-fab-text shadow-popover transition-transform duration-fast hover:scale-105"
         >
           <CircleHelp className="size-6" strokeWidth={1.75} />
         </button>

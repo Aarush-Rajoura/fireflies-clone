@@ -20,8 +20,10 @@ export function ProfileMenu({ expanded = false }: { expanded?: boolean }) {
     <Popover
       open={open}
       onOpenChange={setOpen}
-      side={expanded ? "bottom" : "right"}
+      // Below the 56px header row (trigger is 40px, centred), like the product: never over the top bar.
+      side="bottom"
       align="start"
+      sideOffset={12}
       label="Account menu"
       className="flex w-auto items-start gap-2 p-2"
       trigger={

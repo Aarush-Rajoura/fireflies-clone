@@ -179,6 +179,10 @@
   --ff-upgrade: var(--ff-green-900);
   --ff-upgrade-hover: var(--ff-green-875);
   --ff-upgrade-text: var(--ff-green-600);
+  /* Floating help button: a light disc that stands off the dark canvas. [S] */
+  --ff-fab: var(--ff-violet-100);
+  --ff-fab-text: var(--ff-ink-950);
+  --ff-fab-border: var(--ff-violet-200);
   --ff-count: var(--ff-green-700);
 
   --ff-warning: var(--ff-amber-500);
@@ -263,6 +267,9 @@
   --ff-upgrade: var(--ff-green-50);
   --ff-upgrade-hover: var(--ff-paper-100);
   --ff-upgrade-text: var(--ff-green-800);
+  --ff-fab: var(--ff-violet-100);
+  --ff-fab-text: var(--ff-slate-900);
+  --ff-fab-border: var(--ff-violet-200);
   --ff-count: var(--ff-green-50);
 
   --ff-warning: var(--ff-amber-600);

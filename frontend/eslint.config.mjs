@@ -40,6 +40,10 @@ const pageNoClient = [
     message: "Pages are thin controllers: compose features, never call the API client.",
   },
   { group: ["openapi-fetch", "openapi-fetch/*"], message: httpClient[0].message },
+  {
+    group: ["@tanstack/react-query", "@tanstack/react-query/*"],
+    message: "Pages never fetch: data loading lives in feature hooks (features/*/hooks).",
+  },
 ];
 const restrict = (...groups) => ({
   "no-restricted-imports": ["error", { patterns: groups.flat() }],
@@ -56,7 +60,12 @@ const importBoundaries = [
     files: ["src/components/ui/**/*.{ts,tsx}"],
     rules: restrict(featureDoor, httpClient, uiNoFeatures),
   },
-  { files: ["src/app/**/*.{ts,tsx}"], rules: restrict(featureDoor, pageNoClient) },
+  // providers.tsx is the composition root: it is the one app file that creates the query client.
+  {
+    files: ["src/app/**/*.{ts,tsx}"],
+    ignores: ["src/app/providers.tsx"],
+    rules: restrict(featureDoor, pageNoClient),
+  },
 ];
 
 /*

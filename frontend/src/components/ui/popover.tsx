@@ -18,6 +18,8 @@ export type PopoverProps = {
   side?: "top" | "right" | "bottom" | "left";
   /** Accessible name for the panel. */
   label?: string;
+  /** Gap between trigger and panel, e.g. to clear the top bar. */
+  sideOffset?: number;
   className?: string;
 };
 
@@ -29,6 +31,7 @@ export function Popover({
   align = "start",
   side = "bottom",
   label,
+  sideOffset = 6,
   className,
 }: PopoverProps) {
   const container = usePortalContainer();
@@ -39,7 +42,7 @@ export function Popover({
         <Radix.Content
           align={align}
           side={side}
-          sideOffset={6}
+          sideOffset={sideOffset}
           aria-label={label}
           className={cn(floatingSurface, "w-72 p-3 text-body text-primary", className)}
         >

@@ -12,10 +12,15 @@ import { NAV_FOOTER, NAV_GROUPS, isActive } from "../nav";
 import { ProfileMenu } from "./ProfileMenu";
 import { RailItem } from "./RailItem";
 
-export type IconRailProps = { expanded: boolean; onToggle: () => void };
+export type IconRailProps = {
+  expanded: boolean;
+  onToggle: () => void;
+  /** Animate width changes; off for the post-hydration restore so the rail doesn't slide on load. */
+  animate?: boolean;
+};
 
 /** The left rail: 64px of icons with tooltips, or 240px with labels. */
-export function IconRail({ expanded, onToggle }: IconRailProps) {
+export function IconRail({ expanded, onToggle, animate = false }: IconRailProps) {
   const pathname = usePathname() ?? "";
   const toggle = (
     <IconButton
@@ -32,7 +37,8 @@ export function IconRail({ expanded, onToggle }: IconRailProps) {
     <aside
       aria-label="Main navigation"
       className={cn(
-        "flex h-full shrink-0 flex-col border-r border-subtle bg-surface-1 transition-[width] duration-base ease-ff",
+        "flex h-full shrink-0 flex-col border-r border-subtle bg-surface-1",
+        animate && "transition-[width] duration-base ease-ff",
         expanded ? "w-60" : "w-rail",
       )}
     >

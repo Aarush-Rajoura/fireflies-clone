@@ -47,6 +47,7 @@ const colors = {
     strong: v("danger-strong"),
   },
   upgrade: { DEFAULT: v("upgrade"), hover: v("upgrade-hover"), text: v("upgrade-text") },
+  fab: { DEFAULT: v("fab"), text: v("fab-text"), border: v("fab-border") },
   count: v("count"),
   highlight: { DEFAULT: v("highlight"), active: v("highlight-active") },
   tint: { rose: v("tint-rose"), teal: v("tint-teal"), violet: v("tint-violet") },

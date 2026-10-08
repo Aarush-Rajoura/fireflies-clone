@@ -114,13 +114,27 @@ The frontend mirrors the backend's layering:
 | `schemas/` | `types/api.d.ts` (generated) + `lib/api/types.ts` (readable aliases) | Never hand-edit generated types (`make types`) |
 | `core/deps.py` | `app/providers.tsx` | The only place app-wide singletons (query client, theme, toaster) are created |
 | Protocols | `ApiClient`, each feature's `index.ts` | Swappable implementations behind small interfaces |
-| `check_layering.py` | ESLint `no-restricted-imports` | No deep feature imports; `components/ui` never imports features; only `lib/api` and `features/*/api.ts` import the HTTP client; pages never import the client |
+| `check_layering.py` | ESLint `no-restricted-imports` | Lint-enforced: no deep feature imports; `components/ui` never imports features; only `lib/api` and `features/*/api.ts` import the HTTP client; `app/**` (except the `providers.tsx` composition root) imports neither the client nor TanStack Query, so pages cannot fetch |
 
 - **Same-origin API:** the browser only calls its own origin; `next.config.ts` rewrites `/api/*`
-  to `BACKEND_URL`, so there is no CORS or cross-site cookie to manage.
+  to `BACKEND_URL`, so there is no CORS or cross-site cookie to manage. Media `Range` requests
+  (206) and multipart uploads pass through the rewrite unchanged.
+- **Proxy limits:** self-hosted `next dev`/`next start` proxies with
+  `experimental.proxyTimeout` = 120 s (Next's default is 30 s, too short for an AI call on a
+  cold backend). On Vercel, an external rewrite is proxied by Vercel's edge instead, and that
+  setting does not apply. Vercel documents a 4.5 MB request-body limit for Functions and a
+  time limit on proxied external requests; we have not confirmed the exact limits for
+  external rewrites. Uploads are therefore kept small: transcripts are text, the backend caps
+  files at 10 MB (`MAX_UPLOAD_MB`), and real transcripts are usually well under 1 MB. If Vercel's
+  4.5 MB limit does apply to rewrites, a file between 4.5 MB and 10 MB would be rejected on the
+  hosted demo but work locally. The fix would be to post that upload directly to the API origin,
+  which already sends CORS headers.
 - **One error path:** `unwrap()` turns the backend's error envelope (or a network failure) into a
-  typed `ApiError`; queries retry once only for network/5xx errors, and any failed mutation shows
-  an error toast with **Retry** when retrying can help.
+  typed `ApiError`. Queries retry once, and only for network, 5xx and 429 (AI rate limit) errors.
+  A failed mutation shows an error toast with **Retry** for the same retryable errors. A mutation
+  can override this with `meta: { retryable }`, or skip the toast with `meta: { errorToast: false }`.
+  The global Retry re-runs the mutation from the cache, so per-call `mutate(vars, { onSuccess })`
+  callbacks do not run again. Features that depend on them show their own toast instead.
 - **Query keys** come from one factory (`lib/api/query-keys.ts`), nested per meeting so a single
   invalidation covers a meeting's transcript, summary and action items.
 - **Shell:** `features/shell` (icon rail, top bar, profile and capture menus, help button) wraps

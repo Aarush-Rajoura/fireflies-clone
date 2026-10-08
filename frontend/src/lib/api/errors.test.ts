@@ -40,6 +40,11 @@ describe("unwrap", () => {
     expect((thrown as ApiError).isRetryable).toBe(true);
   });
 
+  it("lets aborts through untouched so cancelled queries stay silent", async () => {
+    const abort = Object.assign(new Error("aborted"), { name: "AbortError" });
+    await expect(unwrap(Promise.reject(abort))).rejects.toBe(abort);
+  });
+
   it("still throws on a non-envelope error body, e.g. a proxy 502", async () => {
     const response = new Response("<html>Bad gateway</html>", {
       status: 502,

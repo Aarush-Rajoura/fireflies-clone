@@ -20,6 +20,8 @@ export function RailItem({
   expanded: boolean;
 }) {
   const { icon: Icon, label } = item;
+  // Items without a route are visible but unbuilt; say so before anyone clicks.
+  const name = item.href ? label : `${label} (Coming soon)`;
   const className = cn(
     itemBase,
     expanded ? "w-full gap-3 px-3" : "w-10 justify-center",
@@ -54,7 +56,7 @@ export function RailItem({
   ) : (
     <button
       type="button"
-      aria-label={label}
+      aria-label={name}
       className={className}
       onClick={() => toast.info(`${label} is coming soon.`)}
     >
@@ -65,7 +67,7 @@ export function RailItem({
   return expanded ? (
     control
   ) : (
-    <Tooltip content={label} side="right">
+    <Tooltip content={name} side="right">
       {control}
     </Tooltip>
   );
