@@ -3,13 +3,7 @@
 import { Play, Scissors, Square, Trash2 } from "lucide-react";
 import { useState } from "react";
 
-import {
-  ConfirmDialog,
-  EmptyState,
-  IconButton,
-  SidePanel,
-  SkeletonRow,
-} from "@/components/ui";
+import { ConfirmDialog, EmptyState, IconButton, SidePanel, SkeletonRow } from "@/components/ui";
 import type { Soundbite } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 

@@ -1,5 +1,13 @@
 import { QueryClientProvider } from "@tanstack/react-query";
-import { act, createEvent, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import {
+  act,
+  createEvent,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TooltipProvider } from "@/components/ui";
@@ -18,7 +26,10 @@ let engine!: VirtualClockEngine;
 const notify = vi.fn();
 
 function renderPanel(route: Route, slots: Omit<TranscriptPanelProps, "meetingId"> = {}) {
-  vi.stubGlobal("fetch", vi.fn<(req: Request) => Promise<Response>>(async (req) => route(req)));
+  vi.stubGlobal(
+    "fetch",
+    vi.fn<(req: Request) => Promise<Response>>(async (req) => route(req)),
+  );
   const client = makeQueryClient(notify);
   return render(
     <QueryClientProvider client={client}>
@@ -63,10 +74,15 @@ describe("TranscriptPanel", () => {
 
   it("renders nothing for a deleted meeting, leaving that state to the page", async () => {
     const { container } = renderPanel(() =>
-      json({ error: { code: "MEETING_DELETED", message: "Meeting was deleted", details: {} } }, 410),
+      json(
+        { error: { code: "MEETING_DELETED", message: "Meeting was deleted", details: {} } },
+        410,
+      ),
     );
     await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled());
-    await waitFor(() => expect(screen.queryByRole("status", { name: "Loading transcript" })).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByRole("status", { name: "Loading transcript" })).toBeNull(),
+    );
     expect(container.textContent).toBe("");
   });
 
@@ -122,7 +138,9 @@ describe("TranscriptPanel", () => {
     const list = screen.getByLabelText("Transcript lines");
     list.focus();
     fireEvent.keyDown(list, { key: "f", ctrlKey: true });
-    expect(document.activeElement).toBe(screen.getByRole("searchbox", { name: "Search transcript" }));
+    expect(document.activeElement).toBe(
+      screen.getByRole("searchbox", { name: "Search transcript" }),
+    );
   });
 
   it("leaves Ctrl/Cmd+F alone inside the portalled rename dialog", async () => {
@@ -157,8 +175,13 @@ describe("TranscriptPanel", () => {
     fireEvent.change(field, { target: { value: "Janice Lee" } });
     fireEvent.click(within(dialog).getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(screen.getAllByRole("button", { name: "Janice Lee" })).toHaveLength(2));
-    const patch = vi.mocked(fetch).mock.calls.map(([r]) => r as Request).find((r) => r.method === "PATCH")!;
+    await waitFor(() =>
+      expect(screen.getAllByRole("button", { name: "Janice Lee" })).toHaveLength(2),
+    );
+    const patch = vi
+      .mocked(fetch)
+      .mock.calls.map(([r]) => r as Request)
+      .find((r) => r.method === "PATCH")!;
     expect(new URL(patch.url).pathname).toBe("/api/v1/speakers/2");
     expect(await patch.clone().json()).toEqual({ name: "Janice Lee" });
 
@@ -189,7 +212,9 @@ describe("TranscriptPanel", () => {
 
       // A search for "pricing" still marks both lines, and the find count is unchanged.
       fireEvent.change(screen.getByRole("searchbox"), { target: { value: "pricing" } });
-      await waitFor(() => expect(document.querySelectorAll("mark[data-match-index]")).toHaveLength(2));
+      await waitFor(() =>
+        expect(document.querySelectorAll("mark[data-match-index]")).toHaveLength(2),
+      );
       const both = document.querySelector('[data-segment-text="102"] mark[data-match-index]');
       expect(both?.getAttribute("data-range-id")).toBe("5");
     });

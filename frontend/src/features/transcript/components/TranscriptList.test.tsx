@@ -3,7 +3,12 @@ import { createRef, useEffect } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { HighlighterProps } from "@/components/ui";
-import { PlayerProvider, VirtualClockEngine, usePlayerControls, type PlayerControls } from "@/features/player";
+import {
+  PlayerProvider,
+  VirtualClockEngine,
+  usePlayerControls,
+  type PlayerControls,
+} from "@/features/player";
 
 import { installFakePlayerTimers, segments, speakers } from "../testing/fixtures";
 import { TranscriptList } from "./TranscriptList";
@@ -52,7 +57,12 @@ function renderList() {
       }}
     >
       <ControlsProbe />
-      <TranscriptList segments={segments} speakers={speakers} scrollRef={scrollRef} onRename={onRename} />
+      <TranscriptList
+        segments={segments}
+        speakers={speakers}
+        scrollRef={scrollRef}
+        onRename={onRename}
+      />
     </PlayerProvider>,
   );
   return { scrollRef, onRename };
@@ -129,11 +139,22 @@ describe("TranscriptList", () => {
 
   /** A 200px viewport with 50px rows every 60px: rows 0-2 on screen, 3+ below. Row 0 hugs the top edge. */
   function stubLayout() {
-    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (this: Element) {
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: Element,
+    ) {
       const index = this.getAttribute("data-segment-index");
       const top = index === null ? 0 : Number(index) * 60;
       const height = index === null ? 200 : 50;
-      return { top, bottom: top + height, left: 0, right: 300, width: 300, height, x: 0, y: top } as DOMRect;
+      return {
+        top,
+        bottom: top + height,
+        left: 0,
+        right: 300,
+        width: 300,
+        height,
+        x: 0,
+        y: top,
+      } as DOMRect;
     });
   }
   const scrolledRows = () =>

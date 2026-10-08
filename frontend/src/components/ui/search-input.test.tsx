@@ -7,7 +7,9 @@ describe("SearchInput", () => {
   test("Escape clears and searches immediately, after the caller's onKeyDown", () => {
     const onSearch = vi.fn();
     const onKeyDown = vi.fn();
-    render(<SearchInput label="Search" defaultValue="fred" onSearch={onSearch} onKeyDown={onKeyDown} />);
+    render(
+      <SearchInput label="Search" defaultValue="fred" onSearch={onSearch} onKeyDown={onKeyDown} />,
+    );
     const box = screen.getByRole("searchbox", { name: "Search" }) as HTMLInputElement;
     fireEvent.keyDown(box, { key: "Escape" });
     expect(onKeyDown).toHaveBeenCalledOnce();
@@ -16,7 +18,9 @@ describe("SearchInput", () => {
   });
 
   test("a caller that prevents default keeps Escape for itself", () => {
-    render(<SearchInput label="Search" defaultValue="fred" onKeyDown={(e) => e.preventDefault()} />);
+    render(
+      <SearchInput label="Search" defaultValue="fred" onKeyDown={(e) => e.preventDefault()} />,
+    );
     const box = screen.getByRole("searchbox") as HTMLInputElement;
     fireEvent.keyDown(box, { key: "Escape" });
     expect(box.value).toBe("fred");

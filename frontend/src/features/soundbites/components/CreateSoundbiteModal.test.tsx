@@ -90,7 +90,9 @@ describe("CreateSoundbiteModal", () => {
     renderModal({ start_ms: 0, end_ms: 180_000 }, 600_000);
     expect(screen.queryByRole("alert")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "End 1 second later" }));
-    expect(screen.getByRole("alert").textContent).toBe("A soundbite can be at most 3 minutes long.");
+    expect(screen.getByRole("alert").textContent).toBe(
+      "A soundbite can be at most 3 minutes long.",
+    );
   });
 
   it("creates with the edited title and range, then closes", async () => {

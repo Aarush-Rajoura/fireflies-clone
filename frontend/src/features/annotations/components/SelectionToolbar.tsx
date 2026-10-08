@@ -3,13 +3,7 @@
 import { Copy, MessageSquarePlus, Scissors } from "lucide-react";
 import { useEffect, useRef, type RefObject } from "react";
 
-import {
-  FloatingToolbar,
-  HIGHLIGHT_TONES,
-  IconButton,
-  ToneSwatch,
-  toast,
-} from "@/components/ui";
+import { FloatingToolbar, HIGHLIGHT_TONES, IconButton, ToneSwatch, toast } from "@/components/ui";
 
 import { useCreateHighlight } from "../hooks/useHighlightMutations";
 import { useTranscriptSelection } from "../hooks/useTranscriptSelection";

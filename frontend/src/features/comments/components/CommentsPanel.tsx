@@ -109,9 +109,7 @@ export function CommentsPanel({
       title="Comments"
       meta={all.length}
       onClose={onClose}
-      footer={
-        <CommentComposer anchor={anchor} focusRequest={focusRequest} onSubmit={submit} />
-      }
+      footer={<CommentComposer anchor={anchor} focusRequest={focusRequest} onSubmit={submit} />}
     >
       {focusStart !== undefined && (
         <div className="px-4 pt-3">

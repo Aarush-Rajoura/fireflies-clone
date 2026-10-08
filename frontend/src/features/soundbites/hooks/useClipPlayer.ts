@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  usePlayerClockSelector,
-  usePlayerClockWatch,
-  usePlayerControls,
-} from "@/features/player";
+import { usePlayerClockSelector, usePlayerClockWatch, usePlayerControls } from "@/features/player";
 
 import type { ClipRange } from "../lib/range";
 

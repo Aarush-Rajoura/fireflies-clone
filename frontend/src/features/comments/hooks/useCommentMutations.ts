@@ -64,9 +64,7 @@ export function useCreateComment(meetingId: number) {
     },
     onError: (error, _body, context) => {
       if (context) {
-        client.setQueryData<MeetingComment[]>(key, (old) =>
-          removeById(old, context.placeholderId),
-        );
+        client.setQueryData<MeetingComment[]>(key, (old) => removeById(old, context.placeholderId));
       }
       toast.error(commentFailureMessage(error, "Couldn't post the comment."));
     },

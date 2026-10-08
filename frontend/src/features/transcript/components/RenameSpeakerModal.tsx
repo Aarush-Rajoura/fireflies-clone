@@ -26,12 +26,18 @@ export function RenameSpeakerModal({ speaker, onClose, onSubmit }: RenameSpeaker
       size="sm"
     >
       {/* Keyed so the field starts from the chosen speaker's name each time. */}
-      {speaker && <RenameForm key={speaker.id} speaker={speaker} onClose={onClose} onSubmit={onSubmit} />}
+      {speaker && (
+        <RenameForm key={speaker.id} speaker={speaker} onClose={onClose} onSubmit={onSubmit} />
+      )}
     </Modal>
   );
 }
 
-function RenameForm({ speaker, onClose, onSubmit }: { speaker: Speaker } & Omit<RenameSpeakerModalProps, "speaker">) {
+function RenameForm({
+  speaker,
+  onClose,
+  onSubmit,
+}: { speaker: Speaker } & Omit<RenameSpeakerModalProps, "speaker">) {
   const [name, setName] = useState(speakerName(speaker));
   const trimmed = name.trim();
   const changed = trimmed !== speakerName(speaker);
@@ -45,7 +51,11 @@ function RenameForm({ speaker, onClose, onSubmit }: { speaker: Speaker } & Omit<
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-4">
-      <Field label="Speaker name" htmlFor="rename-speaker-name" error={trimmed ? undefined : "Enter a name."}>
+      <Field
+        label="Speaker name"
+        htmlFor="rename-speaker-name"
+        error={trimmed ? undefined : "Enter a name."}
+      >
         <Input
           id="rename-speaker-name"
           autoFocus

@@ -21,7 +21,18 @@ export type SearchInputProps = Omit<InputProps, "value" | "defaultValue" | "onCh
 };
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(function SearchInput(
-  { value, defaultValue = "", onSearch, onValueChange, debounceMs = 250, hint, label, className, onKeyDown, ...rest },
+  {
+    value,
+    defaultValue = "",
+    onSearch,
+    onValueChange,
+    debounceMs = 250,
+    hint,
+    label,
+    className,
+    onKeyDown,
+    ...rest
+  },
   ref,
 ) {
   const controlled = value !== undefined;

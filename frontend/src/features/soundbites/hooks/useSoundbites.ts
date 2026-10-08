@@ -58,7 +58,9 @@ export function useDeleteSoundbite(meetingId: number) {
         client.setQueryData<Soundbite[]>(key, (old) => reinsertAt(old, removed, context.index));
       }
       toast.error(
-        error instanceof ApiError && error.message ? error.message : "Couldn't delete the soundbite.",
+        error instanceof ApiError && error.message
+          ? error.message
+          : "Couldn't delete the soundbite.",
       );
     },
     onSuccess: () => toast.success("Soundbite deleted"),

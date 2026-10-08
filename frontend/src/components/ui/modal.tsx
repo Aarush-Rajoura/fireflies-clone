@@ -61,14 +61,21 @@ export function Modal({
             <div className="flex flex-col gap-1">
               <Dialog.Title className="text-h3 text-strong">{title}</Dialog.Title>
               {description ? (
-                <Dialog.Description className="text-body text-secondary">{description}</Dialog.Description>
+                <Dialog.Description className="text-body text-secondary">
+                  {description}
+                </Dialog.Description>
               ) : (
                 <Dialog.Description className="sr-only">{title}</Dialog.Description>
               )}
             </div>
             {dismissible && (
               <Dialog.Close asChild>
-                <IconButton label="Close" size="sm" icon={<X strokeWidth={1.75} />} tooltip={false} />
+                <IconButton
+                  label="Close"
+                  size="sm"
+                  icon={<X strokeWidth={1.75} />}
+                  tooltip={false}
+                />
               </Dialog.Close>
             )}
           </div>

@@ -46,7 +46,9 @@ export function useCreateHighlight(meetingId: number) {
       return { placeholderId: placeholder.id };
     },
     onSuccess: (saved, _body, context) => {
-      client.setQueryData<Highlight[]>(key, (old) => replaceById(old, context.placeholderId, saved));
+      client.setQueryData<Highlight[]>(key, (old) =>
+        replaceById(old, context.placeholderId, saved),
+      );
     },
     onError: (error, _body, context) => {
       if (context) {

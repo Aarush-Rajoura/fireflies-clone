@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { clipRangeError, clipRangeForSegment, formatClipRange } from "./range";
 
 const seg = (id: number, start_ms: number, end_ms: number) => ({ id, start_ms, end_ms });
-const segments = [seg(1, 0, 1_200), seg(2, 1_500, 2_400), seg(3, 2_600, 5_000), seg(4, 6_000, 20_000)];
+const segments = [
+  seg(1, 0, 1_200),
+  seg(2, 1_500, 2_400),
+  seg(3, 2_600, 5_000),
+  seg(4, 6_000, 20_000),
+];
 
 describe("clipRangeForSegment", () => {
   it("uses the line's own span when it is long enough", () => {

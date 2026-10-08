@@ -60,7 +60,11 @@ export const FindBar = forwardRef<HTMLInputElement, FindBarProps>(function FindB
       </div>
       {hasQuery && (
         <>
-          <span role="status" aria-live="polite" className="tnum shrink-0 px-1 text-caption text-muted">
+          <span
+            role="status"
+            aria-live="polite"
+            className="tnum shrink-0 px-1 text-caption text-muted"
+          >
             {status}
           </span>
           <IconButton

@@ -37,7 +37,12 @@ export function Select({
 }: SelectProps) {
   const container = usePortalContainer();
   return (
-    <RadixSelect.Root value={value} defaultValue={defaultValue} onValueChange={onValueChange} disabled={disabled}>
+    <RadixSelect.Root
+      value={value}
+      defaultValue={defaultValue}
+      onValueChange={onValueChange}
+      disabled={disabled}
+    >
       <RadixSelect.Trigger
         id={id}
         aria-label={label}

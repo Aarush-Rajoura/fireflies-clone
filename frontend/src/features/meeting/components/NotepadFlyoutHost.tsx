@@ -27,9 +27,7 @@ export function NotepadFlyoutHost({
 }: NotepadFlyoutHostProps) {
   const { open, mounted, close } = flyouts;
   const slot = (flyout: NotepadFlyout, panel: ReactNode) =>
-    mounted.has(flyout) && (
-      <div className={cn("h-full", open !== flyout && "hidden")}>{panel}</div>
-    );
+    mounted.has(flyout) && <div className={cn("h-full", open !== flyout && "hidden")}>{panel}</div>;
 
   return (
     // Ask Fred gets more room: answers and citations read badly at 320px.

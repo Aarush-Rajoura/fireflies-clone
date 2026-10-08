@@ -179,7 +179,7 @@
   --ff-tag-7-subtle: color-mix(in srgb, var(--ff-tag-7) 16%, transparent);
 
   /* Type, shape, motion */
-  --ff-font-sans: var(--font-inter), Inter, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --ff-font-sans: var(--font-inter), Inter, -apple-system, "Segoe UI", Roboto, sans-serif;
   --ff-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --ff-radius-xs: 3px;
@@ -196,7 +196,7 @@
 }
 
 /* ── Dark semantics (default) ─────────────────────────────────────────────── */
-[data-theme='dark'] {
+[data-theme="dark"] {
   color-scheme: dark;
 
   --ff-surface-0: var(--ff-ink-950); /* page                        */
@@ -322,7 +322,7 @@
 }
 
 /* ── Light semantics: values from the reference design.md ─────────────────── */
-[data-theme='light'] {
+[data-theme="light"] {
   color-scheme: light;
 
   --ff-surface-0: var(--ff-paper-0);

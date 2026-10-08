@@ -18,7 +18,9 @@ export function useHighlights(meetingId: number) {
 const EMPTY: ReadonlyMap<number, readonly HighlightRange[]> = new Map();
 
 /** Highlights as Highlighter ranges, keyed by segment id; stable until the list changes. */
-export function useHighlightRanges(meetingId: number): ReadonlyMap<number, readonly HighlightRange[]> {
+export function useHighlightRanges(
+  meetingId: number,
+): ReadonlyMap<number, readonly HighlightRange[]> {
   const { data } = useHighlights(meetingId);
   return useMemo(() => (data ? toRanges(data) : EMPTY), [data]);
 }

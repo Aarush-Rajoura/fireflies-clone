@@ -4,7 +4,13 @@ import { cn } from "@/lib/utils/cn";
 
 /** Loading placeholder block; size it with className. Hidden from assistive tech. */
 export function Skeleton({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
-  return <div aria-hidden className={cn("animate-shimmer rounded-item bg-skeleton", className)} {...rest} />;
+  return (
+    <div
+      aria-hidden
+      className={cn("animate-shimmer rounded-item bg-skeleton", className)}
+      {...rest}
+    />
+  );
 }
 
 /** A list-row placeholder: avatar-sized square, a title bar and a meta bar. */

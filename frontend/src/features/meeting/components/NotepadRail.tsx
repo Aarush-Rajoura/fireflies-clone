@@ -64,7 +64,11 @@ export function NotepadRail({
       aria-label="Meeting tools"
       className="flex w-rail-mini shrink-0 flex-col items-center gap-1 border-r border-subtle py-3"
     >
-      <IconButton label="Search transcript" icon={<Search strokeWidth={1.75} />} onClick={onSearch} />
+      <IconButton
+        label="Search transcript"
+        icon={<Search strokeWidth={1.75} />}
+        onClick={onSearch}
+      />
       {flyout("ai", "Ask Fred", <Sparkles strokeWidth={1.75} />)}
       {flyout(
         "soundbites",

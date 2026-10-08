@@ -13,15 +13,31 @@ export type EmptyStateProps = {
   className?: string;
 };
 
-export function EmptyState({ title, description, icon, illustration, action, className }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  icon,
+  illustration,
+  action,
+  className,
+}: EmptyStateProps) {
   return (
-    <div className={cn("mx-auto flex max-w-md flex-col items-center px-6 py-12 text-center", className)}>
+    <div
+      className={cn(
+        "mx-auto flex max-w-md flex-col items-center px-6 py-12 text-center",
+        className,
+      )}
+    >
       {illustration && <div className="mb-10 w-full">{illustration}</div>}
       {icon && <div className="mb-4 text-secondary [&_svg]:size-8">{icon}</div>}
       {/* The two screenshot variants differ in emphasis: illustrated is bold and bright, icon-led is quieter. */}
-      <h2 className={cn("text-h3", illustration ? "text-strong" : "font-medium text-secondary")}>{title}</h2>
+      <h2 className={cn("text-h3", illustration ? "text-strong" : "font-medium text-secondary")}>
+        {title}
+      </h2>
       {description && (
-        <p className={cn("mt-2 text-body", illustration ? "text-secondary" : "text-muted")}>{description}</p>
+        <p className={cn("mt-2 text-body", illustration ? "text-secondary" : "text-muted")}>
+          {description}
+        </p>
       )}
       {action && <div className="mt-6">{action}</div>}
     </div>

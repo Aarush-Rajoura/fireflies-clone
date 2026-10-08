@@ -61,7 +61,13 @@ describe("resolveRange", () => {
     const [, everyone, rest] = text('[data-segment-text="101"]');
     // "everyone to" spans the highlight mark and the following text node.
     const got = resolveRange(range(everyone!, 0, rest!, 3), scope);
-    expect(got).toEqual({ kind: "segment", segmentId: 101, start: 8, end: 19, text: "everyone to" });
+    expect(got).toEqual({
+      kind: "segment",
+      segmentId: 101,
+      start: 8,
+      end: 19,
+      text: "everyone to",
+    });
     expect("Welcome everyone to the kickoff.".slice(8, 19)).toBe("everyone to");
   });
 

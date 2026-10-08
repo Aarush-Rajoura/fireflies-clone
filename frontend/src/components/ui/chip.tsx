@@ -44,7 +44,13 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
   }
 
   return (
-    <button ref={ref} type={type} aria-pressed={selected} className={cn(chipBase, look, className)} {...rest}>
+    <button
+      ref={ref}
+      type={type}
+      aria-pressed={selected}
+      className={cn(chipBase, look, className)}
+      {...rest}
+    >
       {icon}
       {children}
     </button>

@@ -14,7 +14,14 @@ import { useClipPlayer } from "./useClipPlayer";
 
 function fakePlayerTimers() {
   vi.useFakeTimers({
-    toFake: ["setTimeout", "clearTimeout", "requestAnimationFrame", "cancelAnimationFrame", "performance", "Date"],
+    toFake: [
+      "setTimeout",
+      "clearTimeout",
+      "requestAnimationFrame",
+      "cancelAnimationFrame",
+      "performance",
+      "Date",
+    ],
   });
 }
 
@@ -27,7 +34,10 @@ function setup() {
     return null;
   }
   render(
-    <PlayerProvider durationMs={60_000} createEngine={({ durationMs }) => new VirtualClockEngine({ durationMs })}>
+    <PlayerProvider
+      durationMs={60_000}
+      createEngine={({ durationMs }) => new VirtualClockEngine({ durationMs })}
+    >
       <Probe />
     </PlayerProvider>,
   );

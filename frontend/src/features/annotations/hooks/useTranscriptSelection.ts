@@ -54,7 +54,8 @@ export function useTranscriptSelection(scopeRef: RefObject<HTMLElement | null>) 
     // The selection is final only after the pointer or key is released.
     const onRelease = () => window.setTimeout(read, 0);
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.shiftKey || e.key === "Shift" || ((e.ctrlKey || e.metaKey) && e.key === "a")) onRelease();
+      if (e.shiftKey || e.key === "Shift" || ((e.ctrlKey || e.metaKey) && e.key === "a"))
+        onRelease();
     };
     const onSelectionChange = () => {
       if (range.current && window.getSelection()?.isCollapsed) {

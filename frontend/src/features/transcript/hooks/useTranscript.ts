@@ -10,7 +10,10 @@ import { getTranscript } from "../api";
 function sortedByStart(t: Transcript): Transcript {
   const sorted = t.segments.every((s, i, all) => i === 0 || all[i - 1]!.start_ms <= s.start_ms);
   if (sorted) return t;
-  return { ...t, segments: [...t.segments].sort((a, b) => a.start_ms - b.start_ms || a.sequence - b.sequence) };
+  return {
+    ...t,
+    segments: [...t.segments].sort((a, b) => a.start_ms - b.start_ms || a.sequence - b.sequence),
+  };
 }
 
 export function useTranscript(meetingId: number) {

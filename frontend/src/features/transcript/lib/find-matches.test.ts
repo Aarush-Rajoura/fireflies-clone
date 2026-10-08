@@ -6,7 +6,9 @@ const seg = (...texts: string[]) => texts.map((text) => ({ text }));
 
 /** The original text each match covers, so offsets are checked against what gets highlighted. */
 function covered(segments: { text: string }[], query: string): string[] {
-  return findMatches(segments, query).map((m) => segments[m.segmentIndex]!.text.slice(m.start, m.end));
+  return findMatches(segments, query).map((m) =>
+    segments[m.segmentIndex]!.text.slice(m.start, m.end),
+  );
 }
 
 describe("findMatches", () => {

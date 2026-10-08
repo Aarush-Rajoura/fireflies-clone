@@ -15,7 +15,13 @@ export type AskFredFlyoutProps = {
 };
 
 /** The "ai" flyout: the ask feature's meeting conversation, framed like the other flyouts. */
-export function AskFredFlyout({ id, meetingId, meetingTitle, active, onClose }: AskFredFlyoutProps) {
+export function AskFredFlyout({
+  id,
+  meetingId,
+  meetingTitle,
+  active,
+  onClose,
+}: AskFredFlyoutProps) {
   const [chat, setChat] = useState(0);
   return (
     <SidePanel

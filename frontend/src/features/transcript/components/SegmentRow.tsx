@@ -97,7 +97,9 @@ export const SegmentRow = memo(function SegmentRow({
       >
         <Highlighter text={segment.text} ranges={ranges} activeIndex={activeMatchIndex} />
       </p>
-      {decorations != null && <div className="mt-0.5 flex items-center gap-1 pl-8">{decorations}</div>}
+      {decorations != null && (
+        <div className="mt-0.5 flex items-center gap-1 pl-8">{decorations}</div>
+      )}
     </div>
   );
 });

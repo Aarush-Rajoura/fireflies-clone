@@ -32,8 +32,8 @@ function referenced(value: unknown, out = new Set<string>()): Set<string> {
 }
 
 const all = declared(tokensCss);
-const dark = declared(block("[data-theme='dark']"));
-const light = declared(block("[data-theme='light']"));
+const dark = declared(block('[data-theme="dark"]'));
+const light = declared(block('[data-theme="light"]'));
 
 describe("design tokens", () => {
   test("every token the Tailwind theme uses is declared in tokens.css", () => {

@@ -44,7 +44,10 @@ export function Checkbox({ label, onCheckedChange, id, className, ...rest }: Che
   return (
     <div className={cn("flex items-center gap-2", className)}>
       {box}
-      <label htmlFor={boxId} className="cursor-pointer text-body text-secondary peer-disabled:cursor-not-allowed">
+      <label
+        htmlFor={boxId}
+        className="cursor-pointer text-body text-secondary peer-disabled:cursor-not-allowed"
+      >
         {label}
       </label>
     </div>

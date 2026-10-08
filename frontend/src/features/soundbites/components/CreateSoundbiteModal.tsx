@@ -110,7 +110,11 @@ function DraftForm({
         void submit();
       }}
     >
-      <Field label="Title" htmlFor="soundbite-title" hint="Optional: defaults to the first words spoken.">
+      <Field
+        label="Title"
+        htmlFor="soundbite-title"
+        hint="Optional: defaults to the first words spoken."
+      >
         <Input
           id="soundbite-title"
           value={title}
@@ -161,7 +165,12 @@ function DraftForm({
         >
           Cancel
         </Button>
-        <Button type="submit" variant="primary" loading={create.isPending} disabled={Boolean(error)}>
+        <Button
+          type="submit"
+          variant="primary"
+          loading={create.isPending}
+          disabled={Boolean(error)}
+        >
           Create soundbite
         </Button>
       </div>
