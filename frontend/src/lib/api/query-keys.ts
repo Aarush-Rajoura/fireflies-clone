@@ -50,6 +50,7 @@ export const qk = {
     detail: (id: number) => ["chats", id] as const,
   },
   chatSkills: () => ["chat-skills"] as const,
+  team: () => ["team"] as const,
   // Not under ['meetings']: search spans every meeting, so instead of being
   // invalidated by meeting edits its queries use staleTime 0 (see useSearch).
   search: {

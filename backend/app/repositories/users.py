@@ -16,6 +16,10 @@ class UserRepository(Repository[User]):
     def get_by_email(self, email: str) -> User | None:
         return self.session.scalar(select(User).where(User.email == email))
 
+    def find_by_email_ci(self, email: str) -> User | None:
+        """Case-insensitive lookup; `email` must already be lower-cased."""
+        return self.session.scalar(select(User).where(func.lower(User.email) == email).limit(1))
+
     def list(self, limit: int, offset: int) -> tuple[list[User], int]:
         total = self.session.scalar(select(func.count()).select_from(User)) or 0
         stmt = select(User).order_by(User.name, User.id).limit(limit).offset(offset)

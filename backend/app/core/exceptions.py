@@ -26,6 +26,11 @@ class NotFoundError(AppError):
     default_message = "Resource not found"
 
 
+class ForbiddenError(AppError):
+    code = "FORBIDDEN"
+    default_message = "You are not allowed to do this"
+
+
 class GoneError(AppError):
     code = "GONE"
     default_message = "Resource has been deleted"

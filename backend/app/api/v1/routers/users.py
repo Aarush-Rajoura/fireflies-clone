@@ -43,8 +43,9 @@ def update_me(body: ProfileUpdate, service: Users) -> MeRead:
     response_model=OnboardingResult,
     summary="Save onboarding answers and mark onboarding complete",
     description=(
-        "`tools` is the complete set (deduplicated, at most 20). `invite_emails` are validated "
-        "and counted in `invites_sent`; they are not stored yet."
+        "`tools` is the complete set (deduplicated, at most 20). `invite_emails` are invited "
+        "to the user's team (created as \"<first name>'s team\" if they have none); "
+        "`invites_sent` counts the new invites. No email is sent."
     ),
     responses={**VALIDATION, **SERVICE_UNAVAILABLE},
 )

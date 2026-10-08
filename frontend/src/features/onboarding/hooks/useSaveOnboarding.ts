@@ -17,10 +17,14 @@ export function useSaveOnboarding(onSaved: () => void) {
   return useMutation({
     mutationFn: saveOnboarding,
     onSuccess: async ({ invites_sent }) => {
-      await client.invalidateQueries({ queryKey: qk.me() });
+      await Promise.all([
+        client.invalidateQueries({ queryKey: qk.me() }),
+        client.invalidateQueries({ queryKey: qk.team() }),
+      ]);
       if (invites_sent > 0) {
         const who = `${invites_sent} coworker${invites_sent === 1 ? "" : "s"}`;
-        toast.info(`Saved. Invites for ${who} go out when team invites launch.`);
+        // Invites are simulated: the links live on the team page, nothing is emailed.
+        toast.info(`Invited ${who}. Share their invite links from My Team.`);
       }
       onSaved();
     },

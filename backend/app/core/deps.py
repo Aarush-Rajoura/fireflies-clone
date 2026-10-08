@@ -32,6 +32,7 @@ from app.services.search import SearchService
 from app.services.soundbites import SoundbiteService
 from app.services.summary import SummaryService
 from app.services.tags import TagService
+from app.services.teams import TeamService
 from app.services.transcript import TranscriptService
 from app.services.users import UserService
 
@@ -68,7 +69,7 @@ def get_media_service(uow: Uow, settings: AppSettings) -> MediaService:
 
 
 def get_user_service(uow: Uow) -> UserService:
-    return UserService(uow)
+    return UserService(uow, TeamService(uow))
 
 
 def get_search_service(uow: Uow) -> SearchService:
@@ -112,6 +113,10 @@ def get_meeting_creation_service(
 
 def get_tag_service(uow: Uow) -> TagService:
     return TagService(uow)
+
+
+def get_team_service(uow: Uow) -> TeamService:
+    return TeamService(uow)
 
 
 def get_comment_service(uow: Uow) -> CommentService:

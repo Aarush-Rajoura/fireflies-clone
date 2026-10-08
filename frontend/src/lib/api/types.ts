@@ -74,6 +74,13 @@ export type IntegrationCategoryInfo = Schemas["IntegrationCategoryRead"];
 export type IntegrationListParams = NonNullable<
   operations["list_integrations"]["parameters"]["query"]
 >;
+
+export type Team = Schemas["TeamRead"];
+export type TeamMember = Schemas["TeamMemberRead"];
+export type TeamRole = Schemas["TeamRole"];
+export type TeamMemberStatus = Schemas["TeamMemberStatus"];
+export type TeamInviteCreate = Schemas["TeamInviteCreate"];
+export type TeamInviteResult = Schemas["TeamInviteResult"];
 export type SearchHit = Schemas["SearchHit"];
 /** Query parameters of GET /api/v1/search. */
 export type SearchParams = operations["search"]["parameters"]["query"];

@@ -1,6 +1,7 @@
 import type { JoinPreference, Me, OnboardingInput, RecapPreference } from "@/lib/api";
 
-import { isValidEmail, MAX_INVITES, splitEmails } from "./emails";
+import { commitEmailDraft, MAX_INVITES } from "@/lib/utils/email";
+
 import { DEFAULTS } from "./options";
 
 export const STEPS = ["join", "recap", "role", "tools", "invite"] as const;
@@ -69,23 +70,13 @@ export function canAdvance(state: WizardState): boolean {
 }
 
 function commitDraft(state: WizardState): WizardState {
-  const entries = splitEmails(state.inviteDraft);
-  if (entries.length === 0) return { ...state, inviteDraft: "", inviteError: null };
-  const bad = entries.filter((e) => !isValidEmail(e));
-  const merged = [...new Set([...state.invites, ...entries.filter(isValidEmail)])];
-  const overflow = merged.length > MAX_INVITES;
-  return {
-    ...state,
-    invites: merged.slice(0, MAX_INVITES),
-    // Invalid entries stay in the box so they can be fixed rather than retyped.
-    inviteDraft: bad.join(", "),
-    inviteError:
-      bad.length > 0
-        ? `${bad.length === 1 ? `"${bad[0]}" is not` : `${bad.length} entries are not`} a valid email address.`
-        : overflow
-          ? `You can invite up to ${MAX_INVITES} coworkers here.`
-          : null,
-  };
+  const { emails, draft, error } = commitEmailDraft(
+    state.invites,
+    state.inviteDraft,
+    MAX_INVITES,
+    `You can invite up to ${MAX_INVITES} coworkers here.`,
+  );
+  return { ...state, invites: emails, inviteDraft: draft, inviteError: error };
 }
 
 const clampStep = (step: number) => Math.min(Math.max(step, 0), LAST_STEP);

@@ -1,12 +1,10 @@
-import { PagePlaceholder } from "@/features/shell";
+import { TeamView } from "@/features/team";
 
 export const metadata = { title: "Team · Fireflies.ai Clone" };
 
-export default function TeamPage() {
-  return (
-    <PagePlaceholder
-      title="Team & sharing"
-      message="Invite teammates and share meetings with them. Team workspaces are coming soon."
-    />
-  );
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function TeamPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const { invite } = await searchParams;
+  return <TeamView inviteRequested={invite === "1"} />;
 }

@@ -82,3 +82,14 @@ class NotificationKind(StrEnum):
 class ChatRole(StrEnum):
     USER = "user"
     ASSISTANT = "assistant"
+
+
+class TeamRole(StrEnum):
+    OWNER = "owner"
+    ADMIN = "admin"
+    MEMBER = "member"
+
+
+class TeamMemberStatus(StrEnum):
+    INVITED = "invited"
+    ACTIVE = "active"

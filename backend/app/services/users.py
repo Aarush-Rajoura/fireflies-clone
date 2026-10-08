@@ -1,9 +1,9 @@
 """The current (demo) user: profile, onboarding answers and plan usage."""
 
-import logging
+from collections.abc import Sequence
 from datetime import UTC, datetime
 
-from app.core.exceptions import ServiceUnavailableError
+from app.core.exceptions import ConflictError, ServiceUnavailableError
 from app.db.unit_of_work import UnitOfWork
 from app.models import User
 from app.schemas.common import Page, PageParams
@@ -15,12 +15,16 @@ from app.schemas.user import (
     UsageRead,
     UserRead,
 )
-
-logger = logging.getLogger(__name__)
+from app.services.teams import TeamService
 
 # The free plan's limits; static until billing exists.
 FREE_MEETINGS_TOTAL = 3
 STORAGE_MINUTES_TOTAL = 400
+
+
+def _team_name(user: User) -> str:
+    first = user.name.split()[0] if user.name.split() else ""
+    return f"{first}'s team" if first else "My team"
 
 
 def _read(user: User) -> UserRead:
@@ -28,8 +32,9 @@ def _read(user: User) -> UserRead:
 
 
 class UserService:
-    def __init__(self, uow: UnitOfWork) -> None:
+    def __init__(self, uow: UnitOfWork, teams: TeamService | None = None) -> None:
         self.uow = uow
+        self.teams = teams or TeamService(uow)
 
     def me(self) -> MeRead:
         return self._me_read(self._default())
@@ -60,13 +65,20 @@ class UserService:
         user.job_title = data.job_title or None
         user.onboarded_at = datetime.now(UTC)
         self.uow.users.replace_tools(user.id, data.tools)
+        # Same transaction: answers and invites are saved together or not at all.
+        invited = self._invite_coworkers(user, data.invite_emails) if data.invite_emails else 0
         self.uow.commit()
-        if data.invite_emails:
-            # Team invites have no table yet; the Team feature will persist them.
-            logger.info("onboarding invites requested", extra={"count": len(data.invite_emails)})
-        return OnboardingResult(
-            **self._me_read(user).model_dump(), invites_sent=len(data.invite_emails)
-        )
+        return OnboardingResult(**self._me_read(user).model_dump(), invites_sent=invited)
+
+    def _invite_coworkers(self, user: User, emails: Sequence[str]) -> int:
+        """Invites into the user's team (created if they have none); returns how many are new."""
+        team_id = self.teams.ensure_my_team(_team_name(user), commit=False)
+        if team_id is None:
+            return 0  # a plain member may not invite; onboarding still completes
+        try:
+            return len(self.teams.invite(team_id, emails, commit=False).invited)
+        except ConflictError:
+            return 0  # everyone listed is already on the team
 
     def restart_onboarding(self) -> None:
         """Clears the completion mark only; earlier answers stay as the wizard's defaults."""

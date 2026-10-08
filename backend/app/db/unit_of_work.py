@@ -20,6 +20,7 @@ from app.repositories.participants import ParticipantRepository
 from app.repositories.soundbites import SoundbiteRepository
 from app.repositories.summaries import SummaryRepository
 from app.repositories.tags import TagRepository
+from app.repositories.teams import TeamMemberRepository, TeamRepository
 from app.repositories.transcript import TranscriptRepository
 from app.repositories.users import UserRepository
 
@@ -45,6 +46,8 @@ class UnitOfWork:
         self.chats = ChatRepository(session)
         self.chat_context = ChatContextRepository(session)
         self.analytics = AnalyticsRepository(session)
+        self.teams = TeamRepository(session)
+        self.team_members = TeamMemberRepository(session)
 
     def __enter__(self) -> "UnitOfWork":
         return self

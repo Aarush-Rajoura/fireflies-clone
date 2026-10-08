@@ -17,6 +17,7 @@ def _declare(status: int, description: str) -> Responses:
 
 
 NOT_FOUND = _declare(404, "The resource does not exist.")
+FORBIDDEN = _declare(403, "Your role does not allow this action.")
 GONE = _declare(410, "The meeting was soft-deleted; restore it to use it again.")
 VALIDATION = _declare(422, "Invalid input; `details.errors[].loc` is the field path.")
 CONFLICT = _declare(409, "The request conflicts with current state, e.g. a duplicate name.")

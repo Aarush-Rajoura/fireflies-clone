@@ -19,6 +19,7 @@ from app.api.v1.routers import (
     soundbites,
     summaries,
     tags,
+    teams,
     transcripts,
     users,
 )
@@ -39,6 +40,7 @@ ROUTERS = (
     channels,
     tags,
     integrations,
+    teams,
     users,
     home,
 )

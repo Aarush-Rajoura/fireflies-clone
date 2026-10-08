@@ -11,6 +11,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.exceptions import (
     AppError,
     ConflictError,
+    ForbiddenError,
     GoneError,
     NotFoundError,
     ServiceUnavailableError,
@@ -23,6 +24,7 @@ logger = logging.getLogger("app.errors")
 # The single place that knows which HTTP status each domain error means.
 STATUS_BY_ERROR: dict[type[AppError], int] = {
     NotFoundError: 404,
+    ForbiddenError: 403,
     GoneError: 410,
     ValidationFailedError: 422,
     ConflictError: 409,

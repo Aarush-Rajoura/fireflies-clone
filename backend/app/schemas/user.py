@@ -44,7 +44,7 @@ class MeRead(UserRead):
 
 
 class OnboardingResult(MeRead):
-    # Invites are not stored until the Team feature owns them; this counts the accepted ones.
+    # New invites created on the user's team (emails already on it are not counted).
     invites_sent: int
 
 

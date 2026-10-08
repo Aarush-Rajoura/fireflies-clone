@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { isValidEmail, splitEmails } from "./emails";
+import { isValidEmail, splitEmails } from "@/lib/utils/email";
 import {
   canAdvance,
   initWizard,

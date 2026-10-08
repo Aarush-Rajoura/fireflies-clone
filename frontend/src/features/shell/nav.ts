@@ -44,7 +44,8 @@ export const NAV_GROUPS: readonly (readonly NavItem[])[] = [
 ];
 
 export const NAV_FOOTER: readonly NavItem[] = [
-  { id: "team", label: "Invite team", icon: UserPlus, href: "/team" },
+  // Lands on the team page with the invite dialog already open.
+  { id: "team", label: "Invite team", icon: UserPlus, href: "/team?invite=1" },
   { id: "integrations", label: "Integrations", icon: Layers, href: "/integrations" },
   { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ];
@@ -54,8 +55,9 @@ const ALL_ITEMS: readonly NavItem[] = [...NAV_GROUPS.flat(), ...NAV_FOOTER];
 /** Exact match or a sub-path ("/meetings/7" keeps Meetings lit), never a mere prefix ("/meetingsx"). */
 export function isActive(pathname: string, href: string | undefined): boolean {
   if (!href) return false;
+  const target = href.split("?")[0] ?? href;
   const path = pathname.replace(/\/+$/, "") || "/";
-  return path === href || path.startsWith(`${href}/`);
+  return path === target || path.startsWith(`${target}/`);
 }
 
 /** Titles for routes that have no rail item of their own. */

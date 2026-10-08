@@ -10,6 +10,7 @@ from app.models.meeting import Meeting
 from app.models.participant import Participant
 from app.models.summary import Keyword, Summary, SummarySection
 from app.models.tag import MeetingTag, Tag
+from app.models.team import Team, TeamMember
 from app.models.transcript import Speaker, TranscriptSegment
 from app.models.user import User
 from app.models.user_tool import UserTool
@@ -18,5 +19,5 @@ __all__ = [
     "ActionItem", "CalendarConnection", "Channel", "ChatCitation", "ChatMessage", "ChatThread",
     "Comment", "Highlight", "IntegrationConnection", "Keyword", "Meeting", "MeetingTag",
     "Notification", "Participant", "Soundbite", "Speaker", "Summary", "SummarySection", "Tag",
-    "TranscriptSegment", "User", "UserTool",
+    "Team", "TeamMember", "TranscriptSegment", "User", "UserTool",
 ]  # fmt: skip
