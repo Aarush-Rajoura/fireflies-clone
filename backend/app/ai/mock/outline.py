@@ -147,14 +147,28 @@ def _title(
     candidates += [b for b in bigrams if tf[b] >= 2]
     if top is not None:
         candidates += [b for b in bigrams if top in b.split()]
+    # Titles are at least two words when the chapter allows: any phrase actually
+    # said, then the two most distinctive words ("Pricing and Rollout"), then one.
+    candidates += bigrams
+    candidates += [f"{a} and {b}" for a, b in zip(unigrams, unigrams[1:2], strict=False)]
     candidates += unigrams
     for term in candidates:
-        if " " in term:
+        if " " in term and " and " not in term:
             term = _extend(term, tf[term], tri)
-        title = " ".join(w.capitalize() for w in term.split())
+        title = " ".join(_title_word(w) for w in term.split())
         if title not in taken:
             return title
     return None
+
+
+_ACRONYMS = frozenset("api arr csv crm kpi okr qa sdk sla sso ui ux".split())
+
+
+def _title_word(word: str) -> str:
+    if word == "and":
+        return word
+    word = word.removesuffix("'s")
+    return word.upper() if word in _ACRONYMS else word.capitalize()
 
 
 def _titles(groups: list[list[TranscriptLine]], exclude: frozenset[str]) -> list[str]:

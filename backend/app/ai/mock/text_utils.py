@@ -31,6 +31,11 @@ STOPWORDS = frozenset(
     every another someone anyone something anything everything nothing people folks guys part
     point question idea without safe sense honest fine plan plans case saw seen write new
     confirm per goes going via
+    please alright hey hi hello nope yup totally definitely literally obviously honestly
+    guess gotta kinda sorta cool awesome perfect nice super basically seems seem seemed
+    whatever somewhat somehow anyway anyways bunch couple certainly simply truly
+    lost depend depends depending happy glad sorry worry worried behind ahead wait waiting
+    asks update updates list
     four five six seven eight nine ten twenty thirty forty fifty hundred thousand million
     percent second seconds minute minutes hour hours day days week weeks month months year years
     yesterday tomorrow tonight morning afternoon monday tuesday wednesday thursday friday
@@ -43,8 +48,12 @@ _SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 
 
 def words(text: str) -> list[str]:
-    """Lower-cased word tokens, apostrophes kept so contractions hit the stopword list."""
-    return _WORD.findall(text.lower().replace("’", "'"))
+    """Lower-cased word tokens, apostrophes kept so contractions hit the stopword list.
+
+    A possessive "'s" is dropped ("Kofi's budget" -> "kofi", "budget"), so names and
+    topics match however they are inflected; "it's"/"that's" fold to stopwords too.
+    """
+    return [w.removesuffix("'s") for w in _WORD.findall(text.lower().replace("’", "'"))]
 
 
 def is_content(word: str, exclude: frozenset[str] = frozenset()) -> bool:
@@ -78,8 +87,9 @@ def as_sentence(text: str) -> str:
 
 
 def speaker_name_tokens(t: TranscriptForAI) -> frozenset[str]:
-    """Every word of every speaker name - names are people, not topics."""
-    return frozenset(w for line in t.lines for w in words(line.speaker))
+    """Every word of every speaker and participant name - names are people, not topics."""
+    names = [line.speaker for line in t.lines] + list(t.participants)
+    return frozenset(w for name in names for w in words(name))
 
 
 def fmt_ms(ms: int) -> str:

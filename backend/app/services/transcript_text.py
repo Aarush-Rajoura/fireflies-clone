@@ -54,4 +54,8 @@ def build_transcript_for_ai(
         )
         for seg in sorted(segments, key=lambda s: s.sequence)
     ]
-    return TranscriptForAI(meeting_title=meeting.title, lines=lines)
+    return TranscriptForAI(
+        meeting_title=meeting.title,
+        lines=lines,
+        participants=tuple(p.display_name for p in participants),
+    )

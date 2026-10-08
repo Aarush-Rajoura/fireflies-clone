@@ -15,6 +15,8 @@ class TranscriptLine:
 class TranscriptForAI:
     meeting_title: str
     lines: list[TranscriptLine]
+    # Everyone on the invite, speaking or not: names are people, never topics.
+    participants: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

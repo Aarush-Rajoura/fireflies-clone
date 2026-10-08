@@ -42,7 +42,10 @@ def resolve_speaker_names(participants: Sequence[str], labels: Sequence[str]) ->
 
 
 def ai_transcript(
-    title: str, segments: Sequence[SegmentIn], names: dict[str, str]
+    title: str,
+    segments: Sequence[SegmentIn],
+    names: dict[str, str],
+    participants: Sequence[str] = (),
 ) -> TranscriptForAI:
     # No rows exist yet, so the sequence number stands in for the segment id.
     return TranscriptForAI(
@@ -51,6 +54,7 @@ def ai_transcript(
             TranscriptLine(segment_id=i, speaker=names[s.speaker], start_ms=s.start_ms, text=s.text)
             for i, s in enumerate(segments)
         ],
+        participants=tuple(distinct([*participants, *names.values()])),
     )
 
 

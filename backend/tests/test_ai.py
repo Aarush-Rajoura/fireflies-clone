@@ -422,3 +422,29 @@ def test_factory_builds_cached_fallback_pipeline_for_gemini() -> None:
     provider = build_ai_provider(Settings(ai_provider="gemini", ai_api_key="k", ai_model="m"))
     assert isinstance(provider, CachingProvider)
     assert provider.name == "gemini" and provider.model == "m"
+
+
+_FILLER = {"please", "okay", "yeah", "gonna", "thing", "stuff", "really", "actually", "just"}
+
+
+def test_mock_never_uses_filler_or_participant_names() -> None:
+    script = [
+        "Okay yeah, please just review the vendor contract, really.",
+        "Yeah okay, Kofi is gonna check the vendor contract stuff actually.",
+        "Please, the thing is the vendor contract renewal, Kofi really wants it.",
+        "Okay, just the renewal pricing thing, yeah, gonna need Kofi on that.",
+        "Actually the renewal pricing stuff is really just about Kofi's budget.",
+        "Yeah please send the renewal pricing to Kofi, okay, really, just do it.",
+    ] * 2
+    lines = [TranscriptLine(i, "Ana Ruiz", i * 5000, text) for i, text in enumerate(script)]
+    # Kofi is invited but never speaks: still a person, not a topic.
+    t = TranscriptForAI("Vendor sync", lines, participants=("Ana Ruiz", "Kofi Mensah"))
+    result = MockProvider().summarize(t)
+    used = {w for k in result.keywords for w in k.term.split()}
+    used |= {w.lower() for o in result.outline for w in o.title.split()}
+    assert used and not used & (_FILLER | {"kofi", "ana", "kofi's"})
+
+
+def test_mock_outline_titles_have_two_words_when_possible() -> None:
+    titles = [o.title for o in MockProvider().summarize(_sample()).outline]
+    assert titles and all(len(t.split()) >= 2 for t in titles)

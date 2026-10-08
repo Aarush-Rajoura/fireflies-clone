@@ -112,8 +112,9 @@ class MeetingCreationService:
         """Step 1: touches no database state, so no transaction is open during the calls."""
         if data.segments is None:
             return None
-        names = mapping.resolve_speaker_names(_people(data, host), _labels(data.segments))
-        transcript = mapping.ai_transcript(data.title, data.segments, names)
+        people = _people(data, host)
+        names = mapping.resolve_speaker_names(people, _labels(data.segments))
+        transcript = mapping.ai_transcript(data.title, data.segments, names, people)
         return AIOutput(
             summary=self.summarizer.summarize(transcript),
             drafts=self.extractor.extract_action_items(transcript),
