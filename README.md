@@ -17,7 +17,7 @@ analytics, a simulated integrations catalogue and a simulated team. There is no 
 seeded demo user is always signed in.
 
 **Status:** the API (77 operations on 54 paths), the app screens and the marketing pages are
-built. Tests: TEST_COUNTS_TBD.
+built. Tests: 542 backend (pytest) and 661 frontend (Vitest), all passing.
 
 ## Live demo
 
