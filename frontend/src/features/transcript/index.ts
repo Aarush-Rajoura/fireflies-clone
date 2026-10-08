@@ -1,4 +1,8 @@
-export { TranscriptPanel, type TranscriptPanelProps } from "./components/TranscriptPanel";
+export {
+  TranscriptPanel,
+  type TranscriptPanelHandle,
+  type TranscriptPanelProps,
+} from "./components/TranscriptPanel";
 export { useTranscript, isTranscriptGone, isTranscriptUnavailable } from "./hooks/useTranscript";
 export { useRenameSpeaker } from "./hooks/useRenameSpeaker";
 export { findActiveSegmentIndex } from "./lib/active-segment";

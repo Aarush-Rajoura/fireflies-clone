@@ -2,7 +2,21 @@ import { Fragment, memo } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
-export type HighlightRange = { start: number; end: number };
+/** The user-chosen highlight colours; each maps to a theme token, never a hex. */
+export const HIGHLIGHT_TONES = ["yellow", "green", "blue", "pink", "purple"] as const;
+export type HighlightTone = (typeof HIGHLIGHT_TONES)[number];
+
+/**
+ * A half-open `[start, end)` range of string indices. Without `tone` it is a
+ * search match (`activeIndex` counts these); with `tone` it is a saved
+ * highlight, and `id` is rendered as `data-range-id` so callers can find it.
+ */
+export type HighlightRange = {
+  start: number;
+  end: number;
+  tone?: HighlightTone;
+  id?: string | number;
+};
 
 export type HighlighterProps = {
   text: string;
@@ -12,62 +26,121 @@ export type HighlighterProps = {
   className?: string;
 };
 
-type Segment = { text: string; match?: number };
+/** A run of text; `match` and `tone` are indices into `ranges` of what covers it. */
+type Piece = { text: string; match?: number; tone?: number };
 
-/**
- * Splits text into plain and matched segments. Ranges are clamped to the text,
- * empty/inverted ones dropped, and overlaps trimmed so that every character is
- * rendered exactly once. Pure, so it is unit-tested directly.
- */
-export function segment(text: string, ranges: readonly HighlightRange[]): Segment[] {
+export const toneClasses: Record<HighlightTone, string> = {
+  yellow: "bg-annotate-yellow",
+  green: "bg-annotate-green",
+  blue: "bg-annotate-blue",
+  pink: "bg-annotate-pink",
+  purple: "bg-annotate-purple",
+};
+
+type Interval = { start: number; end: number; index: number };
+
+/** Clamped, non-empty, non-overlapping intervals; on overlap the earlier-starting range keeps the text. */
+function layer(text: string, ranges: readonly HighlightRange[], toned: boolean): Interval[] {
   const len = text.length;
   const clean = ranges
     .map((r, index) => ({
       start: Math.max(0, Math.min(len, Math.floor(r.start))),
       end: Math.max(0, Math.min(len, Math.floor(r.end))),
       index,
+      toned: r.tone !== undefined,
     }))
-    .filter((r) => Number.isFinite(r.start) && Number.isFinite(r.end) && r.end > r.start)
+    .filter(
+      (r) =>
+        r.toned === toned && Number.isFinite(r.start) && Number.isFinite(r.end) && r.end > r.start,
+    )
     .sort((a, b) => a.start - b.start || b.end - a.end);
 
-  const out: Segment[] = [];
+  const out: Interval[] = [];
   let cursor = 0;
   for (const r of clean) {
     const start = Math.max(r.start, cursor);
     if (start >= r.end) continue;
-    if (start > cursor) out.push({ text: text.slice(cursor, start) });
-    out.push({ text: text.slice(start, r.end), match: r.index });
+    out.push({ start, end: r.end, index: r.index });
     cursor = r.end;
   }
-  if (cursor < len) out.push({ text: text.slice(cursor) });
+  return out;
+}
+
+const coveringAt = (intervals: Interval[], at: number) =>
+  intervals.find((r) => r.start <= at && at < r.end)?.index;
+
+/**
+ * Splits text into pieces tagged with the search match and the saved highlight
+ * covering each. Matches and highlights are two layers that may overlap each
+ * other; within a layer overlaps are trimmed, so every character is rendered
+ * exactly once. Pure, so it is unit-tested directly.
+ */
+export function segment(text: string, ranges: readonly HighlightRange[]): Piece[] {
+  const search = layer(text, ranges, false);
+  const tones = layer(text, ranges, true);
+  const cuts = new Set([0, text.length]);
+  for (const r of [...search, ...tones]) cuts.add(r.start).add(r.end);
+  const points = [...cuts].sort((a, b) => a - b);
+
+  const out: Piece[] = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const from = points[i] as number;
+    const to = points[i + 1] as number;
+    const match = coveringAt(search, from);
+    const tone = coveringAt(tones, from);
+    const last = out[out.length - 1];
+    if (last && last.match === match && last.tone === tone) {
+      last.text += text.slice(from, to);
+      continue;
+    }
+    const piece: Piece = { text: text.slice(from, to) };
+    if (match !== undefined) piece.match = match;
+    if (tone !== undefined) piece.tone = tone;
+    out.push(piece);
+  }
   return out;
 }
 
 /**
- * Wraps matches in <mark>. Text is always rendered as React text nodes, never
- * as HTML, so user content like `<script>` displays literally.
+ * Wraps matches and highlights in <mark>. Where a search match crosses a saved
+ * highlight the search styling wins, so "n of m" stays visible. Text is always
+ * rendered as React text nodes, never as HTML, so `<script>` displays literally.
  */
-export const Highlighter = memo(function Highlighter({ text, ranges, activeIndex, className }: HighlighterProps) {
+export const Highlighter = memo(function Highlighter({
+  text,
+  ranges,
+  activeIndex,
+  className,
+}: HighlighterProps) {
   if (ranges.length === 0) return <span className={className}>{text}</span>;
   return (
     <span className={className}>
-      {segment(text, ranges).map((s, i) =>
-        s.match === undefined ? (
-          <Fragment key={i}>{s.text}</Fragment>
-        ) : (
+      {segment(text, ranges).map((s, i) => {
+        if (s.match === undefined && s.tone === undefined) {
+          return <Fragment key={i}>{s.text}</Fragment>;
+        }
+        const highlight = s.tone === undefined ? undefined : ranges[s.tone];
+        const isSearch = s.match !== undefined;
+        return (
           <mark
             key={i}
             data-match-index={s.match}
-            aria-current={s.match === activeIndex ? "true" : undefined}
+            data-tone={highlight?.tone}
+            data-range-id={highlight?.id}
+            aria-current={isSearch && s.match === activeIndex ? "true" : undefined}
             className={cn(
               "rounded-tag text-strong",
-              s.match === activeIndex ? "bg-highlight-active" : "bg-highlight",
+              isSearch
+                ? s.match === activeIndex
+                  ? "bg-highlight-active"
+                  : "bg-highlight"
+                : highlight?.tone && toneClasses[highlight.tone],
             )}
           >
             {s.text}
           </mark>
-        ),
-      )}
+        );
+      })}
     </span>
   );
 });

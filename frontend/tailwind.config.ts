@@ -50,6 +50,10 @@ const colors = {
   fab: { DEFAULT: v("fab"), text: v("fab-text"), border: v("fab-border") },
   count: v("count"),
   highlight: { DEFAULT: v("highlight"), active: v("highlight-active") },
+  // Saved transcript highlights: one wash per colour the user can pick.
+  annotate: Object.fromEntries(
+    ["yellow", "green", "blue", "pink", "purple"].map((c) => [c, v(`annotate-${c}`)]),
+  ),
   tint: { rose: v("tint-rose"), teal: v("tint-teal"), violet: v("tint-violet") },
   speaker: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`speaker-${i}`)])),
   avatar: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`avatar-${i}`)])),

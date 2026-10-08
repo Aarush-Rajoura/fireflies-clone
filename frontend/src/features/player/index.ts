@@ -1,6 +1,12 @@
 export { PlayerProvider, defaultCreateEngine, type PlayerProviderProps } from "./PlayerProvider";
 export { usePlayerControls } from "./hooks/usePlayerControls";
-export { usePlayerClock, usePlayerClockSelector, usePlayerTime } from "./hooks/usePlayerClock";
+export {
+  usePlayerClock,
+  usePlayerClockSelector,
+  usePlayerClockWatch,
+  usePlayerTime,
+  type ClockListener,
+} from "./hooks/usePlayerClock";
 export { usePlayerShortcuts } from "./hooks/usePlayerShortcuts";
 export { useInitialSeek } from "./hooks/useInitialSeek";
 export { PlayerCard, type PlayerCardProps } from "./components/PlayerCard";

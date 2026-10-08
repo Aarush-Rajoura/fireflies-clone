@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, type MouseEvent } from "react";
+import { memo, type MouseEvent, type ReactNode } from "react";
 
 import { Highlighter, TimestampButton, type HighlightRange } from "@/components/ui";
 import type { Segment, Speaker } from "@/lib/api";
@@ -21,6 +21,10 @@ export type SegmentRowProps = {
   activeMatchIndex: number | undefined;
   onSeek: (ms: number) => void;
   onRename: (speakerId: number) => void;
+  /** Clicking a saved highlight (a mark with `data-range-id`) calls this instead of seeking. */
+  onHighlightClick?: (rangeId: string, mark: HTMLElement) => void;
+  /** Extra controls under the line (e.g. a comment count); keep its identity stable. */
+  renderDecorations?: (segment: Segment) => ReactNode;
 };
 
 /**
@@ -38,6 +42,8 @@ export const SegmentRow = memo(function SegmentRow({
   activeMatchIndex,
   onSeek,
   onRename,
+  onHighlightClick,
+  renderDecorations,
 }: SegmentRowProps) {
   const onClick = (e: MouseEvent<HTMLDivElement>) => {
     // Menu items are portalled: their clicks bubble here through React, not the DOM.
@@ -45,9 +51,12 @@ export const SegmentRow = memo(function SegmentRow({
     if ((e.target as HTMLElement).closest("button")) return;
     // Selecting text to copy it is not a request to jump.
     if (window.getSelection()?.toString()) return;
+    const mark = (e.target as HTMLElement).closest<HTMLElement>("mark[data-range-id]");
+    if (mark && onHighlightClick) return onHighlightClick(mark.dataset.rangeId ?? "", mark);
     onSeek(segment.start_ms);
   };
   const stamp = formatTimestamp(segment.start_ms);
+  const decorations = renderDecorations?.(segment);
 
   return (
     <div
@@ -80,9 +89,15 @@ export const SegmentRow = memo(function SegmentRow({
           {stamp}
         </TimestampButton>
       )}
-      <p className={cn("pl-8 text-transcript text-primary", showHeader ? "mt-1" : "pr-10")}>
+      {/* `data-segment-text` marks the node whose text content is exactly `segment.text`, so a
+          DOM selection inside it maps to string offsets. */}
+      <p
+        data-segment-text={segment.id}
+        className={cn("pl-8 text-transcript text-primary", showHeader ? "mt-1" : "pr-10")}
+      >
         <Highlighter text={segment.text} ranges={ranges} activeIndex={activeMatchIndex} />
       </p>
+      {decorations != null && <div className="mt-0.5 flex items-center gap-1 pl-8">{decorations}</div>}
     </div>
   );
 });

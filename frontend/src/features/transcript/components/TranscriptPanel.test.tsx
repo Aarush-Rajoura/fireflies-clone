@@ -7,7 +7,7 @@ import { PlayerProvider, VirtualClockEngine } from "@/features/player";
 import { makeQueryClient } from "@/lib/query/query-client";
 
 import { transcript } from "../testing/fixtures";
-import { TranscriptPanel } from "./TranscriptPanel";
+import { TranscriptPanel, type TranscriptPanelProps } from "./TranscriptPanel";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -17,7 +17,7 @@ type Route = (req: Request) => Promise<Response> | Response;
 let engine!: VirtualClockEngine;
 const notify = vi.fn();
 
-function renderPanel(route: Route) {
+function renderPanel(route: Route, slots: Omit<TranscriptPanelProps, "meetingId"> = {}) {
   vi.stubGlobal("fetch", vi.fn<(req: Request) => Promise<Response>>(async (req) => route(req)));
   const client = makeQueryClient(notify);
   return render(
@@ -30,7 +30,7 @@ function renderPanel(route: Route) {
             return engine;
           }}
         >
-          <TranscriptPanel meetingId={7} />
+          <TranscriptPanel meetingId={7} {...slots} />
         </PlayerProvider>
       </TooltipProvider>
     </QueryClientProvider>,
@@ -165,5 +165,49 @@ describe("TranscriptPanel", () => {
     await act(async () => fail());
     await waitFor(() => expect(screen.getAllByRole("button", { name: "Janice" })).toHaveLength(2));
     expect(notify).toHaveBeenCalledWith("Rename failed", undefined);
+  });
+
+  describe("slots for other features", () => {
+    // "Let's start with pricing for Acme." is segment 102.
+    const highlights = new Map([[102, [{ start: 17, end: 24, tone: "pink" as const, id: 5 }]]]);
+
+    it("renders saved highlights under search matches, and a highlight click does not seek", async () => {
+      const onHighlightClick = vi.fn();
+      renderPanel(transcriptOk, { highlights, onHighlightClick });
+      await screen.findByText(transcript.segments[0]!.text);
+      const mark = document.querySelector<HTMLElement>('mark[data-range-id="5"]')!;
+      expect(mark.textContent).toBe("pricing");
+      expect(mark.dataset.tone).toBe("pink");
+      // The text node the selection toolbar measures against is exactly the segment text.
+      expect(document.querySelector('[data-segment-text="102"]')?.textContent).toBe(
+        "Let's start with pricing for Acme.",
+      );
+
+      fireEvent.click(mark);
+      expect(onHighlightClick).toHaveBeenCalledWith("5", mark);
+      expect(engine.currentMs).toBe(0);
+
+      // A search for "pricing" still marks both lines, and the find count is unchanged.
+      fireEvent.change(screen.getByRole("searchbox"), { target: { value: "pricing" } });
+      await waitFor(() => expect(document.querySelectorAll("mark[data-match-index]")).toHaveLength(2));
+      const both = document.querySelector('[data-segment-text="102"] mark[data-match-index]');
+      expect(both?.getAttribute("data-range-id")).toBe("5");
+    });
+
+    it("renders decorations under a line and focuses find through the handle", async () => {
+      const handle = { current: null as null | { focusFind(): void } };
+      renderPanel(transcriptOk, {
+        handleRef: handle,
+        renderSegmentDecorations: (segment) =>
+          segment.id === 103 ? <span data-testid="badge">2 comments</span> : null,
+      });
+      await screen.findByText(transcript.segments[0]!.text);
+      const badge = screen.getByTestId("badge");
+      expect(badge.closest("[data-segment-index]")?.getAttribute("data-segment-index")).toBe("2");
+      expect(document.querySelectorAll('[data-testid="badge"]')).toHaveLength(1);
+
+      act(() => handle.current?.focusFind());
+      expect(document.activeElement).toBe(screen.getByRole("searchbox"));
+    });
   });
 });

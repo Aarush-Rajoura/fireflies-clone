@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useImperativeHandle, useMemo, type Ref, type RefObject } from "react";
+import {
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from "react";
 
 import type { HighlightRange } from "@/components/ui";
 import { usePlayerClockSelector, usePlayerControls } from "@/features/player";
@@ -15,6 +22,7 @@ import { SegmentRow } from "./SegmentRow";
 
 const NO_RANGES: readonly HighlightRange[] = [];
 const NO_MATCHES: ReadonlyMap<number, SegmentMatches> = new Map();
+const NO_HIGHLIGHTS: ReadonlyMap<number, readonly HighlightRange[]> = new Map();
 
 const UNKNOWN_SPEAKER: Speaker = {
   id: -1,
@@ -40,6 +48,10 @@ export type TranscriptListProps = {
   currentMatch?: Match;
   /** Global index of `currentMatch`. */
   currentMatchIndex?: number;
+  /** Saved highlights by segment id; ranges carry a `tone`. */
+  highlights?: ReadonlyMap<number, readonly HighlightRange[]>;
+  onHighlightClick?: (rangeId: string, mark: HTMLElement) => void;
+  renderSegmentDecorations?: (segment: Segment) => ReactNode;
 };
 
 /**
@@ -60,6 +72,9 @@ export function TranscriptList({
   matches = NO_MATCHES,
   currentMatch,
   currentMatchIndex = -1,
+  highlights = NO_HIGHLIGHTS,
+  onHighlightClick,
+  renderSegmentDecorations,
 }: TranscriptListProps) {
   const { seek } = usePlayerControls();
   const activeIndex = usePlayerClockSelector((c) => findActiveSegmentIndex(segments, c.currentMs));
@@ -70,6 +85,18 @@ export function TranscriptList({
 
   const turnStarts = useMemo(() => speakerTurnStarts(segments), [segments]);
   const speakerById = useMemo(() => new Map(speakers.map((s) => [s.id, s])), [speakers]);
+  // Search ranges first, so a row's match indices are unchanged by its highlights.
+  // Built once per change of either, so playhead ticks still re-render only two rows.
+  const rowRanges = useMemo(
+    () =>
+      segments.map((segment, i) => {
+        const found = matches.get(i)?.ranges ?? NO_RANGES;
+        const saved = highlights.get(segment.id) ?? NO_RANGES;
+        if (saved.length === 0) return found;
+        return found.length === 0 ? saved : [...found, ...saved];
+      }),
+    [segments, matches, highlights],
+  );
 
   // Seeking keeps the current play state, as Fireflies does; a click also means "follow from here".
   const onSeek = useCallback(
@@ -98,12 +125,14 @@ export function TranscriptList({
               speaker={speakerById.get(segment.speaker_id) ?? UNKNOWN_SPEAKER}
               showHeader={turnStarts[i] ?? true}
               isActive={i === activeIndex}
-              ranges={hit?.ranges ?? NO_RANGES}
+              ranges={rowRanges[i] ?? NO_RANGES}
               activeMatchIndex={
                 hit && currentMatch?.segmentIndex === i ? currentMatchIndex - hit.offset : undefined
               }
               onSeek={onSeek}
               onRename={onRename}
+              onHighlightClick={onHighlightClick}
+              renderDecorations={renderSegmentDecorations}
             />
           );
         })}

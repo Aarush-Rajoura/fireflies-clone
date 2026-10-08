@@ -15,7 +15,7 @@ import {
   toast,
 } from "@/components/ui";
 
-import { formatRelative } from "../lib/relative-time";
+import { formatRelative } from "@/lib/utils/relative-time";
 import { NOTE_TEMPLATES, type TemplateId } from "../lib/templates";
 
 export type SummaryHeaderProps = {

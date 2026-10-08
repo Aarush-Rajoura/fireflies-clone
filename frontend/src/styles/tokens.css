@@ -81,6 +81,20 @@
   --ff-amber-mark-light: #ffe9a8;
   --ff-amber-mark-light-active: #ffc933;
 
+  /* Saved-highlight washes. [D] Dark ones are deep enough for light text;
+     light ones are pastel under dark text. Yellow leans lemon so it reads
+     apart from the amber search wash. */
+  --ff-annotate-dark-yellow: #4a4718;
+  --ff-annotate-dark-green: #1d4a33;
+  --ff-annotate-dark-blue: #1b3f60;
+  --ff-annotate-dark-pink: #5a2347;
+  --ff-annotate-dark-purple: #3f2f70;
+  --ff-annotate-light-yellow: #fbf3a0;
+  --ff-annotate-light-green: #c9f2d6;
+  --ff-annotate-light-blue: #cfe4ff;
+  --ff-annotate-light-pink: #fbd3ea;
+  --ff-annotate-light-purple: #e2d9ff;
+
   --ff-red-950: #2d1512;
   --ff-red-700: #b4261a;
   --ff-red-600: #d92d20;
@@ -207,6 +221,12 @@
   --ff-highlight: var(--ff-amber-mark);
   --ff-highlight-active: var(--ff-amber-mark-active);
 
+  --ff-annotate-yellow: var(--ff-annotate-dark-yellow);
+  --ff-annotate-green: var(--ff-annotate-dark-green);
+  --ff-annotate-blue: var(--ff-annotate-dark-blue);
+  --ff-annotate-pink: var(--ff-annotate-dark-pink);
+  --ff-annotate-purple: var(--ff-annotate-dark-purple);
+
   --ff-tint-rose: var(--ff-rose-950);
   --ff-tint-teal: var(--ff-teal-950);
   --ff-tint-violet: var(--ff-violet-950);
@@ -302,6 +322,12 @@
 
   --ff-highlight: var(--ff-amber-mark-light);
   --ff-highlight-active: var(--ff-amber-mark-light-active);
+
+  --ff-annotate-yellow: var(--ff-annotate-light-yellow);
+  --ff-annotate-green: var(--ff-annotate-light-green);
+  --ff-annotate-blue: var(--ff-annotate-light-blue);
+  --ff-annotate-pink: var(--ff-annotate-light-pink);
+  --ff-annotate-purple: var(--ff-annotate-light-purple);
 
   --ff-tint-rose: var(--ff-red-50);
   --ff-tint-teal: var(--ff-green-50);

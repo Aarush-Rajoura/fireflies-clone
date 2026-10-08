@@ -1,9 +1,16 @@
 "use client";
 
 import { AlertCircle, FileText } from "lucide-react";
-import { useRef, useState, type KeyboardEvent } from "react";
+import {
+  useImperativeHandle,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+} from "react";
 
-import { Button, EmptyState, Skeleton } from "@/components/ui";
+import { Button, EmptyState, Skeleton, type HighlightRange } from "@/components/ui";
 import { usePlayerControls } from "@/features/player";
 import type { Segment, Speaker } from "@/lib/api";
 
@@ -16,14 +23,34 @@ import { FindBar } from "./FindBar";
 import { RenameSpeakerModal } from "./RenameSpeakerModal";
 import { TranscriptList, type TranscriptListHandle } from "./TranscriptList";
 
-export type TranscriptPanelProps = { meetingId: number };
+export type TranscriptPanelHandle = {
+  /** Focus the find box (e.g. from a page-level Search button). */
+  focusFind(): void;
+};
+
+/**
+ * The optional props are slots for other features (highlights, comments) so
+ * the transcript never imports them; the page composes them in.
+ */
+export type TranscriptPanelProps = {
+  meetingId: number;
+  handleRef?: Ref<TranscriptPanelHandle>;
+  /** Saved highlights by segment id; each range carries a `tone` and an `id`. */
+  highlights?: ReadonlyMap<number, readonly HighlightRange[]>;
+  /** Called instead of seeking when a saved highlight is clicked. */
+  onHighlightClick?: (rangeId: string, mark: HTMLElement) => void;
+  /** Rendered under a line. Its identity should change only when what it renders does. */
+  renderSegmentDecorations?: (segment: Segment) => ReactNode;
+};
+
+type Slots = Omit<TranscriptPanelProps, "meetingId">;
 
 /**
  * The meeting page's transcript column. Must sit inside <PlayerProvider>.
  * A 404/410 renders nothing: the page owns "meeting deleted / not found"
  * (check with `isTranscriptGone` / `isTranscriptUnavailable`).
  */
-export function TranscriptPanel({ meetingId }: TranscriptPanelProps) {
+export function TranscriptPanel({ meetingId, ...slots }: TranscriptPanelProps) {
   const query = useTranscript(meetingId);
   if (query.isError && isTranscriptUnavailable(query.error)) return null;
 
@@ -57,6 +84,7 @@ export function TranscriptPanel({ meetingId }: TranscriptPanelProps) {
         meetingId={meetingId}
         segments={query.data.segments}
         speakers={query.data.speakers}
+        {...slots}
       />
     );
   }
@@ -73,7 +101,11 @@ function LoadedTranscript({
   meetingId,
   segments,
   speakers,
-}: {
+  handleRef,
+  highlights,
+  onHighlightClick,
+  renderSegmentDecorations,
+}: Slots & {
   meetingId: number;
   segments: Segment[];
   speakers: Speaker[];
@@ -85,6 +117,16 @@ function LoadedTranscript({
   const listRef = useRef<HTMLDivElement>(null);
   const listHandle = useRef<TranscriptListHandle>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  useImperativeHandle(
+    handleRef,
+    () => ({
+      focusFind: () => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      },
+    }),
+    [],
+  );
 
   // Seek exactly once, here in the event handler that chose the match.
   const goTo = (match: Match | undefined) => {
@@ -132,6 +174,9 @@ function LoadedTranscript({
         matches={find.bySegment}
         currentMatch={find.currentMatch}
         currentMatchIndex={find.current}
+        highlights={highlights}
+        onHighlightClick={onHighlightClick}
+        renderSegmentDecorations={renderSegmentDecorations}
       />
       <RenameSpeakerModal
         speaker={speakers.find((s) => s.id === renamingId) ?? null}

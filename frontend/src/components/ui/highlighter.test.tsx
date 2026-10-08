@@ -46,6 +46,67 @@ describe("Highlighter", () => {
     ]);
   });
 
+  test("renders several coloured highlights with their tone and id", () => {
+    const { container } = render(
+      <Highlighter
+        text="ship it on Friday, review Monday"
+        ranges={[
+          { start: 0, end: 7, tone: "green", id: 4 },
+          { start: 26, end: 32, tone: "pink", id: 9 },
+        ]}
+      />,
+    );
+    const found = [...container.querySelectorAll("mark")].map((m) => [
+      m.textContent,
+      m.getAttribute("data-tone"),
+      m.getAttribute("data-range-id"),
+      m.className.includes(`bg-annotate-${m.getAttribute("data-tone")}`),
+      m.hasAttribute("data-match-index"),
+    ]);
+    expect(found).toEqual([
+      ["ship it", "green", "4", true, false],
+      ["Monday", "pink", "9", true, false],
+    ]);
+    expect(container.textContent).toBe("ship it on Friday, review Monday");
+  });
+
+  test("search matches sit on top of highlights and keep their own index", () => {
+    // Search for "it on" (index 0) inside a yellow highlight of "ship it on Friday".
+    const ranges = [
+      { start: 5, end: 10 },
+      { start: 0, end: 17, tone: "yellow" as const, id: "h1" },
+    ];
+    expect(segment("ship it on Friday!", ranges)).toEqual([
+      { text: "ship ", tone: 1 },
+      { text: "it on", match: 0, tone: 1 },
+      { text: " Friday", tone: 1 },
+      { text: "!" },
+    ]);
+    const { container } = render(
+      <Highlighter text="ship it on Friday!" ranges={ranges} activeIndex={0} />,
+    );
+    const current = container.querySelector('mark[aria-current="true"]');
+    expect(current?.textContent).toBe("it on");
+    expect(current?.className).toContain("bg-highlight-active");
+    expect(current?.className).not.toContain("bg-annotate");
+    // Still discoverable as part of the highlight, so clicking it can edit the highlight.
+    expect(current?.getAttribute("data-range-id")).toBe("h1");
+    expect(container.querySelectorAll('mark[data-range-id="h1"]')).toHaveLength(3);
+  });
+
+  test("overlapping highlights render each character once", () => {
+    const segs = segment("abcdefgh", [
+      { start: 1, end: 5, tone: "blue" },
+      { start: 3, end: 7, tone: "pink" },
+    ]);
+    expect(segs).toEqual([
+      { text: "a" },
+      { text: "bcde", tone: 0 },
+      { text: "fg", tone: 1 },
+      { text: "h" },
+    ]);
+  });
+
   test("no ranges renders plain text", () => {
     const { container } = render(<Highlighter text="plain" ranges={[]} />);
     expect(container.querySelector("mark")).toBeNull();

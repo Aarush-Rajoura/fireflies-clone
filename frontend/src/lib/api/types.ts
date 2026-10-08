@@ -43,6 +43,19 @@ export type ActionItemCreate = Schemas["ActionItemCreate"];
 export type ActionItemUpdate = Schemas["ActionItemUpdate"];
 export type ActionItemStatus = Schemas["ActionItemStatus"];
 
+// Not `Comment`: that name is the DOM comment-node type.
+export type MeetingComment = Schemas["CommentRead"];
+export type CommentCreate = Schemas["CommentCreate"];
+export type CommentUpdate = Schemas["CommentUpdate"];
+
+export type Highlight = Schemas["HighlightRead"];
+export type HighlightCreate = Schemas["HighlightCreate"];
+export type HighlightUpdate = Schemas["HighlightUpdate"];
+export type HighlightColor = Highlight["color"];
+
+export type Soundbite = Schemas["SoundbiteRead"];
+export type SoundbiteCreate = Schemas["SoundbiteCreate"];
+
 export type Channel = Schemas["ChannelRead"];
 export type SearchHit = Schemas["SearchHit"];
 /** Query parameters of GET /api/v1/search. */

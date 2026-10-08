@@ -1,6 +1,6 @@
 "use client";
 
-import { useContext, useSyncExternalStore } from "react";
+import { useCallback, useContext, useSyncExternalStore } from "react";
 
 import { PlayerClockContext } from "../context";
 import type { ClockStore, PlayerClock } from "../lib/clock-store";
@@ -30,4 +30,21 @@ export function usePlayerClockSelector<T>(selector: (clock: PlayerClock) => T): 
 
 export function usePlayerTime(): number {
   return usePlayerClockSelector((c) => c.currentMs);
+}
+
+export type ClockListener = (clock: PlayerClock) => void;
+
+/**
+ * Subscribe imperatively, for event-driven watchers that act on time without
+ * rendering, e.g. pausing when a clip reaches its end. Start one from the
+ * event handler that needs it and call the returned function to stop it.
+ * The listener gets each published clock (~10/s while playing, plus every
+ * play/pause/seek). Identity is stable.
+ */
+export function usePlayerClockWatch(): (listener: ClockListener) => () => void {
+  const store = useClockStore();
+  return useCallback(
+    (listener: ClockListener) => store.subscribe(() => listener(store.get())),
+    [store],
+  );
 }
