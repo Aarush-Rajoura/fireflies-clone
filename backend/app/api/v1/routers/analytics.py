@@ -20,8 +20,13 @@ router = APIRouter(tags=["analytics"])
 )
 def analytics_overview(
     service: Annotated[AnalyticsService, Depends(get_analytics_service)],
-    range: Annotated[
-        AnalyticsRange, Query(description="Window ending now: the last 7, 30 or 90 days, or all.")
+    range_: Annotated[
+        AnalyticsRange,
+        Query(
+            alias="range",
+            description="Window opening 7, 30 or 90 days ago, or `all`. It has no upper bound: "
+            "completed meetings dated later today still count.",
+        ),
     ] = AnalyticsRange.MONTH,
     tz: Annotated[
         str,
@@ -31,4 +36,4 @@ def analytics_overview(
         ),
     ] = "UTC",
 ) -> AnalyticsOverview:
-    return service.overview(range, tz)
+    return service.overview(range_, tz)

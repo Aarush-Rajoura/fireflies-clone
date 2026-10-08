@@ -1,14 +1,20 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { SegmentedControl, Skeleton, StateView } from "@/components/ui";
 import type { AnalyticsOverview, AnalyticsRange } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
 import { useAnalyticsOverview } from "../hooks/useAnalyticsOverview";
-import { DEFAULT_RANGE, formatHour, RANGE_OPTIONS, rangePhrase, WEEKDAYS } from "../lib/format";
+import {
+  DEFAULT_RANGE,
+  formatHour,
+  isAnalyticsRange,
+  RANGE_OPTIONS,
+  rangePhrase,
+  WEEKDAYS,
+} from "../lib/format";
 import { ActivityHeatmap } from "./ActivityHeatmap";
 import { AnalyticsEmpty } from "./AnalyticsEmpty";
 import { ChartCard } from "./ChartCard";
@@ -76,16 +82,17 @@ function DashboardSkeleton() {
  * The `/analytics` dashboard. The range lives in the URL (`?range=`) so a
  * view is shareable; the time zone is always the viewer's own.
  */
-export function AnalyticsView({ initialRange = DEFAULT_RANGE }: { initialRange?: AnalyticsRange }) {
+export function AnalyticsView() {
   const router = useRouter();
   const pathname = usePathname();
-  const [range, setRange] = useState<AnalyticsRange>(initialRange);
+  // Read from the URL on every render so back/forward and pasted links stay in sync.
+  const param = useSearchParams().get("range");
+  const range: AnalyticsRange = isAnalyticsRange(param) ? param : DEFAULT_RANGE;
   const overview = useAnalyticsOverview(range);
 
   const changeRange = (next: AnalyticsRange) => {
-    setRange(next);
     const qs = next === DEFAULT_RANGE ? "" : `?range=${next}`;
-    router.replace(`${pathname}${qs}`, { scroll: false });
+    router.push(`${pathname}${qs}`, { scroll: false });
   };
 
   return (

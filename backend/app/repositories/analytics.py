@@ -38,7 +38,10 @@ class KeywordCount:
 
 
 def _person_key() -> ColumnElement[str]:
-    """One person across meetings: the linked user, else the name ignoring case."""
+    """One person across meetings: the linked user, else the name ignoring case.
+
+    Known limit: someone linked in one meeting and typed by name in another counts twice.
+    """
     return case(
         (Participant.user_id.is_not(None), "u:" + cast(Participant.user_id, String)),
         else_="n:" + func.lower(Participant.display_name),

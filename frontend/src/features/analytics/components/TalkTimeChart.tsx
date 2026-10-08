@@ -1,4 +1,5 @@
 import type { AnalyticsOverview, TalkTimeShare } from "@/lib/api";
+import { Tooltip } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 import { assignSpeakerColors, formatDuration, formatPercent } from "../lib/format";
@@ -40,18 +41,27 @@ export function TalkTimeChart({ talk }: { talk: AnalyticsOverview["talk_time"] }
   return (
     <div className="flex flex-col gap-5">
       <div
-        role="img"
+        role="group"
         aria-label={`Share of talk time: ${summary}.`}
         className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full"
       >
-        {rows.map((r) => (
-          <div
-            key={r.name}
-            title={`${r.name}: ${formatPercent(r.share)} (${formatDuration(r.talk_ms)})`}
-            className={cn("h-full min-w-0.5 first:rounded-l-full last:rounded-r-full", r.swatch)}
-            style={{ flexGrow: r.talk_ms, flexBasis: 0 }}
-          />
-        ))}
+        {rows.map((r) => {
+          const detail = `${r.name}: ${formatPercent(r.share)} (${formatDuration(r.talk_ms)})`;
+          return (
+            <Tooltip key={r.name} content={detail} side="top">
+              <div
+                role="img"
+                tabIndex={0}
+                aria-label={detail}
+                className={cn(
+                  "h-full min-w-0.5 first:rounded-l-full last:rounded-r-full",
+                  r.swatch,
+                )}
+                style={{ flexGrow: r.talk_ms, flexBasis: 0 }}
+              />
+            </Tooltip>
+          );
+        })}
       </div>
       <ul className="grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
         {rows.map((r) => (

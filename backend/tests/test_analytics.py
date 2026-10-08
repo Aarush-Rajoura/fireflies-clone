@@ -233,4 +233,4 @@ def test_overview_endpoint(api: TestClient) -> None:
     bad_tz = api.get("/api/v1/analytics/overview", params={"tz": "Nowhere/City"})
     assert bad_tz.status_code == 422 and bad_tz.json()["error"]["code"] == "INVALID_TIMEZONE"
     bad_range = api.get("/api/v1/analytics/overview", params={"range": "1y"})
-    assert bad_range.status_code == 422
+    assert bad_range.status_code == 422 and bad_range.json()["error"]["code"] == "VALIDATION_ERROR"

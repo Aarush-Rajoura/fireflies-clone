@@ -23,11 +23,7 @@ export function TopTopics({ keywords }: { keywords: KeywordStat[] }) {
           <span className="tnum text-meta text-muted">{i + 1}</span>
           <div className="min-w-0">
             <div className="truncate text-body-strong text-primary">{k.term}</div>
-            <div
-              aria-hidden
-              className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3"
-              title={`Weight ${k.weight}`}
-            >
+            <div aria-hidden className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-surface-3">
               <div
                 className="h-full rounded-full bg-accent"
                 style={{ width: `${Math.max(fraction(k.weight, maxWeight), 0.02) * 100}%` }}

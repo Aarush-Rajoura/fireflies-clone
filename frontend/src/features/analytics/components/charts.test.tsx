@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { TooltipProvider } from "@/components/ui";
 import type { AnalyticsOverview } from "@/lib/api";
 
 import { ActivityHeatmap } from "./ActivityHeatmap";
@@ -79,10 +80,15 @@ describe("TalkTimeChart", () => {
       { name: "Raj", talk_ms: 30_000, share: 0.3, is_other: false },
       { name: "Others", talk_ms: 10_000, share: 0.1, is_other: true },
     ];
-    render(<TalkTimeChart talk={{ total_ms: 100_000, participants }} />);
-    expect(screen.getByRole("img").getAttribute("aria-label")).toBe(
+    render(
+      <TooltipProvider>
+        <TalkTimeChart talk={{ total_ms: 100_000, participants }} />
+      </TooltipProvider>,
+    );
+    expect(screen.getByRole("group").getAttribute("aria-label")).toBe(
       "Share of talk time: Sarah Chen 60%, Raj 30%, Others 10%.",
     );
+    expect(screen.getByRole("img", { name: /^Raj: 30% \(/ })).toBeTruthy();
     const swatches = screen
       .getAllByRole("listitem")
       .map((li) => li.querySelector("span")?.className ?? "");
@@ -118,12 +124,20 @@ describe("ActivityHeatmap", () => {
   it("summarises the busiest slot for assistive tech", () => {
     const heatmap = Array.from({ length: 7 }, () => Array<number>(24).fill(0));
     heatmap[1]![10] = 3;
-    render(<ActivityHeatmap activity={{ heatmap, busiest_weekday: 1, busiest_hour: 10 }} />);
-    expect(screen.getByRole("img").getAttribute("aria-label")).toBe(
+    render(
+      <TooltipProvider>
+        <ActivityHeatmap activity={{ heatmap, busiest_weekday: 1, busiest_hour: 10 }} />
+      </TooltipProvider>,
+    );
+    expect(screen.getByRole("group").getAttribute("aria-label")).toBe(
       "Meetings by weekday and hour. Busiest day: Tuesday; busiest hour: 10 AM.",
     );
-    expect(screen.getByTitle("Tuesday 10 AM: 3 meetings").className).toContain("bg-heat-4");
-    expect(screen.getByTitle("Monday 12 AM: 0 meetings").className).toContain("bg-heat-0");
+    expect(screen.getByRole("img", { name: "Tuesday 10 AM: 3 meetings" }).className).toContain(
+      "bg-heat-4",
+    );
+    expect(screen.getByRole("img", { name: "Monday 12 AM: 0 meetings" }).className).toContain(
+      "bg-heat-0",
+    );
   });
 });
 

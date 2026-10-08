@@ -1,4 +1,5 @@
 import type { AnalyticsOverview } from "@/lib/api";
+import { Tooltip } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 import { formatHour, WEEKDAYS } from "../lib/format";
@@ -23,7 +24,7 @@ export function ActivityHeatmap({ activity }: { activity: AnalyticsOverview["act
     <div className="flex flex-col gap-4">
       <div className="overflow-x-auto">
         <div
-          role="img"
+          role="group"
           aria-label={describe(activity)}
           className="grid min-w-[480px] grid-cols-[2.25rem_repeat(24,minmax(0,1fr))] gap-[3px]"
         >
@@ -32,13 +33,18 @@ export function ActivityHeatmap({ activity }: { activity: AnalyticsOverview["act
               <span className="pr-1 text-caption leading-4 text-muted">
                 {WEEKDAYS[d]?.slice(0, 3)}
               </span>
-              {row.map((count, h) => (
-                <div
-                  key={h}
-                  title={`${WEEKDAYS[d]} ${formatHour(h)}: ${meetingsLabel(count)}`}
-                  className={cn("h-4 rounded-tag", HEAT_BG[intensityLevel(count, max)])}
-                />
-              ))}
+              {row.map((count, h) => {
+                const detail = `${WEEKDAYS[d]} ${formatHour(h)}: ${meetingsLabel(count)}`;
+                return (
+                  <Tooltip key={h} content={detail} side="top">
+                    <div
+                      role="img"
+                      aria-label={detail}
+                      className={cn("h-4 rounded-tag", HEAT_BG[intensityLevel(count, max)])}
+                    />
+                  </Tooltip>
+                );
+              })}
             </div>
           ))}
           <span />
