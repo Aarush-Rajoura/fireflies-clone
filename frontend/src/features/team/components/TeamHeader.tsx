@@ -60,7 +60,7 @@ export function TeamHeader({ team, onInvite }: TeamHeaderProps) {
           </form>
         ) : (
           <div className="flex items-center gap-1">
-            <h1 className="truncate text-h2 text-strong">{team.name}</h1>
+            <h2 className="truncate text-h2 text-strong">{team.name}</h2>
             {manager && (
               <IconButton
                 label="Rename team"

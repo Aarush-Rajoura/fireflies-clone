@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertCircle,
   Bell,
   BellOff,
   CalendarCheck,
@@ -13,7 +14,7 @@ import {
 import Link from "next/link";
 import { useState } from "react";
 
-import { IconButton, Popover, SkeletonRow, TextButton } from "@/components/ui";
+import { Button, IconButton, Popover, SkeletonRow, TextButton } from "@/components/ui";
 import type { Notification } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 import { relativeTime } from "@/lib/utils/relative-time";
@@ -83,6 +84,14 @@ export function NotificationsPopover() {
         <div role="status" aria-label="Loading notifications" className="p-3">
           <SkeletonRow />
           <SkeletonRow />
+        </div>
+      ) : query.isError ? (
+        <div role="alert" className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+          <AlertCircle className="size-6 text-muted" strokeWidth={1.75} aria-hidden />
+          <p className="text-body-strong text-primary">Couldn&apos;t load notifications</p>
+          <Button size="sm" onClick={() => void query.refetch()}>
+            Try again
+          </Button>
         </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">

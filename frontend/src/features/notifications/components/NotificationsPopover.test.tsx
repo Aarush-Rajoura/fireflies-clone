@@ -115,4 +115,15 @@ describe("NotificationsPopover", () => {
     expect(await screen.findByText("You're all caught up")).toBeTruthy();
     expect(screen.queryByTestId("unread-dot")).toBeNull();
   });
+
+  it("shows an error with retry instead of all caught up when the fetch fails", async () => {
+    vi.mocked(fetchNotifications).mockRejectedValue(new Error("boom"));
+    renderBell();
+    fireEvent.click(await screen.findByRole("button", { name: "Notifications" }));
+    expect(await screen.findByText("Couldn't load notifications")).toBeTruthy();
+    expect(screen.queryByText("You're all caught up")).toBeNull();
+    vi.mocked(fetchNotifications).mockResolvedValue(pageOf([]));
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("You're all caught up")).toBeTruthy();
+  });
 });

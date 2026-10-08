@@ -99,7 +99,7 @@ export function AnalyticsView() {
     <div className="mx-auto flex w-full max-w-content flex-col gap-6 px-6 py-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-display text-strong">Analytics</h1>
+          <h2 className="text-display text-strong">Analytics</h2>
           <p className="mt-1 text-body text-secondary">
             Meetings, talk time and topics across your workspace for {rangePhrase(range)}
             {overview.tz ? ` · ${overview.tz}` : ""}

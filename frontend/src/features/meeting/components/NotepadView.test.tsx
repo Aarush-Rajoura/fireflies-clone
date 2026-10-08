@@ -131,7 +131,7 @@ describe("NotepadView", () => {
     expect(await screen.findByText("This meeting was deleted")).toBeTruthy();
     deleted = false;
     fireEvent.click(screen.getByRole("button", { name: "Restore" }));
-    expect(await screen.findByRole("heading", { level: 1, name: meeting.title })).toBeTruthy();
+    expect(await screen.findByRole("heading", { level: 2, name: meeting.title })).toBeTruthy();
   });
 
   it("shows not found on 404", async () => {

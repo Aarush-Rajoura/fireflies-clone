@@ -34,7 +34,7 @@ describe("NotepadHeader", () => {
     expect(crumb.textContent).toContain("# Product");
     expect(crumb.textContent).toContain("Launch Go/No-Go");
     expect(screen.getByText("Ready")).toBeTruthy();
-    expect(screen.getByRole("heading", { level: 1, name: "Launch Go/No-Go" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Launch Go/No-Go" })).toBeTruthy();
     expect(screen.getByText("Sarah Watts, +2")).toBeTruthy();
     expect(screen.getByText(/Mar 15, 2026 ·/)).toBeTruthy();
     expect(screen.getByText("20 min")).toBeTruthy();
@@ -53,7 +53,7 @@ describe("NotepadHeader", () => {
   it("truncates a long title instead of overflowing, keeping the full text available", () => {
     const long = "Quarterly planning ".repeat(20).trim();
     renderHeader({ title: long });
-    const h1 = screen.getByRole("heading", { level: 1 });
+    const h1 = screen.getByRole("heading", { level: 2 });
     expect(h1.className).toContain("truncate");
     expect(h1.getAttribute("title")).toBe(long);
     // Each text run shrinks inside a min-w-0 flex item; the actions never do.

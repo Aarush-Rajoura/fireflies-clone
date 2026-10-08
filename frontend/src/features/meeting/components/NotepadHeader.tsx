@@ -183,9 +183,9 @@ export function NotepadHeader({
 
       <div className="flex min-w-0 items-start gap-4">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h1 className="truncate text-h2 text-strong" title={meeting.title}>
+          <h2 className="truncate text-h2 text-strong" title={meeting.title}>
             {meeting.title}
-          </h1>
+          </h2>
           <div className="flex min-w-0 items-center gap-2 text-meta text-secondary">
             <AvatarGroup names={names} max={3} size="sm" className="shrink-0" />
             <span className="min-w-0 truncate" title={names.join(", ")}>

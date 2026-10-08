@@ -52,5 +52,3 @@ export function Popover({
     </Radix.Root>
   );
 }
-
-export const PopoverClose = Radix.Close;

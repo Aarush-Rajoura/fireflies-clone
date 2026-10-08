@@ -81,6 +81,3 @@ export function Menu({ trigger, items, align = "end", side = "bottom", className
     </Radix.Root>
   );
 }
-
-/** Alias kept because feature code reads more naturally as "Dropdown" in places. */
-export const Dropdown = Menu;
