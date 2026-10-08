@@ -19,6 +19,7 @@ from app.services.meeting_creation import MeetingCreationService
 from app.services.meetings import MeetingService
 from app.services.search import SearchService
 from app.services.summary import SummaryService
+from app.services.tags import TagService
 from app.services.transcript import TranscriptService
 from app.services.users import UserService
 
@@ -86,6 +87,10 @@ def get_meeting_creation_service(
         SummaryService(uow, summarizer),
         max_upload_mb=settings.max_upload_mb,
     )
+
+
+def get_tag_service(uow: Uow) -> TagService:
+    return TagService(uow)
 
 
 def get_health_service(uow: Uow) -> HealthService:

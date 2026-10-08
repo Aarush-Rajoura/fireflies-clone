@@ -9,12 +9,13 @@ from app.api.v1.routers import (
     meetings,
     search,
     summaries,
+    tags,
     transcripts,
     users,
 )
 
 v1_router = APIRouter(prefix="/v1")
-for module in (meetings, transcripts, summaries, action_items, search, channels, users):
+for module in (meetings, transcripts, summaries, action_items, search, channels, tags, users):
     v1_router.include_router(module.router)
 
 

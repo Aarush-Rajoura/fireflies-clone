@@ -15,8 +15,8 @@ from app.schemas.meeting import (
     ParticipantRead,
     ParticipantRef,
     SummaryStatus,
-    TagRead,
 )
+from app.schemas.tag import TagRead
 from app.schemas.user import UserRef
 from app.services.transcript_text import speaker_read
 

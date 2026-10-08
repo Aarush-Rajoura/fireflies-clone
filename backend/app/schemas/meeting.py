@@ -12,6 +12,7 @@ from pydantic import (
 from app.models.enums import MediaType, MeetingSource, MeetingStatus, ParticipantRole, Platform
 from app.schemas.channel import ChannelRef
 from app.schemas.common import InputModel
+from app.schemas.tag import TagRead
 from app.schemas.transcript import SegmentIn, SpeakerRead
 from app.schemas.user import UserRef
 
@@ -78,14 +79,6 @@ class MeetingUpdate(InputModel):
         if value is not None:
             _distinct_names([p.display_name for p in value])
         return value
-
-
-class TagRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    name: str
-    color_index: int
 
 
 class ParticipantRef(BaseModel):

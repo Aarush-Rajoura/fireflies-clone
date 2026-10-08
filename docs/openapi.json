@@ -861,6 +861,25 @@
         "title": "MeetingStatus",
         "type": "string"
       },
+      "MeetingTagsUpdate": {
+        "additionalProperties": false,
+        "description": "The meeting's complete tag set; tags left out are removed.",
+        "properties": {
+          "tag_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 50,
+            "title": "Tag Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "tag_ids"
+        ],
+        "title": "MeetingTagsUpdate",
+        "type": "object"
+      },
       "MeetingUpdate": {
         "additionalProperties": false,
         "description": "Partial update; unset fields are untouched, so null can clear description/channel.",
@@ -1146,6 +1165,49 @@
           "has_next"
         ],
         "title": "Page[SearchHit]",
+        "type": "object"
+      },
+      "Page_TagRead_": {
+        "properties": {
+          "has_next": {
+            "readOnly": true,
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TagRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "readOnly": true,
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "has_next"
+        ],
+        "title": "Page[TagRead]",
         "type": "object"
       },
       "Page_UserRead_": {
@@ -1586,6 +1648,29 @@
         "title": "SummaryRead",
         "type": "object"
       },
+      "TagCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "color_index": {
+            "default": 0,
+            "maximum": 7.0,
+            "minimum": 0.0,
+            "title": "Color Index",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TagCreate",
+        "type": "object"
+      },
       "TagRead": {
         "properties": {
           "color_index": {
@@ -1607,6 +1692,39 @@
           "color_index"
         ],
         "title": "TagRead",
+        "type": "object"
+      },
+      "TagUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "color_index": {
+            "anyOf": [
+              {
+                "maximum": 7.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color Index"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "TagUpdate",
         "type": "object"
       },
       "TranscriptPreview": {
@@ -3094,6 +3212,79 @@
         ]
       }
     },
+    "/api/v1/meetings/{meeting_id}/tags": {
+      "put": {
+        "description": "`tag_ids` is the complete set; an unknown id is `422 TAG_NOT_FOUND`.",
+        "operationId": "set_meeting_tags",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "meeting_id",
+            "required": true,
+            "schema": {
+              "title": "Meeting Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetingTagsUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeetingDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The meeting was soft-deleted; restore it to use it again."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Replace a meeting's tags",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
     "/api/v1/meetings/{meeting_id}/transcript": {
       "get": {
         "operationId": "get_transcript",
@@ -3365,6 +3556,227 @@
         "summary": "Rename a speaker",
         "tags": [
           "transcripts"
+        ]
+      }
+    },
+    "/api/v1/tags": {
+      "get": {
+        "operationId": "list_tags",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Clamped to 100.",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Clamped to 100.",
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_TagRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "List tags",
+        "tags": [
+          "tags"
+        ]
+      },
+      "post": {
+        "operationId": "create_tag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request conflicts with current state, e.g. a duplicate name."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Create a tag (names are unique ignoring case)",
+        "tags": [
+          "tags"
+        ]
+      }
+    },
+    "/api/v1/tags/{tag_id}": {
+      "delete": {
+        "operationId": "delete_tag",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "title": "Tag Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Delete a tag (removes it from every meeting)",
+        "tags": [
+          "tags"
+        ]
+      },
+      "patch": {
+        "operationId": "update_tag",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag_id",
+            "required": true,
+            "schema": {
+              "title": "Tag Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TagUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The request conflicts with current state, e.g. a duplicate name."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Rename or recolour a tag",
+        "tags": [
+          "tags"
         ]
       }
     },
