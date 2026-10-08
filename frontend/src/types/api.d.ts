@@ -57,6 +57,23 @@ export interface paths {
         patch: operations["update_action_item"];
         trace?: never;
     };
+    "/api/v1/analytics/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Meeting analytics overview */
+        get: operations["analytics_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/calendar-connections": {
         parameters: {
             query?: never;
@@ -934,6 +951,75 @@ export interface components {
             /** Text */
             text?: string | null;
         };
+        /** Activity */
+        Activity: {
+            /**
+             * Busiest Hour
+             * @description 0..23 local; null when there are no meetings.
+             */
+            busiest_hour: number | null;
+            /**
+             * Busiest Weekday
+             * @description 0 = Monday; null when there are no meetings.
+             */
+            busiest_weekday: number | null;
+            /**
+             * Heatmap
+             * @description 7 rows (Monday first) of 24 hourly meeting counts, local to `tz`.
+             */
+            heatmap: number[][];
+        };
+        /** AnalyticsOverview */
+        AnalyticsOverview: {
+            activity: components["schemas"]["Activity"];
+            /**
+             * End
+             * Format: date-time
+             * @description When the overview was computed (UTC).
+             */
+            end: string;
+            /** Meetings Per Week */
+            meetings_per_week: components["schemas"]["WeekBucket"][];
+            range: components["schemas"]["AnalyticsRange"];
+            /** Sources */
+            sources: components["schemas"]["SourceCount"][];
+            /**
+             * Start
+             * @description Window start (UTC); null for `all`.
+             */
+            start: string | null;
+            talk_time: components["schemas"]["TalkTime"];
+            /** Top Keywords */
+            top_keywords: components["schemas"]["KeywordStat"][];
+            totals: components["schemas"]["AnalyticsTotals"];
+            /** Tz */
+            tz: string;
+        };
+        /**
+         * AnalyticsRange
+         * @enum {string}
+         */
+        AnalyticsRange: "7d" | "30d" | "90d" | "all";
+        /** AnalyticsTotals */
+        AnalyticsTotals: {
+            /** Action Items Completed */
+            action_items_completed: number;
+            /** Action Items Created */
+            action_items_created: number;
+            /** Avg Duration Ms */
+            avg_duration_ms: number;
+            /**
+             * Completion Rate
+             * @description Completed / created, 0..1; 0 when none exist.
+             */
+            completion_rate: number;
+            /** Meetings */
+            meetings: number;
+            /** Total Duration Ms */
+            total_duration_ms: number;
+            /** Unique Participants */
+            unique_participants: number;
+        };
         /** AskCitation */
         AskCitation: {
             /** Meeting Id */
@@ -1346,6 +1432,21 @@ export interface components {
          * @enum {string}
          */
         JoinPreference: "owned" | "all" | "team" | "invited";
+        /** KeywordStat */
+        KeywordStat: {
+            /**
+             * Meetings
+             * @description Meetings in range that list this keyword.
+             */
+            meetings: number;
+            /** Term */
+            term: string;
+            /**
+             * Weight
+             * @description Summed keyword weight across those meetings.
+             */
+            weight: number;
+        };
         /**
          * MatchRange
          * @description Half-open character offsets into the snippet; the client wraps them, never raw HTML.
@@ -2021,6 +2122,12 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** SourceCount */
+        SourceCount: {
+            /** Meetings */
+            meetings: number;
+            source: components["schemas"]["MeetingSource"];
+        };
         /** SpeakerRead */
         SpeakerRead: {
             /** Color Index */
@@ -2083,6 +2190,30 @@ export interface components {
             color_index?: number | null;
             /** Name */
             name?: string | null;
+        };
+        /** TalkTime */
+        TalkTime: {
+            /** Participants */
+            participants: components["schemas"]["TalkTimeShare"][];
+            /** Total Ms */
+            total_ms: number;
+        };
+        /** TalkTimeShare */
+        TalkTimeShare: {
+            /**
+             * Is Other
+             * @description True for the single row folding everyone past the top 8.
+             */
+            is_other: boolean;
+            /** Name */
+            name: string;
+            /**
+             * Share
+             * @description Fraction of all talk time in range, 0..1.
+             */
+            share: number;
+            /** Talk Ms */
+            talk_ms: number;
         };
         /**
          * TaskCreate
@@ -2170,6 +2301,17 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+        };
+        /** WeekBucket */
+        WeekBucket: {
+            /** Meetings */
+            meetings: number;
+            /**
+             * Week Start
+             * Format: date
+             * @description Monday of the week, as a local day in `tz`.
+             */
+            week_start: string;
         };
     };
     responses: never;
@@ -2398,6 +2540,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    analytics_overview: {
+        parameters: {
+            query?: {
+                /** @description Window opening 7, 30 or 90 days ago, or `all`. It has no upper bound: completed meetings dated later today still count. */
+                range?: components["schemas"]["AnalyticsRange"];
+                /** @description IANA time zone that weeks and hours are bucketed in, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`. */
+                tz?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AnalyticsOverview"];
                 };
             };
             /** @description Invalid input; `details.errors[].loc` is the field path. */

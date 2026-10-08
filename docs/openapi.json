@@ -260,6 +260,180 @@
         "title": "ActionItemUpdate",
         "type": "object"
       },
+      "Activity": {
+        "properties": {
+          "busiest_hour": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "0..23 local; null when there are no meetings.",
+            "title": "Busiest Hour"
+          },
+          "busiest_weekday": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "0 = Monday; null when there are no meetings.",
+            "title": "Busiest Weekday"
+          },
+          "heatmap": {
+            "description": "7 rows (Monday first) of 24 hourly meeting counts, local to `tz`.",
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "type": "array"
+            },
+            "title": "Heatmap",
+            "type": "array"
+          }
+        },
+        "required": [
+          "heatmap",
+          "busiest_weekday",
+          "busiest_hour"
+        ],
+        "title": "Activity",
+        "type": "object"
+      },
+      "AnalyticsOverview": {
+        "properties": {
+          "activity": {
+            "$ref": "#/components/schemas/Activity"
+          },
+          "end": {
+            "description": "When the overview was computed (UTC).",
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "meetings_per_week": {
+            "items": {
+              "$ref": "#/components/schemas/WeekBucket"
+            },
+            "title": "Meetings Per Week",
+            "type": "array"
+          },
+          "range": {
+            "$ref": "#/components/schemas/AnalyticsRange"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceCount"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Window start (UTC); null for `all`.",
+            "title": "Start"
+          },
+          "talk_time": {
+            "$ref": "#/components/schemas/TalkTime"
+          },
+          "top_keywords": {
+            "items": {
+              "$ref": "#/components/schemas/KeywordStat"
+            },
+            "title": "Top Keywords",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/AnalyticsTotals"
+          },
+          "tz": {
+            "title": "Tz",
+            "type": "string"
+          }
+        },
+        "required": [
+          "range",
+          "tz",
+          "start",
+          "end",
+          "totals",
+          "meetings_per_week",
+          "talk_time",
+          "top_keywords",
+          "activity",
+          "sources"
+        ],
+        "title": "AnalyticsOverview",
+        "type": "object"
+      },
+      "AnalyticsRange": {
+        "enum": [
+          "7d",
+          "30d",
+          "90d",
+          "all"
+        ],
+        "title": "AnalyticsRange",
+        "type": "string"
+      },
+      "AnalyticsTotals": {
+        "properties": {
+          "action_items_completed": {
+            "title": "Action Items Completed",
+            "type": "integer"
+          },
+          "action_items_created": {
+            "title": "Action Items Created",
+            "type": "integer"
+          },
+          "avg_duration_ms": {
+            "title": "Avg Duration Ms",
+            "type": "integer"
+          },
+          "completion_rate": {
+            "description": "Completed / created, 0..1; 0 when none exist.",
+            "title": "Completion Rate",
+            "type": "number"
+          },
+          "meetings": {
+            "title": "Meetings",
+            "type": "integer"
+          },
+          "total_duration_ms": {
+            "title": "Total Duration Ms",
+            "type": "integer"
+          },
+          "unique_participants": {
+            "title": "Unique Participants",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "meetings",
+          "total_duration_ms",
+          "avg_duration_ms",
+          "unique_participants",
+          "action_items_created",
+          "action_items_completed",
+          "completion_rate"
+        ],
+        "title": "AnalyticsTotals",
+        "type": "object"
+      },
       "AskCitation": {
         "properties": {
           "meeting_id": {
@@ -1359,6 +1533,31 @@
         ],
         "title": "JoinPreference",
         "type": "string"
+      },
+      "KeywordStat": {
+        "properties": {
+          "meetings": {
+            "description": "Meetings in range that list this keyword.",
+            "title": "Meetings",
+            "type": "integer"
+          },
+          "term": {
+            "title": "Term",
+            "type": "string"
+          },
+          "weight": {
+            "description": "Summed keyword weight across those meetings.",
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "term",
+          "meetings",
+          "weight"
+        ],
+        "title": "KeywordStat",
+        "type": "object"
       },
       "MatchRange": {
         "description": "Half-open character offsets into the snippet; the client wraps them, never raw HTML.",
@@ -3434,6 +3633,23 @@
         "title": "SoundbiteRead",
         "type": "object"
       },
+      "SourceCount": {
+        "properties": {
+          "meetings": {
+            "title": "Meetings",
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/MeetingSource"
+          }
+        },
+        "required": [
+          "source",
+          "meetings"
+        ],
+        "title": "SourceCount",
+        "type": "object"
+      },
       "SpeakerRead": {
         "properties": {
           "color_index": {
@@ -3646,6 +3862,57 @@
           }
         },
         "title": "TagUpdate",
+        "type": "object"
+      },
+      "TalkTime": {
+        "properties": {
+          "participants": {
+            "items": {
+              "$ref": "#/components/schemas/TalkTimeShare"
+            },
+            "title": "Participants",
+            "type": "array"
+          },
+          "total_ms": {
+            "title": "Total Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_ms",
+          "participants"
+        ],
+        "title": "TalkTime",
+        "type": "object"
+      },
+      "TalkTimeShare": {
+        "properties": {
+          "is_other": {
+            "description": "True for the single row folding everyone past the top 8.",
+            "title": "Is Other",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "share": {
+            "description": "Fraction of all talk time in range, 0..1.",
+            "title": "Share",
+            "type": "number"
+          },
+          "talk_ms": {
+            "title": "Talk Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "talk_ms",
+          "share",
+          "is_other"
+        ],
+        "title": "TalkTimeShare",
         "type": "object"
       },
       "TaskCreate": {
@@ -3904,6 +4171,26 @@
           "name"
         ],
         "title": "UserRef",
+        "type": "object"
+      },
+      "WeekBucket": {
+        "properties": {
+          "meetings": {
+            "title": "Meetings",
+            "type": "integer"
+          },
+          "week_start": {
+            "description": "Monday of the week, as a local day in `tz`.",
+            "format": "date",
+            "title": "Week Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "week_start",
+          "meetings"
+        ],
+        "title": "WeekBucket",
         "type": "object"
       }
     }
@@ -4284,6 +4571,62 @@
         "summary": "Update an action item",
         "tags": [
           "action-items"
+        ]
+      }
+    },
+    "/api/v1/analytics/overview": {
+      "get": {
+        "operationId": "analytics_overview",
+        "parameters": [
+          {
+            "description": "Window opening 7, 30 or 90 days ago, or `all`. It has no upper bound: completed meetings dated later today still count.",
+            "in": "query",
+            "name": "range",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AnalyticsRange",
+              "default": "30d",
+              "description": "Window opening 7, 30 or 90 days ago, or `all`. It has no upper bound: completed meetings dated later today still count."
+            }
+          },
+          {
+            "description": "IANA time zone that weeks and hours are bucketed in, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`.",
+            "in": "query",
+            "name": "tz",
+            "required": false,
+            "schema": {
+              "default": "UTC",
+              "description": "IANA time zone that weeks and hours are bucketed in, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`.",
+              "title": "Tz",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsOverview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          }
+        },
+        "summary": "Meeting analytics overview",
+        "tags": [
+          "analytics"
         ]
       }
     },
