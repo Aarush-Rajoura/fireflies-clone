@@ -4,55 +4,55 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * App base styles live under `.ff-app` (set by ThemeRoot) so they never leak
+ * into the marketing site, which has its own `.mk-root` rules.
+ */
 @layer base {
-  html {
-    font-family: var(--ff-font-sans);
+  .ff-app {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
 
-  body {
-    @apply bg-surface-0 text-body text-primary;
-  }
-
-  ::placeholder {
+  .ff-app ::placeholder {
     color: var(--ff-text-muted);
     opacity: 1;
   }
 
   /* One focus treatment everywhere, keyboard only, so mouse clicks stay quiet. */
-  :focus-visible {
+  .ff-app :focus-visible {
     outline: none;
     box-shadow: var(--ff-shadow-focus);
   }
 
-  ::selection {
+  .ff-app ::selection {
     background: var(--ff-accent-subtle);
     color: var(--ff-text-strong);
   }
 
   /* Thin, low-contrast scrollbars to match the app's dense panels. */
-  * {
+  .ff-app,
+  .ff-app * {
     scrollbar-width: thin;
     scrollbar-color: var(--ff-border-strong) transparent;
   }
-  ::-webkit-scrollbar {
+  .ff-app ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-  ::-webkit-scrollbar-thumb {
+  .ff-app ::-webkit-scrollbar-thumb {
     background: var(--ff-border-strong);
     border-radius: var(--ff-radius-full);
   }
-  ::-webkit-scrollbar-track {
+  .ff-app ::-webkit-scrollbar-track {
     background: transparent;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
+    .ff-app *,
+    .ff-app *::before,
+    .ff-app *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import { ENTERPRISE_BENEFITS } from "@/features/landing/content";
-import { EnterpriseDemo } from "@/features/landing/EnterpriseDemo";
-import { FeatureItem } from "@/features/landing/FeatureItem";
-import { LogoStrip } from "@/features/landing/LogoStrip";
-import { AccentHeading, Container } from "@/features/landing/ui";
+import {
+  AccentHeading,
+  Container,
+  ENTERPRISE_BENEFITS,
+  EnterpriseDemo,
+  FeatureItem,
+  LogoStrip,
+} from "@/features/landing";
 
 export const metadata: Metadata = {
   title: "Enterprise | Fireflies.ai Clone",

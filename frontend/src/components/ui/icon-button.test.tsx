@@ -4,10 +4,15 @@ import { describe, expect, test } from "vitest";
 
 import { Button } from "./button";
 import { IconButton } from "./icon-button";
+import { TooltipProvider } from "./tooltip";
 
 describe("IconButton", () => {
   test("label becomes the accessible name", () => {
-    render(<IconButton label="Notifications" icon={<Bell />} />);
+    render(
+      <TooltipProvider>
+        <IconButton label="Notifications" icon={<Bell />} />
+      </TooltipProvider>,
+    );
     const button = screen.getByRole("button", { name: "Notifications" });
     expect(button.getAttribute("aria-label")).toBe("Notifications");
   });

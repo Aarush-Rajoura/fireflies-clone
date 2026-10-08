@@ -1,6 +1,16 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
-import { AUTO_DISMISS_MS, getToasts, MAX_VISIBLE, resetToasts, subscribe, toast } from "./toast-store";
+import {
+  AUTO_DISMISS_MS,
+  getToasts,
+  MAX_VISIBLE,
+  pause,
+  resetToasts,
+  resume,
+  runAction,
+  subscribe,
+  toast,
+} from "./toast-store";
 
 describe("toast store", () => {
   beforeEach(() => {
@@ -51,6 +61,31 @@ describe("toast store", () => {
     vi.advanceTimersByTime(AUTO_DISMISS_MS - 1);
     expect(getToasts()).toHaveLength(1);
     vi.advanceTimersByTime(1);
+    expect(getToasts()).toHaveLength(0);
+  });
+
+  test("pause freezes the countdown and resume continues it", () => {
+    const id = toast.success("Hover me");
+    vi.advanceTimersByTime(3000);
+    pause(id);
+    vi.advanceTimersByTime(10_000);
+    expect(getToasts()).toHaveLength(1);
+    resume(id);
+    vi.advanceTimersByTime(1999);
+    expect(getToasts()).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(getToasts()).toHaveLength(0);
+  });
+
+  test("an action that throws still dismisses its toast", () => {
+    toast.error("Failed", {
+      retry: () => {
+        throw new Error("boom");
+      },
+    });
+    const [item] = getToasts();
+    expect(item).toBeDefined();
+    expect(() => runAction(item!)).toThrow("boom");
     expect(getToasts()).toHaveLength(0);
   });
 

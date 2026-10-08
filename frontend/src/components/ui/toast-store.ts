@@ -19,24 +19,60 @@ export const MAX_VISIBLE = 3;
 export const AUTO_DISMISS_MS = 5000;
 
 type Listener = () => void;
+type Timer = { handle?: ReturnType<typeof setTimeout>; startedAt: number; remaining: number };
 
 let toasts: readonly Toast[] = [];
 let nextId = 1;
 const listeners = new Set<Listener>();
-const timers = new Map<number, ReturnType<typeof setTimeout>>();
+const timers = new Map<number, Timer>();
 
 function emit() {
   listeners.forEach((l) => l());
 }
 
-export function dismiss(id: number): void {
+function clearTimer(id: number) {
   const t = timers.get(id);
-  if (t) clearTimeout(t);
+  if (t?.handle) clearTimeout(t.handle);
   timers.delete(id);
+}
+
+function startTimer(id: number, remaining: number) {
+  timers.set(id, {
+    handle: setTimeout(() => dismiss(id), remaining),
+    startedAt: Date.now(),
+    remaining,
+  });
+}
+
+export function dismiss(id: number): void {
+  clearTimer(id);
   const next = toasts.filter((x) => x.id !== id);
   if (next.length !== toasts.length) {
     toasts = next;
     emit();
+  }
+}
+
+/** Freezes the countdown while the user hovers or focuses a toast. */
+export function pause(id: number): void {
+  const t = timers.get(id);
+  if (!t?.handle) return;
+  clearTimeout(t.handle);
+  timers.set(id, { startedAt: 0, remaining: Math.max(0, t.remaining - (Date.now() - t.startedAt)) });
+}
+
+export function resume(id: number): void {
+  const t = timers.get(id);
+  if (!t || t.handle) return;
+  startTimer(id, t.remaining);
+}
+
+/** Runs the toast's action, then dismisses it even if the action throws. */
+export function runAction(item: Toast): void {
+  try {
+    item.action?.onClick();
+  } finally {
+    dismiss(item.id);
   }
 }
 
@@ -47,13 +83,10 @@ function push(kind: ToastKind, message: string, action?: ToastAction): number {
   const next = [...toasts, { id, kind, message, action }];
   while (next.length > MAX_VISIBLE) {
     const dropped = next.shift();
-    if (dropped) {
-      clearTimeout(timers.get(dropped.id));
-      timers.delete(dropped.id);
-    }
+    if (dropped) clearTimer(dropped.id);
   }
   toasts = next;
-  timers.set(id, setTimeout(() => dismiss(id), AUTO_DISMISS_MS));
+  startTimer(id, AUTO_DISMISS_MS);
   emit();
   return id;
 }
@@ -83,8 +116,7 @@ export function getServerToasts(): readonly Toast[] {
 
 /** Test helper: clears state and pending timers between cases. */
 export function resetToasts(): void {
-  timers.forEach((t) => clearTimeout(t));
-  timers.clear();
+  [...timers.keys()].forEach(clearTimer);
   toasts = [];
   emit();
 }

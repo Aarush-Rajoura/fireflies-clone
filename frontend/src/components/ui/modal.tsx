@@ -6,6 +6,8 @@ import type { ReactNode } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
+import { usePortalContainer } from "./theme-root";
+
 import { IconButton } from "./icon-button";
 
 export type ModalSize = "sm" | "md" | "lg";
@@ -39,18 +41,19 @@ export function Modal({
   size = "md",
   dismissible = true,
 }: ModalProps) {
+  const container = usePortalContainer();
   const block = (e: Event) => {
     if (!dismissible) e.preventDefault();
   };
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
+      <Dialog.Portal container={container}>
         <Dialog.Overlay className="fixed inset-0 z-modal bg-scrim" />
         <Dialog.Content
           onEscapeKeyDown={block}
           onPointerDownOutside={block}
           className={cn(
-            "fixed left-1/2 top-1/2 z-modal flex max-h-[85vh] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-lg border border-subtle bg-surface-1 shadow-lg animate-fade-in",
+            "fixed left-1/2 top-1/2 z-modal flex max-h-[85vh] w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col rounded-card border border-subtle bg-surface-1 shadow-overlay animate-fade-in",
             widths[size],
           )}
         >

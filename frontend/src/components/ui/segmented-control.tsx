@@ -55,7 +55,7 @@ export function SegmentedControl<V extends string>({
     <div
       role="tablist"
       aria-label={label}
-      className={cn("inline-flex items-center gap-0.5 rounded-sm bg-surface-3 p-1", className)}
+      className={cn("inline-flex items-center gap-0.5 rounded-item bg-surface-3 p-1", className)}
     >
       {options.map((o, i) => {
         const selected = o.value === value;
@@ -77,7 +77,7 @@ export function SegmentedControl<V extends string>({
               "inline-flex items-center gap-1.5 whitespace-nowrap rounded-control text-body-strong transition-colors duration-fast disabled:opacity-50",
               size === "sm" ? "h-7 px-2.5" : "h-8 px-3.5",
               selected
-                ? "bg-surface-selected text-primary shadow-sm"
+                ? "bg-surface-selected text-primary shadow-raised"
                 : "text-secondary hover:text-primary",
             )}
           >

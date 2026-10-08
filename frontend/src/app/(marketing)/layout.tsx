@@ -1,15 +1,17 @@
 import type { Metadata } from "next";
-import { DM_Sans, Inter } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import type { ReactNode } from "react";
-import { AnnouncementBar } from "@/features/landing/AnnouncementBar";
-import { DemoProvider } from "@/features/landing/DemoModal";
-import { MarketingFooter } from "@/features/landing/MarketingFooter";
-import { MarketingNav } from "@/features/landing/MarketingNav";
-import { SupportChat } from "@/features/landing/SupportChat";
+import {
+  AnnouncementBar,
+  DemoProvider,
+  MarketingFooter,
+  MarketingNav,
+  SupportChat,
+} from "@/features/landing";
 import "@/styles/marketing-tokens.css";
 
-// Exposed as CSS variables; marketing-tokens.css puts them at the head of the font stacks.
-const inter = Inter({ subsets: ["latin"], variable: "--mk-font-inter", display: "swap" });
+// Exposed as a CSS variable; marketing-tokens.css puts it at the head of the display stack.
+// Inter comes from the root layout (--font-inter), aliased in marketing-tokens.css.
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--mk-font-dm", display: "swap" });
 
 // Static snippet (no user data). Scroll-reveal may only hide content once JS is known to run.
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function MarketingLayout({ children }: { children: ReactNode }) {
   return (
-    <div className={`mk-root min-h-screen ${inter.variable} ${dmSans.variable}`}>
+    <div className={`mk-root min-h-screen ${dmSans.variable}`}>
       <script dangerouslySetInnerHTML={{ __html: JS_FLAG }} />
       <DemoProvider>
         <a

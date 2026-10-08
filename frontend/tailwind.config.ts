@@ -1,10 +1,15 @@
 import type { Config } from "tailwindcss";
 
 /*
- * The default palette, type scale, radii and shadows are REPLACED, not
- * extended: every utility resolves to a token in src/styles/tokens.css, so an
- * off-palette class like `bg-blue-500` simply does not exist (and the
- * tailwindcss/no-custom-classname lint rule reports it).
+ * Colours are REPLACED: every colour utility resolves to a token in
+ * src/styles/tokens.css, so an off-palette class like `bg-blue-500` does not
+ * exist (and tailwindcss/no-custom-classname reports it). The marketing site
+ * styles colours with its own `--mk-*` variables, so it is unaffected.
+ *
+ * Type, radius, shadow and motion EXTEND Tailwind's defaults under distinct
+ * names (`text-body`, `rounded-control`, `shadow-overlay`, `duration-fast`), so
+ * stock classes the marketing site uses (`text-lg`, `rounded-xl`, ...) keep
+ * their original values.
  */
 
 const v = (name: string) => `var(--ff-${name})`;
@@ -22,7 +27,7 @@ const colors = {
     sunken: v("surface-sunken"),
   },
   skeleton: v("skeleton"),
-  // Lets 1px rules drawn as backgrounds (resize handles, menu separators) use the border colour.
+  // Lets 1px rules drawn as backgrounds (resize handles, separators) use the border colour.
   divider: v("border-subtle"),
   accent: {
     DEFAULT: v("accent"),
@@ -41,7 +46,7 @@ const colors = {
     subtle: v("danger-subtle"),
     strong: v("danger-strong"),
   },
-  upgrade: { DEFAULT: v("upgrade"), text: v("upgrade-text") },
+  upgrade: { DEFAULT: v("upgrade"), hover: v("upgrade-hover"), text: v("upgrade-text") },
   count: v("count"),
   highlight: { DEFAULT: v("highlight"), active: v("highlight-active") },
   tint: { rose: v("tint-rose"), teal: v("tint-teal"), violet: v("tint-violet") },
@@ -58,6 +63,7 @@ const textColor = {
   ...colors,
   strong: v("text-strong"),
   primary: v("text-primary"),
+  menu: v("text-menu"),
   secondary: v("text-secondary"),
   muted: v("text-muted"),
   inverse: v("text-inverse"),
@@ -66,14 +72,16 @@ const textColor = {
 
 const borderColor = {
   ...colors,
-  DEFAULT: v("border-subtle"),
+  // Outside the app no theme is set, so fall back to Tailwind's stock border.
+  DEFAULT: "var(--ff-border-subtle, var(--ff-stock-border))",
   subtle: v("border-subtle"),
+  control: v("border-control"),
   strong: v("border-strong"),
 };
 
-// Function, not string: Tailwind runs ringColor.DEFAULT through an alpha helper
-// that cannot parse var() and would otherwise fall back to a literal blue hex.
-const ringDefault = (() => v("accent-border")) as unknown as string;
+// Functions, not strings: Tailwind runs these DEFAULTs through an alpha helper
+// that cannot parse var() and would otherwise emit a literal hex.
+const fn = (value: string) => (() => value) as unknown as string;
 
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
@@ -82,54 +90,47 @@ const config: Config = {
     textColor,
     borderColor,
     divideColor: borderColor,
-    ringColor: { ...colors, DEFAULT: ringDefault },
-    ringOffsetColor: { DEFAULT: v("surface-0"), ...colors },
-    fontFamily: {
-      sans: [v("font-sans")],
-      mono: [v("font-mono")],
-    },
-    fontSize: {
-      display: ["28px", { lineHeight: "36px", fontWeight: "600", letterSpacing: "-0.01em" }],
-      h2: ["20px", { lineHeight: "28px", fontWeight: "600" }],
-      h3: ["16px", { lineHeight: "24px", fontWeight: "600" }],
-      body: ["14px", { lineHeight: "22px", fontWeight: "400" }],
-      "body-strong": ["14px", { lineHeight: "22px", fontWeight: "500" }],
-      "title-row": ["15px", { lineHeight: "22px", fontWeight: "600" }],
-      transcript: ["15px", { lineHeight: "26px", fontWeight: "400" }],
-      label: ["12px", { lineHeight: "16px", fontWeight: "600" }],
-      sm: ["13px", { lineHeight: "18px", fontWeight: "400" }],
-      xs: ["12px", { lineHeight: "16px", fontWeight: "500" }],
-      "2xs": ["10px", { lineHeight: "12px", fontWeight: "600" }],
-    },
-    borderRadius: {
-      none: "0",
-      xs: v("radius-xs"),
-    control: v("radius-control"),
-      sm: v("radius-sm"),
-      md: v("radius-md"),
-      lg: v("radius-lg"),
-      full: v("radius-full"),
-    },
-    boxShadow: {
-      none: "none",
-      xs: v("shadow-xs"),
-      sm: v("shadow-sm"),
-      md: v("shadow-md"),
-      lg: v("shadow-lg"),
-      focus: v("shadow-focus"),
-    },
-    transitionDuration: {
-      DEFAULT: v("dur-base"),
-      fast: v("dur-fast"),
-      base: v("dur-base"),
-      slow: v("dur-slow"),
-    },
-    transitionTimingFunction: {
-      DEFAULT: v("ease"),
-      ff: v("ease"),
-      linear: "linear",
-    },
+    ringColor: { ...colors, DEFAULT: fn("var(--ff-accent-border, var(--ff-stock-ring))") },
+    ringOffsetColor: { ...colors, DEFAULT: fn("var(--ff-surface-0, var(--ff-stock-ring-offset))") },
     extend: {
+      fontFamily: {
+        app: [v("font-sans")],
+      },
+      fontSize: {
+        display: ["28px", { lineHeight: "36px", fontWeight: "600", letterSpacing: "-0.01em" }],
+        h2: ["20px", { lineHeight: "28px", fontWeight: "600" }],
+        h3: ["16px", { lineHeight: "24px", fontWeight: "600" }],
+        body: ["14px", { lineHeight: "22px", fontWeight: "400" }],
+        "body-strong": ["14px", { lineHeight: "22px", fontWeight: "500" }],
+        "title-row": ["15px", { lineHeight: "22px", fontWeight: "600" }],
+        transcript: ["15px", { lineHeight: "26px", fontWeight: "400" }],
+        label: ["12px", { lineHeight: "16px", fontWeight: "600" }],
+        meta: ["13px", { lineHeight: "18px", fontWeight: "400" }],
+        caption: ["12px", { lineHeight: "16px", fontWeight: "500" }],
+        micro: ["10px", { lineHeight: "12px", fontWeight: "600" }],
+      },
+      borderRadius: {
+        tag: v("radius-xs"), //        3px: checkboxes, badges
+        control: v("radius-control"), // 4px: buttons, inputs
+        item: v("radius-sm"), //       6px: menu items, tracks, tooltips
+        panel: v("radius-md"), //      8px: menus, popovers, toasts
+        card: v("radius-lg"), //      12px: cards, modals
+      },
+      boxShadow: {
+        hairline: v("shadow-xs"),
+        raised: v("shadow-sm"),
+        popover: v("shadow-md"),
+        overlay: v("shadow-lg"),
+        focus: v("shadow-focus"),
+      },
+      transitionDuration: {
+        fast: v("dur-fast"),
+        base: v("dur-base"),
+        slow: v("dur-slow"),
+      },
+      transitionTimingFunction: {
+        ff: v("ease"),
+      },
       // App-shell and control sizes, named so layouts don't sprinkle magic numbers.
       spacing: {
         topbar: "56px",

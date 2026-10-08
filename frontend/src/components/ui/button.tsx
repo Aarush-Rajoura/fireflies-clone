@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils/cn";
 
 import { Spinner } from "./spinner";
 
-export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "upgrade";
 export type ButtonSize = "sm" | "md";
 
 export type ButtonProps = {
@@ -23,9 +23,11 @@ const base =
 export const buttonVariants: Record<ButtonVariant, string> = {
   primary: "bg-accent text-on-accent hover:bg-accent-hover active:bg-accent-pressed",
   secondary:
-    "border border-subtle bg-surface-2 text-secondary hover:border-strong hover:bg-surface-hover hover:text-primary",
+    "border border-control bg-surface-2 text-secondary hover:border-strong hover:bg-surface-hover hover:text-primary",
   ghost: "text-secondary hover:bg-surface-hover hover:text-primary",
   danger: "bg-danger text-on-accent hover:bg-danger-hover",
+  // The green "Upgrade" pill in the top bar and profile menu.
+  upgrade: "bg-upgrade text-upgrade-text hover:bg-upgrade-hover",
 };
 
 const sizes: Record<ButtonSize, { text: string; icon: string }> = {

@@ -5,6 +5,8 @@ import type { ReactElement, ReactNode } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
+import { usePortalContainer } from "./theme-root";
+
 import { floatingSurface } from "./menu";
 
 export type PopoverProps = {
@@ -29,10 +31,11 @@ export function Popover({
   label,
   className,
 }: PopoverProps) {
+  const container = usePortalContainer();
   return (
     <Radix.Root open={open} onOpenChange={onOpenChange}>
       <Radix.Trigger asChild>{trigger}</Radix.Trigger>
-      <Radix.Portal>
+      <Radix.Portal container={container}>
         <Radix.Content
           align={align}
           side={side}

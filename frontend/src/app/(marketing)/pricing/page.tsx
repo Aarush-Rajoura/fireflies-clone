@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { FaqSection } from "@/features/landing/FaqSection";
-import { PricingCards } from "@/features/landing/PricingCards";
-import { AccentHeading, Container } from "@/features/landing/ui";
+import { AccentHeading, Container, FaqSection, PricingCards } from "@/features/landing";
 
 export const metadata: Metadata = {
   title: "Pricing | Fireflies.ai Clone",

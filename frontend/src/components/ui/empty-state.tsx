@@ -39,11 +39,11 @@ export function SkeletonCardsIllustration({ letters = ["K", "A", "R"] }: { lette
         <div
           key={`${letter}-${i}`}
           className={cn(
-            "flex items-center gap-3 rounded-md border border-strong bg-surface-sunken px-3",
+            "flex items-center gap-3 rounded-panel border border-strong bg-surface-sunken px-3",
             i === 1 ? "h-14 w-full max-w-[420px]" : "h-12 w-[82%] max-w-[336px]",
           )}
         >
-          <span className="flex size-6 items-center justify-center rounded-xs bg-skeleton text-2xs text-secondary">
+          <span className="flex size-6 items-center justify-center rounded-tag bg-skeleton text-micro text-secondary">
             {letter}
           </span>
           <span className="flex flex-col gap-1.5">

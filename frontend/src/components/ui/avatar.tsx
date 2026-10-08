@@ -4,8 +4,8 @@ import { initials, speakerIndex } from "@/lib/utils/identity";
 export type AvatarSize = "sm" | "md" | "lg";
 
 const sizes: Record<AvatarSize, string> = {
-  sm: "size-avatar-sm text-2xs",
-  md: "size-avatar-md text-xs",
+  sm: "size-avatar-sm text-micro",
+  md: "size-avatar-md text-caption",
   lg: "size-avatar-lg text-body-strong",
 };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
+import { useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
@@ -69,19 +69,28 @@ export function ResizablePanels({
   );
   const size = clampSize(chosen ?? stored ?? defaultSize, minSize, maxSize);
 
-  const commit = useCallback(
-    (next: number) => {
-      const clamped = clampSize(next, minSize, maxSize);
-      setChosen(clamped);
-      if (storageKey) writeStoredSize(storageKey, clamped);
-    },
-    [minSize, maxSize, storageKey],
-  );
+  const persist = (value: number) => {
+    if (storageKey) writeStoredSize(storageKey, value);
+  };
+
+  // Keyboard and double-click are discrete, so they persist immediately.
+  const commit = (next: number) => {
+    const clamped = clampSize(next, minSize, maxSize);
+    setChosen(clamped);
+    persist(clamped);
+  };
 
   const fromPointer = (clientX: number) => {
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect || rect.width === 0) return;
-    commit(((clientX - rect.left) / rect.width) * 100);
+    setChosen(clampSize(((clientX - rect.left) / rect.width) * 100, minSize, maxSize));
+  };
+
+  // Drags write storage once, on release, rather than on every pointermove.
+  const endDrag = () => {
+    if (!dragging) return;
+    setDragging(false);
+    persist(size);
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -112,16 +121,22 @@ export function ResizablePanels({
         tabIndex={0}
         onKeyDown={onKeyDown}
         onPointerDown={(e) => {
-          e.currentTarget.setPointerCapture(e.pointerId);
+          e.currentTarget.setPointerCapture?.(e.pointerId);
           setDragging(true);
         }}
         onPointerMove={(e) => {
           if (dragging) fromPointer(e.clientX);
         }}
         onPointerUp={(e) => {
-          e.currentTarget.releasePointerCapture(e.pointerId);
-          setDragging(false);
+          if (e.currentTarget.hasPointerCapture?.(e.pointerId)) {
+            e.currentTarget.releasePointerCapture(e.pointerId);
+          }
+          endDrag();
         }}
+        // A cancelled or stolen pointer (touch scroll, window blur) still ends
+        // the drag, keeping wherever the user had got to.
+        onPointerCancel={endDrag}
+        onLostPointerCapture={endDrag}
         onDoubleClick={() => commit(defaultSize)}
         className={cn(
           "relative w-px shrink-0 cursor-col-resize touch-none bg-divider transition-colors duration-fast hover:bg-accent focus-visible:bg-accent",

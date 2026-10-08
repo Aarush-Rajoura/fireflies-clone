@@ -26,7 +26,7 @@ export function Checkbox({ label, onCheckedChange, id, className, ...rest }: Che
       id={boxId}
       onCheckedChange={(c) => onCheckedChange?.(c === true)}
       className={cn(
-        "peer flex size-4 shrink-0 items-center justify-center rounded-xs border border-strong bg-surface-2 text-on-accent transition-colors duration-fast hover:border-accent-border disabled:opacity-50 data-[state=checked]:border-accent data-[state=indeterminate]:border-accent data-[state=checked]:bg-accent data-[state=indeterminate]:bg-accent",
+        "peer flex size-4 shrink-0 items-center justify-center rounded-tag border border-strong bg-surface-2 text-on-accent transition-colors duration-fast hover:border-accent-border disabled:opacity-50 data-[state=checked]:border-accent data-[state=indeterminate]:border-accent data-[state=checked]:bg-accent data-[state=indeterminate]:bg-accent",
         !label && className,
       )}
       {...rest}

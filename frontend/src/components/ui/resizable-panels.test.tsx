@@ -47,6 +47,30 @@ describe("ResizablePanels", () => {
     expect(sep().getAttribute("aria-valuenow")).toBe("80");
   });
 
+  test("dragging resizes live but persists only on release or cancel", () => {
+    setup({ storageKey: "split" });
+    const container = sep().parentElement as HTMLElement;
+    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({ left: 0, width: 1000 } as DOMRect);
+    const setItem = vi.spyOn(Storage.prototype, "setItem");
+
+    fireEvent.pointerDown(sep(), { pointerId: 1, clientX: 500 });
+    fireEvent.pointerMove(sep(), { pointerId: 1, clientX: 300 });
+    expect(sep().getAttribute("aria-valuenow")).toBe("30");
+    fireEvent.pointerMove(sep(), { pointerId: 1, clientX: 50 });
+    expect(sep().getAttribute("aria-valuenow")).toBe("20");
+    expect(setItem).not.toHaveBeenCalled();
+    fireEvent.pointerUp(sep(), { pointerId: 1, clientX: 50 });
+    expect(window.localStorage.getItem("split")).toBe("20");
+
+    fireEvent.pointerDown(sep(), { pointerId: 2, clientX: 200 });
+    fireEvent.pointerMove(sep(), { pointerId: 2, clientX: 400 });
+    fireEvent.pointerCancel(sep(), { pointerId: 2 });
+    expect(window.localStorage.getItem("split")).toBe("40");
+    // Moves after the drag ended are ignored.
+    fireEvent.pointerMove(sep(), { pointerId: 2, clientX: 700 });
+    expect(sep().getAttribute("aria-valuenow")).toBe("40");
+  });
+
   test("storage failures are swallowed", () => {
     vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("denied");

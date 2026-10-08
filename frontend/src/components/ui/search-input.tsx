@@ -21,7 +21,7 @@ export type SearchInputProps = Omit<InputProps, "value" | "defaultValue" | "onCh
 };
 
 export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(function SearchInput(
-  { value, defaultValue = "", onSearch, onValueChange, debounceMs = 250, hint, label, className, ...rest },
+  { value, defaultValue = "", onSearch, onValueChange, debounceMs = 250, hint, label, className, onKeyDown, ...rest },
   ref,
 ) {
   const controlled = value !== undefined;
@@ -48,6 +48,9 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
       value={current}
       onChange={(e) => update(e.target.value)}
       onKeyDown={(e) => {
+        // Caller first, so it can preventDefault to keep Escape for itself.
+        onKeyDown?.(e);
+        if (e.defaultPrevented) return;
         if (e.key === "Escape" && current) {
           e.preventDefault();
           update("", true);
@@ -60,7 +63,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(functi
             type="button"
             aria-label="Clear search"
             onClick={() => update("", true)}
-            className="flex size-6 items-center justify-center rounded-xs text-muted hover:bg-surface-hover hover:text-primary [&_svg]:size-3.5"
+            className="flex size-6 items-center justify-center rounded-tag text-muted hover:bg-surface-hover hover:text-primary [&_svg]:size-3.5"
           >
             <X strokeWidth={1.75} />
           </button>

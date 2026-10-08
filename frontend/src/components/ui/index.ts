@@ -1,6 +1,8 @@
+export * from "./app-providers";
 export * from "./avatar";
 export * from "./badge";
 export * from "./button";
+export * from "./button-group";
 export * from "./checkbox";
 export * from "./chip";
 export * from "./coming-soon";
@@ -23,6 +25,7 @@ export * from "./spinner";
 export * from "./split-button";
 export * from "./state-view";
 export * from "./switch";
+export * from "./theme-root";
 export { toast, type Toast, type ToastKind } from "./toast-store";
 export * from "./toaster";
 export * from "./tooltip";

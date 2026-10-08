@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+// Loaded once for the whole site; the app and marketing font stacks both read --font-inter.
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
@@ -10,13 +11,12 @@ export const metadata: Metadata = {
 };
 
 /*
- * Dark is the default theme (tokens on :root). The theme toggle switches by
- * setting `data-theme="light"` on <html>; suppressHydrationWarning lets a
- * pre-paint script change that attribute without a hydration mismatch.
+ * Deliberately theme-neutral: the app's tokens and dark theme are applied by
+ * the (app) route group's ThemeRoot, and the marketing site styles itself.
  */
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-theme="dark" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={inter.variable}>
       <body>{children}</body>
     </html>
   );

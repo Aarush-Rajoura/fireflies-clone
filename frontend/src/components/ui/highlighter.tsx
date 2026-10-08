@@ -60,7 +60,7 @@ export const Highlighter = memo(function Highlighter({ text, ranges, activeIndex
             data-match-index={s.match}
             aria-current={s.match === activeIndex ? "true" : undefined}
             className={cn(
-              "rounded-xs text-strong",
+              "rounded-tag text-strong",
               s.match === activeIndex ? "bg-highlight-active" : "bg-highlight",
             )}
           >

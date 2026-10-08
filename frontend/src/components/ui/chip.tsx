@@ -24,7 +24,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
 ) {
   const look = selected
     ? "border-accent-border bg-accent-subtle text-accent"
-    : "border-subtle bg-surface-2 text-secondary hover:border-strong hover:text-primary";
+    : "border-control bg-surface-2 text-secondary hover:border-strong hover:text-primary";
 
   if (onRemove) {
     return (
@@ -35,7 +35,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
           type="button"
           aria-label={`Remove ${typeof children === "string" ? children : "item"}`}
           onClick={onRemove}
-          className="flex size-6 items-center justify-center rounded-xs text-muted hover:bg-surface-hover hover:text-primary [&_svg]:size-3.5"
+          className="flex size-6 items-center justify-center rounded-tag text-muted hover:bg-surface-hover hover:text-primary [&_svg]:size-3.5"
         >
           <X strokeWidth={1.75} />
         </button>

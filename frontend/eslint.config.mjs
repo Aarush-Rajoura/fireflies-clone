@@ -45,8 +45,9 @@ const tailwindEnforcement = {
     },
   },
   rules: {
-    // `tnum` is hand-written in globals.css, so the plugin cannot see it.
-    "tailwindcss/no-custom-classname": ["error", { whitelist: ["tnum"] }],
+    // Hand-written classes the plugin cannot see: `tnum` and `ff-app` (globals.css)
+    // and the marketing site's `mk-*` helpers (marketing-tokens.css).
+    "tailwindcss/no-custom-classname": ["error", { whitelist: ["tnum", "ff-app", "mk-.*"] }],
     "tailwindcss/no-contradicting-classname": "error",
   },
 };

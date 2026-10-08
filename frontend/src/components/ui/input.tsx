@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils/cn";
 
 /** Shared field chrome so Input, Textarea, SearchInput and Select line up. */
 export const fieldClasses =
-  "w-full rounded-control border border-subtle bg-surface-2 px-3 text-body text-primary transition-colors duration-fast placeholder:text-muted hover:border-strong focus-visible:border-accent-border disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger";
+  "w-full rounded-control border border-control bg-surface-2 px-3 text-body text-primary transition-colors duration-fast placeholder:text-muted hover:border-strong focus-visible:border-accent-border disabled:cursor-not-allowed disabled:opacity-50 aria-[invalid=true]:border-danger";
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean;
@@ -77,11 +77,11 @@ export function Field({
       </label>
       {children}
       {error ? (
-        <p role="alert" className="text-xs text-danger-strong">
+        <p role="alert" className="text-caption text-danger-strong">
           {error}
         </p>
       ) : hint ? (
-        <p className="text-xs text-muted">{hint}</p>
+        <p className="text-caption text-muted">{hint}</p>
       ) : null}
     </div>
   );

@@ -27,7 +27,7 @@ export function ComingSoon({
     <div
       role="status"
       className={cn(
-        "mx-auto flex max-w-md flex-col items-center gap-3 rounded-lg border border-dashed border-strong bg-surface-sunken px-6 py-10 text-center",
+        "mx-auto flex max-w-md flex-col items-center gap-3 rounded-card border border-dashed border-strong bg-surface-sunken px-6 py-10 text-center",
         className,
       )}
     >

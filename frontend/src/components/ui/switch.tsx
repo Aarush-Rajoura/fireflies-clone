@@ -28,7 +28,7 @@ export function Switch({ label, id, className, ...rest }: SwitchProps) {
       )}
       {...rest}
     >
-      <RadixSwitch.Thumb className="block size-4 translate-x-0.5 rounded-full bg-on-accent shadow-sm transition-transform duration-fast data-[state=checked]:translate-x-[18px]" />
+      <RadixSwitch.Thumb className="block size-4 translate-x-0.5 rounded-full bg-on-accent shadow-raised transition-transform duration-fast data-[state=checked]:translate-x-[18px]" />
     </RadixSwitch.Root>
   );
   if (!label) return control;

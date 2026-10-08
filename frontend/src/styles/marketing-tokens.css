@@ -4,6 +4,9 @@
  * Every colour used by features/landing lives here.
  */
 .mk-root {
+  /* Inter is loaded once by the root layout; alias it for the marketing stacks. */
+  --mk-font-inter: var(--font-inter);
+
   /* surfaces */
   --mk-navy: #10082e;
   --mk-navy-deep: #0b0522;

@@ -21,6 +21,7 @@ import {
   AvatarGroup,
   Badge,
   Button,
+  ButtonGroup,
   Checkbox,
   Chip,
   ComingSoon,
@@ -48,7 +49,6 @@ import {
   Switch,
   Textarea,
   toast,
-  Toaster,
   Tooltip,
 } from "@/components/ui";
 
@@ -77,6 +77,7 @@ export function Gallery({ theme }: { theme: string }) {
   const [tab, setTab] = useState<"recent" | "upcoming" | "feed">("recent");
   const [tasks, setTasks] = useState<"mine" | "all">("mine");
   const [chip, setChip] = useState("All");
+  const [owner, setOwner] = useState({ hosted: true, shared: false });
   const [modal, setModal] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [date, setDate] = useState("2026-10-07");
@@ -85,7 +86,7 @@ export function Gallery({ theme }: { theme: string }) {
 
   return (
     <div className="mx-auto flex max-w-content flex-col px-8 py-6">
-      <header className="flex items-center justify-between gap-4 rounded-lg border border-subtle bg-surface-1 px-4 py-2.5">
+      <header className="flex items-center justify-between gap-4 rounded-card border border-subtle bg-surface-1 px-4 py-2.5">
         <div className="flex items-center gap-3">
           <IconButton label="Toggle sidebar" icon={icon(PanelLeft)} />
           <span className="whitespace-nowrap text-body text-secondary">{theme} theme</span>
@@ -94,7 +95,7 @@ export function Gallery({ theme }: { theme: string }) {
           <SearchInput label="Search meetings" placeholder="Search by title or keyword" hint={<Kbd keys={["Ctrl", "K"]} />} />
         </div>
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-2 whitespace-nowrap text-sm text-secondary">
+          <span className="flex items-center gap-2 whitespace-nowrap text-meta text-secondary">
             <Badge tone="count">3</Badge>Free meetings
           </span>
           <IconButton label="Notifications" icon={icon(Bell)} />
@@ -107,6 +108,7 @@ export function Gallery({ theme }: { theme: string }) {
         <Button variant="secondary" leadingIcon={icon(Plus)}>Channel</Button>
         <Button variant="ghost">Share Feedback</Button>
         <Button variant="danger" leadingIcon={icon(Trash2)}>Delete</Button>
+        <Button variant="upgrade">Upgrade</Button>
         <Button variant="primary" size="sm">Small</Button>
         <Button variant="primary" loading>Saving</Button>
         <Button variant="secondary" disabled>Disabled</Button>
@@ -117,6 +119,7 @@ export function Gallery({ theme }: { theme: string }) {
       <Section title="Segmented control · chips · badges">
         <SegmentedControl label="Home feed" value={tab} onChange={setTab} options={[{ value: "recent", label: "Recent" }, { value: "upcoming", label: "Upcoming" }, { value: "feed", label: "AI Feed" }]} />
         <SegmentedControl label="Task scope" value={tasks} onChange={setTasks} options={[{ value: "mine", label: "My Tasks" }, { value: "all", label: "All Tasks" }]} />
+        <ButtonGroup label="Meeting ownership" items={[{ key: "hosted", label: "Hosted by me", pressed: owner.hosted, onClick: () => setOwner((o) => ({ ...o, hosted: !o.hosted })) }, { key: "shared", label: "Shared with me", pressed: owner.shared, onClick: () => setOwner((o) => ({ ...o, shared: !o.shared })) }]} />
         <div className="flex flex-wrap gap-2">
           {["All", "Audio recording", "CRM", "MCP"].map((c) => (
             <Chip key={c} selected={chip === c} onClick={() => setChip(c)}>{c}</Chip>
@@ -201,13 +204,12 @@ export function Gallery({ theme }: { theme: string }) {
       </Section>
 
       <Section title="Resizable panels">
-        <div className="h-40 w-full overflow-hidden rounded-lg border border-subtle">
+        <div className="h-40 w-full overflow-hidden rounded-card border border-subtle">
           <ResizablePanels storageKey={`dev-ui-split-${theme}`} defaultSize={40} minSize={25} maxSize={75}
             start={<div className="h-full bg-surface-1 p-4 text-body text-secondary">Summary</div>}
             end={<div className="h-full p-4 text-body text-secondary">Transcript</div>} />
         </div>
       </Section>
-      {theme === "Dark" && <Toaster />}
     </div>
   );
 }
