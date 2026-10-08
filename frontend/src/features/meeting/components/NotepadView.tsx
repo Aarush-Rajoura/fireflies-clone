@@ -116,7 +116,9 @@ function LoadedNotepad({
           storageKey="notepad.split"
           label="Resize summary and transcript"
           start={
-            <div className="px-8 pb-10 pt-5">
+            // `relative` keeps absolutely positioned bits (Radix's hidden native
+            // <select>) inside this scroller instead of stretching the document.
+            <div className="relative px-8 pb-10 pt-5">
               <SummaryPanel
                 meetingId={meeting.id}
                 durationMs={meeting.duration_ms}
@@ -128,7 +130,7 @@ function LoadedNotepad({
             </div>
           }
           end={
-            <div className="flex h-full min-h-0 flex-col">
+            <div className="relative flex h-full min-h-0 flex-col">
               {/* Hidden, not unmounted: playback and keyboard shortcuts carry on. */}
               <div className={cn("shrink-0 px-4 pt-4", !playerVisible && "hidden")}>
                 <PlayerCard />
