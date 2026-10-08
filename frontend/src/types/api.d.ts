@@ -75,6 +75,42 @@ export interface paths {
         patch: operations["rename_channel"];
         trace?: never;
     };
+    "/api/v1/comments/{comment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a comment */
+        delete: operations["delete_comment"];
+        options?: never;
+        head?: never;
+        /** Edit a comment */
+        patch: operations["update_comment"];
+        trace?: never;
+    };
+    "/api/v1/highlights/{highlight_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a highlight */
+        delete: operations["delete_highlight"];
+        options?: never;
+        head?: never;
+        /** Change a highlight's range or colour */
+        patch: operations["update_highlight"];
+        trace?: never;
+    };
     "/api/v1/me": {
         parameters: {
             query?: never;
@@ -150,6 +186,88 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/meetings/{meeting_id}/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask a question about a meeting
+         * @description Answers from the meeting's transcript; each citation is one of its lines. With nothing to answer from (no transcript) it answers that it found nothing, with `provider: null`, without calling the AI or counting towards the rate limit.
+         */
+        post: operations["ask_meeting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meetings/{meeting_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a meeting's comments (oldest first) */
+        get: operations["list_comments"];
+        put?: never;
+        /**
+         * Comment on a meeting or one of its transcript lines
+         * @description A `segment_id` from another meeting is `422 SEGMENT_NOT_IN_MEETING`.
+         */
+        post: operations["create_comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meetings/{meeting_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export a meeting as a file
+         * @description Unknown `format` is `422 EXPORT_FORMAT_UNSUPPORTED`; an unknown or empty `sections` list is `422 EXPORT_SECTION_UNKNOWN`.
+         */
+        get: operations["export_meeting"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meetings/{meeting_id}/highlights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a meeting's highlights (transcript order) */
+        get: operations["list_highlights"];
+        put?: never;
+        /**
+         * Highlight part of a transcript line
+         * @description Offsets must satisfy `0 <= start_offset < end_offset <= len(segment.text)` (`422 HIGHLIGHT_OUT_OF_RANGE`); the segment must belong to the meeting (`422 SEGMENT_NOT_IN_MEETING`).
+         */
+        post: operations["create_highlight"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/meetings/{meeting_id}/media": {
         parameters: {
             query?: never;
@@ -178,6 +296,27 @@ export interface paths {
         put?: never;
         /** Restore a soft-deleted meeting */
         post: operations["restore_meeting"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/meetings/{meeting_id}/soundbites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List a meeting's soundbites (recording order) */
+        get: operations["list_soundbites"];
+        put?: never;
+        /**
+         * Clip part of the recording
+         * @description Length must be 3-180 s (`422 SOUNDBITE_LENGTH_INVALID`) and `end_ms` at most the meeting's `duration_ms` (`422 SOUNDBITE_OUT_OF_RANGE`).
+         */
+        post: operations["create_soundbite"];
         delete?: never;
         options?: never;
         head?: never;
@@ -218,6 +357,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/meetings/{meeting_id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace a meeting's tags
+         * @description `tag_ids` is the complete set; an unknown id is `422 TAG_NOT_FOUND`.
+         */
+        put: operations["set_meeting_tags"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/meetings/{meeting_id}/transcript": {
         parameters: {
             query?: never;
@@ -252,6 +411,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask a question across meetings
+         * @description Answers from the best transcript matches (and those meetings' summaries) across all live meetings, or only `meeting_ids` when given. With no matches it answers that it found nothing, with `provider: null`, without calling the AI or counting towards the rate limit.
+         */
+        post: operations["ask_across_meetings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/segments/{segment_id}": {
         parameters: {
             query?: never;
@@ -269,6 +448,23 @@ export interface paths {
         patch: operations["update_segment"];
         trace?: never;
     };
+    "/api/v1/soundbites/{soundbite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a soundbite */
+        delete: operations["delete_soundbite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/speakers/{speaker_id}": {
         parameters: {
             query?: never;
@@ -284,6 +480,42 @@ export interface paths {
         head?: never;
         /** Rename a speaker */
         patch: operations["rename_speaker"];
+        trace?: never;
+    };
+    "/api/v1/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tags */
+        get: operations["list_tags"];
+        put?: never;
+        /** Create a tag (names are unique ignoring case) */
+        post: operations["create_tag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tags/{tag_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a tag (removes it from every meeting) */
+        delete: operations["delete_tag"];
+        options?: never;
+        head?: never;
+        /** Rename or recolour a tag */
+        patch: operations["update_tag"];
         trace?: never;
     };
     "/api/v1/transcript-previews": {
@@ -400,6 +632,35 @@ export interface components {
             /** Text */
             text?: string | null;
         };
+        /** AskCitation */
+        AskCitation: {
+            /** Meeting Id */
+            meeting_id: number;
+            /** Meeting Title */
+            meeting_title: string;
+            /** Quote */
+            quote: string;
+            /** Segment Id */
+            segment_id: number;
+            /** Start Ms */
+            start_ms: number;
+        };
+        /** AskRequest */
+        AskRequest: {
+            /** Question */
+            question: string;
+        };
+        /** AskResponse */
+        AskResponse: {
+            /** Answer */
+            answer: string;
+            /** Citations */
+            citations: components["schemas"]["AskCitation"][];
+            /** Model */
+            model: string | null;
+            /** Provider */
+            provider: string | null;
+        };
         /** AssigneeRead */
         AssigneeRead: {
             /** Display Name */
@@ -447,6 +708,47 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** CommentCreate */
+        CommentCreate: {
+            /** Body */
+            body: string;
+            /** Segment Id */
+            segment_id?: number | null;
+        };
+        /** CommentRead */
+        CommentRead: {
+            author: components["schemas"]["UserRef"] | null;
+            /** Body */
+            body: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Meeting Id */
+            meeting_id: number;
+            /** Segment Id */
+            segment_id: number | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** CommentUpdate */
+        CommentUpdate: {
+            /** Body */
+            body: string;
+        };
+        /** CrossMeetingAskRequest */
+        CrossMeetingAskRequest: {
+            /** Meeting Ids */
+            meeting_ids?: number[] | null;
+            /** Question */
+            question: string;
+        };
         /** ErrorDetail */
         ErrorDetail: {
             /** Code */
@@ -472,6 +774,75 @@ export interface components {
             status: string;
             /** Version */
             version: string;
+        };
+        /**
+         * HighlightCreate
+         * @description Half-open range `[start_offset, end_offset)` inside the segment's text, in UTF-16
+         *     code units (JavaScript string indices).
+         */
+        HighlightCreate: {
+            /**
+             * Color
+             * @default yellow
+             * @enum {string}
+             */
+            color: "yellow" | "green" | "blue" | "pink" | "purple";
+            /**
+             * End Offset
+             * @description Exclusive end offset into the segment text, in UTF-16 code units, matching JavaScript string indices; at most its length.
+             */
+            end_offset: number;
+            /** Segment Id */
+            segment_id: number;
+            /**
+             * Start Offset
+             * @description Inclusive start offset into the segment text, in UTF-16 code units, matching JavaScript string indices.
+             */
+            start_offset: number;
+        };
+        /** HighlightRead */
+        HighlightRead: {
+            /**
+             * Color
+             * @enum {string}
+             */
+            color: "yellow" | "green" | "blue" | "pink" | "purple";
+            /** Created By */
+            created_by: number | null;
+            /**
+             * End Offset
+             * @description Exclusive end offset into the segment text, in UTF-16 code units, matching JavaScript string indices; at most its length.
+             */
+            end_offset: number;
+            /** Id */
+            id: number;
+            /** Meeting Id */
+            meeting_id: number;
+            /** Segment Id */
+            segment_id: number;
+            /**
+             * Start Offset
+             * @description Inclusive start offset into the segment text, in UTF-16 code units, matching JavaScript string indices.
+             */
+            start_offset: number;
+        };
+        /**
+         * HighlightUpdate
+         * @description Partial edit; the resulting range is re-checked against the segment text.
+         */
+        HighlightUpdate: {
+            /** Color */
+            color?: ("yellow" | "green" | "blue" | "pink" | "purple") | null;
+            /**
+             * End Offset
+             * @description Exclusive end offset into the segment text, in UTF-16 code units, matching JavaScript string indices; at most its length.
+             */
+            end_offset?: number | null;
+            /**
+             * Start Offset
+             * @description Inclusive start offset into the segment text, in UTF-16 code units, matching JavaScript string indices.
+             */
+            start_offset?: number | null;
         };
         /**
          * MatchRange
@@ -613,6 +984,14 @@ export interface components {
          */
         MeetingStatus: "scheduled" | "live" | "processing" | "completed";
         /**
+         * MeetingTagsUpdate
+         * @description The meeting's complete tag set; tags left out are removed.
+         */
+        MeetingTagsUpdate: {
+            /** Tag Ids */
+            tag_ids: number[];
+        };
+        /**
          * MeetingUpdate
          * @description Partial update; unset fields are untouched, so null can clear description/channel.
          */
@@ -672,6 +1051,36 @@ export interface components {
             /** Total Pages */
             readonly total_pages: number;
         };
+        /** Page[CommentRead] */
+        Page_CommentRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["CommentRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[HighlightRead] */
+        Page_HighlightRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["HighlightRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
         /** Page[MeetingListItem] */
         Page_MeetingListItem_: {
             /** Has Next */
@@ -693,6 +1102,36 @@ export interface components {
             readonly has_next: boolean;
             /** Items */
             items: components["schemas"]["SearchHit"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[SoundbiteRead] */
+        Page_SoundbiteRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["SoundbiteRead"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Total */
+            total: number;
+            /** Total Pages */
+            readonly total_pages: number;
+        };
+        /** Page[TagRead] */
+        Page_TagRead_: {
+            /** Has Next */
+            readonly has_next: boolean;
+            /** Items */
+            items: components["schemas"]["TagRead"][];
             /** Page */
             page: number;
             /** Page Size */
@@ -810,6 +1249,35 @@ export interface components {
             /** Text */
             text: string;
         };
+        /**
+         * SoundbiteCreate
+         * @description A clip of the recording; the length must be 3-180 s and end within the meeting.
+         */
+        SoundbiteCreate: {
+            /** End Ms */
+            end_ms: number;
+            /** Start Ms */
+            start_ms: number;
+            /** Title */
+            title?: string | null;
+        };
+        /** SoundbiteRead */
+        SoundbiteRead: {
+            /** Created By */
+            created_by: number | null;
+            /** Duration Ms */
+            duration_ms: number;
+            /** End Ms */
+            end_ms: number;
+            /** Id */
+            id: number;
+            /** Meeting Id */
+            meeting_id: number;
+            /** Start Ms */
+            start_ms: number;
+            /** Title */
+            title: string;
+        };
         /** SpeakerRead */
         SpeakerRead: {
             /** Color Index */
@@ -847,6 +1315,16 @@ export interface components {
             /** Provider */
             provider: string | null;
         };
+        /** TagCreate */
+        TagCreate: {
+            /**
+             * Color Index
+             * @default 0
+             */
+            color_index: number;
+            /** Name */
+            name: string;
+        };
         /** TagRead */
         TagRead: {
             /** Color Index */
@@ -855,6 +1333,13 @@ export interface components {
             id: number;
             /** Name */
             name: string;
+        };
+        /** TagUpdate */
+        TagUpdate: {
+            /** Color Index */
+            color_index?: number | null;
+            /** Name */
+            name?: string | null;
         };
         /** TranscriptPreview */
         TranscriptPreview: {
@@ -1217,6 +1702,206 @@ export interface operations {
             };
         };
     };
+    delete_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                comment_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_highlight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                highlight_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_highlight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                highlight_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HighlightUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HighlightRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_me: {
         parameters: {
             query?: never;
@@ -1255,10 +1940,12 @@ export interface operations {
                 q?: string | null;
                 /** @description Participant name contains. */
                 participant?: string | null;
-                /** @description Inclusive, UTC day. */
+                /** @description Inclusive, local day in `tz`. */
                 date_from?: string | null;
-                /** @description Inclusive, UTC day. */
+                /** @description Inclusive, local day in `tz`. */
                 date_to?: string | null;
+                /** @description IANA time zone the date filters are days in, e.g. `Asia/Kolkata`; an unknown name is `422 INVALID_TIMEZONE`. */
+                tz?: string;
                 /** @description Tag id; repeat for any-of. */
                 tag?: number[] | null;
                 /** @description Channel id. */
@@ -1619,6 +2306,363 @@ export interface operations {
             };
         };
     };
+    ask_meeting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskResponse"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description AI rate limit exceeded; retry later. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The AI provider failed; `code` is AI_UNAVAILABLE. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_comments: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CommentRead_"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommentRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    export_meeting: {
+        parameters: {
+            query?: {
+                /** @description One of: md, txt, pdf. */
+                format?: "md" | "txt" | "pdf";
+                /** @description Comma-separated, any of: summary, action_items, transcript. Omit for all. */
+                sections?: string | null;
+            };
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The file, with `Content-Disposition: attachment; filename=...`. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": string;
+                    "text/markdown": string;
+                    "text/plain": string;
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_highlights: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_HighlightRead_"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_highlight: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HighlightCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HighlightRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_media: {
         parameters: {
             query?: never;
@@ -1708,6 +2752,121 @@ export interface operations {
             };
             /** @description Invalid input; `details.errors[].loc` is the field path. */
             422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_soundbites: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_SoundbiteRead_"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_soundbite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SoundbiteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SoundbiteRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -1842,6 +3001,59 @@ export interface operations {
             };
         };
     };
+    set_meeting_tags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeetingTagsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeetingDetail"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_transcript: {
         parameters: {
             query?: never;
@@ -1926,6 +3138,57 @@ export interface operations {
             };
         };
     };
+    ask_across_meetings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrossMeetingAskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AskResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description AI rate limit exceeded; retry later. */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The AI provider failed; `code` is AI_UNAVAILABLE. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     update_segment: {
         parameters: {
             query?: never;
@@ -1949,6 +3212,53 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SegmentRead"];
                 };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The meeting was soft-deleted; restore it to use it again. */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_soundbite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                soundbite_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The resource does not exist. */
             404: {
@@ -2014,6 +3324,172 @@ export interface operations {
             };
             /** @description The meeting was soft-deleted; restore it to use it again. */
             410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_tags: {
+        parameters: {
+            query?: {
+                page?: number;
+                /** @description Clamped to 100. */
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_TagRead_"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_tag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagRead"];
+                };
+            };
+            /** @description The request conflicts with current state, e.g. a duplicate name. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_tag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_tag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TagUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagRead"];
+                };
+            };
+            /** @description The resource does not exist. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description The request conflicts with current state, e.g. a duplicate name. */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
