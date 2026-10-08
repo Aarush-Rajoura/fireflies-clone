@@ -1,10 +1,20 @@
 import { notFound } from "next/navigation";
 
-import { MeetingPreview } from "@/features/meetings";
+import { NotepadView } from "@/features/meeting";
 
-export default async function MeetingPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+type SearchParams = Record<string, string | string[] | undefined>;
+
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+
+export default async function MeetingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<SearchParams>;
+}) {
+  const [{ id }, query] = await Promise.all([params, searchParams]);
   const meetingId = Number(id);
   if (!Number.isSafeInteger(meetingId) || meetingId <= 0) notFound();
-  return <MeetingPreview id={meetingId} />;
+  return <NotepadView meetingId={meetingId} t={first(query.t)} edit={first(query.edit) === "1"} />;
 }

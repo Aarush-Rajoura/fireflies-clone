@@ -1,3 +1,5 @@
+export { NotepadView, type NotepadViewProps } from "./components/NotepadView";
+export { NotepadHeader, type NotepadHeaderProps } from "./components/NotepadHeader";
 export { EditMeetingModal, type EditMode } from "./components/EditMeetingModal";
 export { DeleteMeetingDialog } from "./components/DeleteMeetingDialog";
 export { DeletedMeetingState, MeetingNotFound } from "./components/MeetingStates";

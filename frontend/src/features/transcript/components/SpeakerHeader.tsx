@@ -2,7 +2,7 @@
 
 import { ChevronDown, Pencil } from "lucide-react";
 
-import { Menu } from "@/components/ui";
+import { Menu, TimestampButton } from "@/components/ui";
 import type { Speaker } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 import { initials } from "@/lib/utils/identity";
@@ -78,14 +78,14 @@ export function SpeakerHeader({ speaker, startMs, onSeek, onRename }: SpeakerHea
       <span aria-hidden className="text-muted">
         ·
       </span>
-      <button
-        type="button"
-        aria-label={`Play from ${stamp}`}
-        onClick={() => onSeek(startMs)}
-        className="tnum rounded-tag text-meta text-accent underline underline-offset-2 hover:text-accent-hover"
+      <TimestampButton
+        ms={startMs}
+        onSeek={onSeek}
+        label={`Play from ${stamp}`}
+        className="text-meta underline underline-offset-2 hover:text-accent-hover"
       >
         {stamp}
-      </button>
+      </TimestampButton>
     </div>
   );
 }

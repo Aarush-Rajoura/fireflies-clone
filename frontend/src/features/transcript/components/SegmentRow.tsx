@@ -2,7 +2,7 @@
 
 import { memo, type MouseEvent } from "react";
 
-import { Highlighter, type HighlightRange } from "@/components/ui";
+import { Highlighter, TimestampButton, type HighlightRange } from "@/components/ui";
 import type { Segment, Speaker } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -63,17 +63,22 @@ export const SegmentRow = memo(function SegmentRow({
       )}
     >
       {showHeader ? (
-        <SpeakerHeader speaker={speaker} startMs={segment.start_ms} onSeek={onSeek} onRename={onRename} />
+        <SpeakerHeader
+          speaker={speaker}
+          startMs={segment.start_ms}
+          onSeek={onSeek}
+          onRename={onRename}
+        />
       ) : (
         // Continuation lines have no header; their time shows on hover and stays keyboard-reachable.
-        <button
-          type="button"
-          aria-label={`Play from ${stamp}`}
-          onClick={() => onSeek(segment.start_ms)}
-          className="tnum absolute right-3 top-1.5 rounded-tag text-caption text-muted opacity-0 hover:text-accent focus-visible:opacity-100 group-hover:opacity-100"
+        <TimestampButton
+          ms={segment.start_ms}
+          onSeek={onSeek}
+          label={`Play from ${stamp}`}
+          className="absolute right-3 top-1.5 text-caption text-muted opacity-0 hover:text-accent hover:no-underline focus-visible:opacity-100 group-hover:opacity-100"
         >
           {stamp}
-        </button>
+        </TimestampButton>
       )}
       <p className={cn("pl-8 text-transcript text-primary", showHeader ? "mt-1" : "pr-10")}>
         <Highlighter text={segment.text} ranges={ranges} activeIndex={activeMatchIndex} />
