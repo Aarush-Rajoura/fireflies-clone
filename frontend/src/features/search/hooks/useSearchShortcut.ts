@@ -2,9 +2,13 @@
 
 import { useEffect, type RefObject } from "react";
 
+// Inputs that take typed text; a focused checkbox or range should not swallow the shortcut.
+const TEXT_INPUT_TYPES = new Set(["text", "search", "email", "url", "tel", "password", "number"]);
+
 function isEditable(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false;
-  if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") return true;
+  if (el instanceof HTMLInputElement) return TEXT_INPUT_TYPES.has(el.type);
+  if (el instanceof HTMLTextAreaElement) return true;
   // The attribute check covers environments where isContentEditable is not computed.
   return (
     el.isContentEditable || el.closest("[contenteditable]:not([contenteditable='false'])") !== null

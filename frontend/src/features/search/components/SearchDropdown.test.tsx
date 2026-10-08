@@ -1,13 +1,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { searchTranscripts } from "../api";
 import { hit, page } from "../testing/fixtures";
 import { SearchDropdown, stepIndex } from "./SearchDropdown";
 
 const push = vi.fn();
-vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+const nav = { pathname: "/meetings", params: new URLSearchParams() };
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+  usePathname: () => nav.pathname,
+  useSearchParams: () => nav.params,
+}));
 vi.mock("../api", () => ({ searchTranscripts: vi.fn() }));
 
 const HITS = [
@@ -50,6 +55,8 @@ describe("stepIndex", () => {
 describe("SearchDropdown", () => {
   beforeEach(() => {
     push.mockReset();
+    nav.pathname = "/meetings";
+    nav.params = new URLSearchParams();
     vi.mocked(searchTranscripts).mockReset().mockResolvedValue(page(HITS));
   });
 
@@ -77,11 +84,11 @@ describe("SearchDropdown", () => {
     await typeAndWait(input, "launch");
 
     fireEvent.keyDown(input, { key: "ArrowDown" });
-    expect(activeOption(input)?.textContent).toContain("1:05");
+    expect(activeOption(input)?.textContent).toContain("01:05");
     fireEvent.keyDown(input, { key: "ArrowDown" });
-    expect(activeOption(input)?.textContent).toContain("2:00");
+    expect(activeOption(input)?.textContent).toContain("02:00");
     fireEvent.keyDown(input, { key: "ArrowDown" });
-    expect(activeOption(input)?.textContent).toContain("0:03");
+    expect(activeOption(input)?.textContent).toContain("00:03");
     expect(activeOption(input)?.getAttribute("aria-selected")).toBe("true");
 
     fireEvent.keyDown(input, { key: "Enter" });
@@ -139,5 +146,57 @@ describe("SearchDropdown", () => {
     await new Promise((r) => setTimeout(r, 300));
     expect(searchTranscripts).not.toHaveBeenCalled();
     expect(screen.queryByRole("listbox")).toBeNull();
+  });
+
+  it("keeps older hits visible but unselectable while the new query settles", async () => {
+    const input = setup();
+    await typeAndWait(input, "launch");
+    // The next query never resolves, so the old hits stay as placeholder data.
+    vi.mocked(searchTranscripts).mockReturnValue(new Promise(() => undefined));
+    fireEvent.change(input, { target: { value: "launch plan" } });
+
+    expect(screen.getAllByText("Launch sync").length).toBeGreaterThan(0);
+    expect(screen.getByRole("status", { name: "Searching" })).toBeTruthy();
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(1);
+    expect(options[0]?.textContent).toContain("See all results for “launch plan”");
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(activeOption(input)?.textContent).toContain("See all results");
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(push).toHaveBeenCalledWith("/search?q=launch%20plan");
+
+    // Still stale once the debounce has fired and the request is in flight.
+    await waitFor(() => expect(searchTranscripts).toHaveBeenCalledTimes(2));
+    expect(screen.queryAllByRole("option").length).toBeLessThanOrEqual(1);
+  });
+
+  it("mirrors ?q into the field on the search page", () => {
+    nav.pathname = "/search";
+    nav.params = new URLSearchParams({ q: "pricing" });
+    const input = setup() as HTMLInputElement;
+    expect(input.value).toBe("pricing");
+  });
+
+  it("leaves the field alone elsewhere", () => {
+    nav.params = new URLSearchParams({ q: "pricing" });
+    const input = setup() as HTMLInputElement;
+    expect(input.value).toBe("");
+  });
+
+  describe("shortcut hint", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it("shows ⌘ on macOS", () => {
+      vi.spyOn(navigator, "platform", "get").mockReturnValue("MacIntel");
+      setup();
+      expect(screen.getByText("⌘")).toBeTruthy();
+    });
+
+    it("shows Ctrl elsewhere", () => {
+      vi.spyOn(navigator, "platform", "get").mockReturnValue("Win32");
+      setup();
+      expect(screen.getByText("Ctrl")).toBeTruthy();
+    });
   });
 });

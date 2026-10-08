@@ -18,8 +18,8 @@ export const qk = {
   actionItems: (id: number) => ["meetings", id, "action-items"] as const,
   channels: () => ["channels"] as const,
   users: () => ["users"] as const,
-  // Not under ['meetings'], so meeting edits do not invalidate it yet; the search
-  // feature owns refreshing its results when meetings change.
+  // Not under ['meetings']: search spans every meeting, so instead of being
+  // invalidated by meeting edits its queries use staleTime 0 (see useSearch).
   search: {
     all: ["search"] as const,
     query: (q: string) => ["search", q] as const,

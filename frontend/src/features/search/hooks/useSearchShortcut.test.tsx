@@ -11,6 +11,8 @@ function Harness() {
     <>
       <input aria-label="search" ref={ref} />
       <input aria-label="title" />
+      <input aria-label="email" type="email" />
+      <input aria-label="done" type="checkbox" />
       <textarea aria-label="notes" />
       <div aria-label="editor" contentEditable suppressContentEditableWarning />
       <button type="button">plain</button>
@@ -38,12 +40,20 @@ describe("Ctrl/Cmd+K", () => {
   it("leaves the keystroke to other inputs, textareas and editors", () => {
     render(<Harness />);
     const search = screen.getByLabelText("search");
-    for (const label of ["title", "notes", "editor"]) {
+    for (const label of ["title", "email", "notes", "editor"]) {
       const field = screen.getByLabelText(label);
       field.focus();
       expect(press(field, { ctrlKey: true })).toBe(true); // not prevented
       expect(document.activeElement).not.toBe(search);
     }
+  });
+
+  it("still fires from non-text inputs such as a checkbox", () => {
+    render(<Harness />);
+    const box = screen.getByLabelText("done");
+    box.focus();
+    expect(press(box, { ctrlKey: true })).toBe(false);
+    expect(document.activeElement).toBe(screen.getByLabelText("search"));
   });
 
   it("still works while the search itself is focused, and ignores other chords", () => {

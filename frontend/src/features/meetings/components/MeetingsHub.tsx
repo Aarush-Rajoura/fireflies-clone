@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
-import { SkeletonRow, StateView } from "@/components/ui";
+import { Pagination, SkeletonRow, StateView } from "@/components/ui";
 import { ChannelSidebar, useChannels } from "@/features/channels";
 import { cn } from "@/lib/utils/cn";
 
@@ -17,7 +17,6 @@ import { PAGE_SIZE } from "../lib/params";
 import { AskFredPanel } from "./AskFredPanel";
 import { MeetingGroupList } from "./MeetingGroupList";
 import { MeetingsEmpty } from "./MeetingsEmpty";
-import { MeetingsPagination } from "./MeetingsPagination";
 import { MeetingsToolbar } from "./MeetingsToolbar";
 
 const SCOPE_LABELS: Record<string, string> = {
@@ -105,7 +104,7 @@ export function MeetingsHub() {
         </div>
 
         {meetings.data && (
-          <MeetingsPagination
+          <Pagination
             page={meetings.data.page}
             pageSize={meetings.data.page_size || PAGE_SIZE}
             itemCount={meetings.data.items.length}

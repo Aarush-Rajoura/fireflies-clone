@@ -2,14 +2,16 @@
 
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Suspense, useId, useRef, useState, type KeyboardEvent } from "react";
 
-import { Kbd, SearchInput, Spinner, floatingSurface } from "@/components/ui";
+import { Kbd, SearchInput, floatingSurface } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
+import { useModKeyLabel } from "@/lib/utils/platform";
 
 import { useSearch } from "../hooks/useSearch";
 import { useSearchShortcut } from "../hooks/useSearchShortcut";
 import { groupByMeeting, hitHref, searchHref } from "../lib/group";
+import { Option, PanelStatus, SyncQueryFromUrl } from "./DropdownParts";
 import { HitSnippet } from "./HitSnippet";
 
 export const DROPDOWN_LIMIT = 5;
@@ -26,6 +28,10 @@ export function stepIndex(current: number, count: number, delta: 1 | -1): number
  * meeting, plus a row to the full results page. Focus stays in the input the
  * whole time (combobox pattern); ↑/↓ move the active option, Enter opens it,
  * Esc closes the panel (a second Esc clears the field).
+ *
+ * Hits left over from an older query (typing ahead of the debounce) stay
+ * visible but dimmed and unselectable, so Enter can only ever open a hit that
+ * answers what is in the box, or "See all results" for it.
  */
 export function SearchDropdown() {
   const router = useRouter();
@@ -35,13 +41,16 @@ export function SearchDropdown() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   useSearchShortcut(inputRef);
+  const mod = useModKeyLabel();
 
   const q = value.trim();
   const search = useSearch(value, { pageSize: DROPDOWN_LIMIT, debounceMs: 200 });
   const groups = groupByMeeting(q ? (search.data?.items ?? []).slice(0, DROPDOWN_LIMIT) : []);
   const hits = groups.flatMap((g) => g.hits);
-  const seeAllIndex = hits.length;
-  const optionCount = q ? hits.length + 1 : 0;
+  const stale = search.isStale;
+  const selectable = stale ? [] : hits;
+  const seeAllIndex = selectable.length;
+  const optionCount = q ? selectable.length + 1 : 0;
   const activeIndex = active < optionCount ? active : -1;
   const showPanel = open && q.length > 0;
   const optionId = (i: number) => `${listId}-option-${i}`;
@@ -61,7 +70,7 @@ export function SearchDropdown() {
       setActive(stepIndex(activeIndex, optionCount, e.key === "ArrowDown" ? 1 : -1));
     } else if (e.key === "Enter" && q) {
       e.preventDefault();
-      const hit = showPanel ? hits[activeIndex] : undefined;
+      const hit = showPanel ? selectable[activeIndex] : undefined;
       go(hit ? hitHref(hit) : searchHref(q));
     } else if (e.key === "Escape" && showPanel) {
       // Keep the text: the first Esc only dismisses the panel.
@@ -73,6 +82,9 @@ export function SearchDropdown() {
 
   return (
     <div className="relative min-w-0">
+      <Suspense fallback={null}>
+        <SyncQueryFromUrl onQuery={setValue} />
+      </Suspense>
       <SearchInput
         ref={inputRef}
         label="Search meetings"
@@ -83,7 +95,7 @@ export function SearchDropdown() {
           setActive(-1);
           setOpen(true);
         }}
-        hint={<Kbd keys={["Ctrl", "K"]} />}
+        hint={<Kbd keys={[mod, "K"]} />}
         onKeyDown={onKeyDown}
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
@@ -106,27 +118,43 @@ export function SearchDropdown() {
           )}
         >
           <PanelStatus search={search} empty={hits.length === 0} q={q} />
-          {groups.map((group) => (
-            <div key={group.meetingId} role="group" aria-label={group.title}>
-              <p role="presentation" className="truncate px-2.5 pb-1 pt-2 text-label text-muted">
-                {group.title}
-              </p>
-              {group.hits.map((hit) => {
-                const i = hits.indexOf(hit);
-                return (
-                  <Option
-                    key={hit.segment_id}
-                    id={optionId(i)}
-                    active={i === activeIndex}
-                    onSelect={() => go(hitHref(hit))}
-                    onHover={() => setActive(i)}
-                  >
-                    <HitSnippet hit={hit} clamp />
-                  </Option>
-                );
-              })}
-            </div>
-          ))}
+          <div
+            aria-hidden={stale || undefined}
+            className={cn(stale && "pointer-events-none opacity-50")}
+          >
+            {groups.map((group) => (
+              <div
+                key={group.meetingId}
+                role={stale ? undefined : "group"}
+                aria-label={group.title}
+              >
+                <p role="presentation" className="truncate px-2.5 pb-1 pt-2 text-label text-muted">
+                  {group.title}
+                </p>
+                {group.hits.map((hit) => {
+                  if (stale) {
+                    return (
+                      <div key={hit.segment_id} className="px-2.5 py-2">
+                        <HitSnippet hit={hit} clamp />
+                      </div>
+                    );
+                  }
+                  const i = hits.indexOf(hit);
+                  return (
+                    <Option
+                      key={hit.segment_id}
+                      id={optionId(i)}
+                      active={i === activeIndex}
+                      onSelect={() => go(hitHref(hit))}
+                      onHover={() => setActive(i)}
+                    >
+                      <HitSnippet hit={hit} clamp />
+                    </Option>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
           <div className="mt-1 border-t border-subtle pt-1">
             <Option
               id={optionId(seeAllIndex)}
@@ -144,57 +172,4 @@ export function SearchDropdown() {
       )}
     </div>
   );
-}
-
-function Option({
-  id,
-  active,
-  onSelect,
-  onHover,
-  children,
-}: {
-  id: string;
-  active: boolean;
-  onSelect: () => void;
-  onHover: () => void;
-  children: ReactNode;
-}) {
-  return (
-    // Keyboard selection is handled by the combobox input (aria-activedescendant), so options take no focus.
-    <div
-      id={id}
-      role="option"
-      aria-selected={active}
-      tabIndex={-1}
-      onClick={onSelect}
-      onMouseMove={onHover}
-      className={cn("cursor-pointer rounded-item px-2.5 py-2", active && "bg-surface-hover")}
-    >
-      {children}
-    </div>
-  );
-}
-
-function PanelStatus({
-  search,
-  empty,
-  q,
-}: {
-  search: ReturnType<typeof useSearch>;
-  empty: boolean;
-  q: string;
-}) {
-  const pending = search.isSettling || search.isFetching;
-  if (search.isError && !pending) {
-    return <p className="px-2.5 py-2 text-meta text-muted">Search is unavailable right now.</p>;
-  }
-  if (!empty) return null;
-  if (pending) {
-    return (
-      <p className="flex items-center gap-2 px-2.5 py-2 text-meta text-muted">
-        <Spinner label="Searching" /> Searching…
-      </p>
-    );
-  }
-  return <p className="px-2.5 py-2 text-meta text-muted">No transcript matches for “{q}”.</p>;
 }

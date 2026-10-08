@@ -2,9 +2,9 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { IconButton } from "@/components/ui";
+import { IconButton } from "./icon-button";
 
-export type MeetingsPaginationProps = {
+export type PaginationProps = {
   page: number;
   pageSize: number;
   /** Rows actually on this page; the last page is usually short. */
@@ -14,16 +14,16 @@ export type MeetingsPaginationProps = {
   onPageChange: (page: number) => void;
 };
 
-/** "Showing 1–20 of 57" with previous/next. */
-export function MeetingsPagination({
+/** Footer bar for a paged list: "Showing 1–20 of 57" with previous/next. */
+export function Pagination({
   page,
   pageSize,
   itemCount,
   total,
   totalPages,
   onPageChange,
-}: MeetingsPaginationProps) {
-  // Nothing to count on an empty or out-of-range page (the hub is clamping it).
+}: PaginationProps) {
+  // Nothing to count on an empty or out-of-range page (the caller may be clamping it).
   if (total === 0 || itemCount === 0) return null;
   const first = (page - 1) * pageSize + 1;
   const last = Math.min(first + itemCount - 1, total);

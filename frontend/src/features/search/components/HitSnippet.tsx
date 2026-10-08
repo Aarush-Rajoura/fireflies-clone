@@ -1,8 +1,9 @@
-import { Highlighter, formatTimestamp } from "@/components/ui";
+import { Highlighter } from "@/components/ui";
+import { formatTimestamp } from "@/features/transcript";
 import type { SearchHit } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
-/** One transcript hit: timestamp chip, speaker, and the snippet with matches marked. */
+/** One transcript hit: timestamp chip (in the transcript's own "00:53" format), speaker, and the snippet with matches marked. */
 export function HitSnippet({ hit, clamp = false }: { hit: SearchHit; clamp?: boolean }) {
   return (
     <span className="flex min-w-0 items-start gap-3">

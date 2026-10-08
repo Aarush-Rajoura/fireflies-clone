@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { SkeletonRow, StateView } from "@/components/ui";
-import { MeetingsPagination } from "@/features/meetings";
+import { Pagination, SkeletonRow, StateView } from "@/components/ui";
 import type { SearchHit } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -55,6 +54,10 @@ function MeetingGroup({ group }: { group: MeetingHits }) {
  * The full `/search?q=` results: every hit on the page, grouped by meeting
  * (best-matching meeting first). `q` and `page` live in the URL so results
  * are shareable and Back works.
+ *
+ * The API pages flat hits, not meetings, so grouping is per page: a meeting
+ * whose hits straddle a page boundary appears on both pages, each group
+ * showing only that page's hits.
  */
 export function SearchResultsPage({ q, page = 1 }: { q: string; page?: number }) {
   const router = useRouter();
@@ -85,7 +88,7 @@ export function SearchResultsPage({ q, page = 1 }: { q: string; page?: number })
                 <p className="tnum text-meta text-muted" aria-live="polite">
                   {plural(data.total, "match")} for “{query}”
                 </p>
-                <ResultGroups hits={data.items} dimmed={search.isPlaceholderData} />
+                <ResultGroups hits={data.items} stale={search.isStale} />
               </>
             )}
           </StateView>
@@ -94,7 +97,7 @@ export function SearchResultsPage({ q, page = 1 }: { q: string; page?: number })
         )}
       </div>
       {search.data && query && (
-        <MeetingsPagination
+        <Pagination
           page={search.data.page}
           pageSize={search.data.page_size}
           itemCount={search.data.items.length}
@@ -107,9 +110,14 @@ export function SearchResultsPage({ q, page = 1 }: { q: string; page?: number })
   );
 }
 
-function ResultGroups({ hits, dimmed }: { hits: SearchHit[]; dimmed: boolean }) {
+/** While the next query or page loads, the old hits stay visible but inert so nobody opens a stale result. */
+function ResultGroups({ hits, stale }: { hits: SearchHit[]; stale: boolean }) {
   return (
-    <div className={cn("flex flex-col gap-4 transition-opacity", dimmed && "opacity-60")}>
+    <div
+      aria-busy={stale}
+      inert={stale}
+      className={cn("flex flex-col gap-4 transition-opacity", stale && "opacity-60")}
+    >
       {groupByMeeting(hits).map((group) => (
         <MeetingGroup key={group.meetingId} group={group} />
       ))}
