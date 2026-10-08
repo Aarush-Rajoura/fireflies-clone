@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     # WAL needs every process on one machine. Hosts whose consoles and web workers share
     # the file over a network (PythonAnywhere) must use "delete" or writes get lost.
     sqlite_journal_mode: Literal["wal", "delete"] = "wal"
+    # Upgrade the schema when the app starts, so a deploy needs only a reload.
+    auto_migrate: bool = True
     # NoDecode: accept "a,b" from the environment instead of requiring a JSON list.
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
     ai_provider: Literal["mock", "gemini"] = "mock"

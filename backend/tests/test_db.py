@@ -52,3 +52,19 @@ def test_health_503_when_db_unreachable() -> None:
     r = TestClient(app).get("/api/health")
     assert r.status_code == 503
     assert r.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+
+
+def test_app_startup_migrates_to_head(settings: Settings) -> None:
+    from alembic.script import ScriptDirectory
+
+    from app.main import create_app
+    from tests.conftest import alembic_config
+
+    head = ScriptDirectory.from_config(alembic_config()).get_current_head()
+    startup = settings.model_copy(update={"auto_migrate": True})
+    create_app(startup)
+    create_app(startup)  # second start on an up-to-date DB is a no-op
+
+    with make_engine(settings.database_url).connect() as conn:
+        assert conn.execute(text("SELECT version_num FROM alembic_version")).scalar() == head
+        assert conn.execute(text("SELECT count(*) FROM user_tools")).scalar() == 0

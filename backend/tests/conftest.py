@@ -16,6 +16,7 @@ from app.main import create_app
 _SETTINGS_ENV_VARS = (
     "DATABASE_URL", "CORS_ORIGINS", "AI_PROVIDER", "AI_API_KEY", "AI_MODEL",
     "AI_RATE_LIMIT", "MEDIA_DIR", "MAX_UPLOAD_MB", "SEED_ANCHOR_DATE", "APP_VERSION", "LOG_LEVEL",
+    "SQLITE_JOURNAL_MODE", "AUTO_MIGRATE",
 )  # fmt: skip
 
 
@@ -33,7 +34,12 @@ def _hermetic_settings(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     # A file DB (not :memory:) so WAL and multi-connection behaviour are real.
-    return Settings(database_url=f"sqlite:///{tmp_path / 'test.db'}", media_dir=tmp_path / "media")
+    # Fixtures migrate explicitly, so startup migration stays off here.
+    return Settings(
+        database_url=f"sqlite:///{tmp_path / 'test.db'}",
+        media_dir=tmp_path / "media",
+        auto_migrate=False,
+    )
 
 
 @pytest.fixture

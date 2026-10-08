@@ -10,6 +10,7 @@ from app.core.config import Settings, get_settings
 from app.core.errors import register_exception_handlers
 from app.core.middleware import RequestContextMiddleware
 from app.core.rate_limit import build_limiter
+from app.db.migrations import upgrade_to_head
 from app.db.session import make_engine, make_session_factory
 
 
@@ -35,6 +36,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = settings
     app.state.engine = make_engine(settings.database_url, settings.sqlite_journal_mode)
+    if settings.auto_migrate:
+        upgrade_to_head(app.state.engine)
     app.state.session_factory = make_session_factory(app.state.engine)
 
     # Added last = outermost, so CORS headers also land on error responses.

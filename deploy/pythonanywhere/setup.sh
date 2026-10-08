@@ -39,14 +39,6 @@ fi
 # Consoles and the web app run on different machines here, so WAL would lose writes.
 grep -q '^SQLITE_JOURNAL_MODE=' "$ENV_FILE" || echo "SQLITE_JOURNAL_MODE=delete" >> "$ENV_FILE"
 
-echo "==> Database"
-(cd "$REPO/backend" && "$VENV/bin/alembic" upgrade head)
-# Fails loudly: a broken seed must stop the deploy, not leave an empty demo behind.
-# --if-empty also (re)generates the sample recording in MEDIA_DIR when it is missing.
-(cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --if-empty)
-# Seeded "upcoming" meetings drift into the past; move them back to their future offsets.
-(cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --refresh-upcoming)
-
 echo "==> Website ($DOMAIN)"
 CMD="$VENV/bin/uvicorn --app-dir $REPO/backend --uds \${DOMAIN_SOCKET} app.main:app"
 if pa website get --domain "$DOMAIN" >/dev/null 2>&1; then
@@ -54,4 +46,18 @@ if pa website get --domain "$DOMAIN" >/dev/null 2>&1; then
 else
   pa website create --domain "$DOMAIN" --command "$CMD"
 fi
+
+echo "==> Database"
+# The web app migrates its own database on startup. It runs on another machine than this
+# console, so migrating from here fails ("database is locked") or does not stick.
+# Wake it and wait until it answers before seeding.
+for _ in $(seq 1 30); do
+  curl -fsS -o /dev/null "https://$DOMAIN/api/health" && break
+  sleep 2
+done
+# Fails loudly: a broken seed must stop the deploy, not leave an empty demo behind.
+# --if-empty also (re)generates the sample recording in MEDIA_DIR when it is missing.
+(cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --if-empty)
+# Seeded "upcoming" meetings drift into the past; move them back to their future offsets.
+(cd "$REPO/backend" && "$VENV/bin/python" -m app.seed.seed --refresh-upcoming)
 echo "==> Done: https://$DOMAIN/api/health"

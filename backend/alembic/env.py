@@ -2,6 +2,8 @@
 
 from logging.config import fileConfig
 
+from sqlalchemy import Connection
+
 import app.models  # noqa: F401  (registers every model on Base.metadata)
 from alembic import context
 from app.core.config import get_settings
@@ -10,7 +12,10 @@ from app.db.migration_filters import include_object
 from app.db.session import make_engine
 
 config = context.config
-if config.config_file_name is not None:
+# The app passes its own connection when it migrates on startup; only the CLI
+# configures logging (fileConfig would otherwise silence the app's loggers).
+app_connection = config.attributes.get("connection")
+if app_connection is None and config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Single source of truth for the URL: Settings, never alembic.ini.
@@ -31,20 +36,27 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def run_migrations_on(connection: Connection) -> None:
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        render_as_batch=True,
+        compare_type=True,
+        include_object=include_object,
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+
+
 def run_migrations_online() -> None:
+    if app_connection is not None:
+        run_migrations_on(app_connection)
+        return
     # Same engine factory as the app, so migrations get the same pragmas (journal mode).
     settings = get_settings()
     connectable = make_engine(settings.database_url, settings.sqlite_journal_mode)
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            render_as_batch=True,
-            compare_type=True,
-            include_object=include_object,
-        )
-        with context.begin_transaction():
-            context.run_migrations()
+        run_migrations_on(connection)
 
 
 if context.is_offline_mode():
