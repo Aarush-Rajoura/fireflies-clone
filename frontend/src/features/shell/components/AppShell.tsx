@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 
+import { CreateMeetingModal } from "@/features/create";
+
 import { useRailExpanded } from "../hooks/useRailExpanded";
 
 import { HelpButton } from "./HelpButton";
@@ -27,6 +29,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
       <HelpButton />
+      {/* Mounted once here so any screen can open it through the create store. */}
+      <CreateMeetingModal />
     </div>
   );
 }

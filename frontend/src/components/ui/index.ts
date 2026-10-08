@@ -8,6 +8,7 @@ export * from "./chip";
 export * from "./coming-soon";
 export * from "./confirm-dialog";
 export * from "./date-picker";
+export * from "./dropzone";
 export * from "./empty-state";
 export * from "./highlighter";
 export * from "./icon-button";

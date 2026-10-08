@@ -23,6 +23,8 @@ export type Tag = Schemas["TagRead"];
 export type Transcript = Schemas["TranscriptRead"];
 export type Segment = Schemas["SegmentRead"];
 export type Speaker = Schemas["SpeakerRead"];
+export type SegmentIn = Schemas["SegmentIn"];
+export type TranscriptPreview = Schemas["TranscriptPreview"];
 
 export type Summary = Schemas["SummaryRead"];
 

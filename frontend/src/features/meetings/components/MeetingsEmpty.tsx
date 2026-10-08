@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 
 import { Button, EmptyState, SkeletonCardsIllustration } from "@/components/ui";
-import { useComingSoon } from "@/features/shell";
+import { openCreateMeeting } from "@/features/create";
 
 import type { EmptyCopy } from "../lib/empty-copy";
 
@@ -14,7 +14,6 @@ export type MeetingsEmptyProps = {
 
 /** The empty library, as in the reference, worded for the view that is empty. */
 export function MeetingsEmpty({ copy, onClearFilters }: MeetingsEmptyProps) {
-  const soon = useComingSoon();
   const capture = copy.kind === "first-run" || copy.kind === "hosted" || copy.kind === "uploads";
 
   const action =
@@ -24,26 +23,18 @@ export function MeetingsEmpty({ copy, onClearFilters }: MeetingsEmptyProps) {
       <Button
         variant="primary"
         leadingIcon={<Plus strokeWidth={1.75} />}
-        onClick={() =>
-          soon.show({
-            title: "Capture",
-            message: "Recording and uploading meetings is coming soon.",
-          })
-        }
+        onClick={() => openCreateMeeting("upload")}
       >
         Capture
       </Button>
     ) : undefined;
 
   return (
-    <>
-      <EmptyState
-        illustration={<SkeletonCardsIllustration />}
-        title={copy.title}
-        description={copy.description}
-        action={action}
-      />
-      {soon.dialog}
-    </>
+    <EmptyState
+      illustration={<SkeletonCardsIllustration />}
+      title={copy.title}
+      description={copy.description}
+      action={action}
+    />
   );
 }

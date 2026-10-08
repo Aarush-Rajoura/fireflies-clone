@@ -3,50 +3,13 @@
 import { Calendar, Mic, Upload, Video } from "lucide-react";
 import { useState } from "react";
 
-import { Button, Input, Modal, SoonBadge, SplitButton } from "@/components/ui";
+import { SplitButton } from "@/components/ui";
+import { openCreateMeeting } from "@/features/create";
 
+import { CaptureModal } from "./CaptureModal";
 import { useComingSoon } from "./ComingSoonDialog";
 
-/** "Add Fred to a live meeting": the live bot is out of scope, so the form is shown but disabled. */
-function LiveMeetingDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  return (
-    <Modal
-      open={open}
-      onOpenChange={onOpenChange}
-      title="Add Fred to a live meeting"
-      description="Fred joins your Zoom, Google Meet or Teams call and takes notes for you."
-      footer={
-        <>
-          <Button onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button variant="primary" disabled>
-            Add to meeting
-          </Button>
-        </>
-      }
-    >
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <label htmlFor="live-meeting-link" className="text-body-strong text-primary">
-            Meeting link
-          </label>
-          <SoonBadge />
-        </div>
-        <Input id="live-meeting-link" disabled placeholder="https://zoom.us/j/…" />
-        <p className="text-meta text-muted">
-          Live capture is coming soon. Upload a transcript to try Fred today.
-        </p>
-      </div>
-    </Modal>
-  );
-}
-
-/** Top-bar "Capture ▾". The create-meeting flow replaces the Coming Soon entries when it ships. */
+/** Top-bar "Capture ▾": live capture, scheduling and recording are placeholders; upload is real. */
 export function CaptureMenu() {
   const [liveOpen, setLiveOpen] = useState(false);
   const soon = useComingSoon();
@@ -75,12 +38,7 @@ export function CaptureMenu() {
           {
             label: "Upload audio or video",
             icon: <Upload strokeWidth={1.75} />,
-            onSelect: () =>
-              soon.show({
-                title: "Upload audio or video",
-                message:
-                  "Speech-to-text is coming soon. Upload a transcript instead to get a summary and action items.",
-              }),
+            onSelect: () => openCreateMeeting("upload"),
           },
           {
             label: "Start recording",
@@ -93,7 +51,7 @@ export function CaptureMenu() {
           },
         ]}
       />
-      <LiveMeetingDialog open={liveOpen} onOpenChange={setLiveOpen} />
+      <CaptureModal open={liveOpen} onOpenChange={setLiveOpen} />
       {soon.dialog}
     </>
   );
