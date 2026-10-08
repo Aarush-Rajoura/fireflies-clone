@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 import { isRowVisible, rowElement, scrollRowIntoView } from "../lib/scroll";
 
@@ -23,7 +23,14 @@ type Options = {
  * This scrolls, it never seeks: the player stays the single source of time.
  */
 export function useFollowPlayhead({ containerRef, activeIndex, isPlaying }: Options) {
-  const [following, setFollowing] = useState(true);
+  const [following, setFollowingState] = useState(true);
+  // Mirrored in a ref so turning following back on doesn't itself trigger the
+  // scroll effect: "Jump to current" scrolls on its own, and a clicked line is already in view.
+  const followingRef = useRef(true);
+  const setFollowing = useCallback((value: boolean) => {
+    followingRef.current = value;
+    setFollowingState(value);
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -48,28 +55,28 @@ export function useFollowPlayhead({ containerRef, activeIndex, isPlaying }: Opti
       el.removeEventListener("keydown", onKeyDown);
       el.removeEventListener("pointerdown", onPointerDown);
     };
-  }, [containerRef]);
+  }, [containerRef, setFollowing]);
 
   // Reacts to the active line to SCROLL only. While paused it scrolls just when
   // the line is off-screen (a deep link or chapter seek), so clicking a visible
   // line doesn't yank the list around.
   useEffect(() => {
     const el = containerRef.current;
-    if (!following || activeIndex < 0 || !el) return;
+    if (!followingRef.current || activeIndex < 0 || !el) return;
     const row = rowElement(el, activeIndex);
     if (!row) return;
     if (isPlaying || !isRowVisible(el, row)) {
       row.scrollIntoView?.({ behavior: "smooth", block: "center" });
     }
-  }, [containerRef, activeIndex, isPlaying, following]);
+  }, [containerRef, activeIndex, isPlaying]);
 
   const jumpToCurrent = useCallback(() => {
     setFollowing(true);
     scrollRowIntoView(containerRef.current, activeIndex);
-  }, [containerRef, activeIndex]);
+  }, [containerRef, activeIndex, setFollowing]);
 
   /** Re-enables following without scrolling, e.g. after the user clicks a line. */
-  const resume = useCallback(() => setFollowing(true), []);
+  const resume = useCallback(() => setFollowing(true), [setFollowing]);
 
   return { following, jumpToCurrent, resume };
 }
