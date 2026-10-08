@@ -157,26 +157,37 @@ describe("NotepadView", () => {
     expect(engine?.currentMs).toBe(3_000);
   });
 
-  it("opens Ask Fred as a drawer it controls, and hands focus back to the toggle on close", async () => {
+  it("opens Ask Fred in the tool rail's flyout from the header or the rail", async () => {
     renderView(meetingRoutes(() => json(meeting)));
     await screen.findByText("Line 1 about the launch.");
-    const toggle = screen.getByRole("button", { name: "Ask Fred" });
+    const rail = screen.getByRole("navigation", { name: "Meeting tools" });
+    const railButton = within(rail).getByRole("button", { name: "Ask Fred" });
+    const toggle = screen
+      .getAllByRole("button", { name: "Ask Fred" })
+      .find((b) => !rail.contains(b))!;
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
 
+    // Browsers focus a clicked button; jsdom does not, so do it as they would.
+    toggle.focus();
     fireEvent.click(toggle);
-    const drawer = screen.getByRole("complementary", { name: "Ask Fred about this meeting" });
+    const panel = screen.getByRole("complementary", { name: "Ask Fred" });
     expect(toggle.getAttribute("aria-expanded")).toBe("true");
-    expect(toggle.getAttribute("aria-controls")).toBe(drawer.id);
-    expect(document.activeElement).toBe(within(drawer).getByRole("textbox"));
+    expect(railButton.getAttribute("aria-expanded")).toBe("true");
+    expect(toggle.getAttribute("aria-controls")).toBe(panel.id);
+    expect(railButton.getAttribute("aria-controls")).toBe(panel.id);
+    await waitFor(() => expect(document.activeElement).toBe(within(panel).getByRole("textbox")));
 
-    fireEvent.click(within(drawer).getByRole("button", { name: "Close Ask Fred" }));
+    fireEvent.click(within(panel).getByRole("button", { name: "Close Ask Fred" }));
     expect(toggle.getAttribute("aria-expanded")).toBe("false");
     expect(document.activeElement).toBe(toggle);
 
-    // Escape from inside the drawer closes it the same way.
-    fireEvent.click(toggle);
-    fireEvent.keyDown(within(drawer).getByRole("textbox"), { key: "Escape" });
-    expect(document.activeElement).toBe(toggle);
+    // From the rail, and Escape inside the panel closes it back to the rail button.
+    railButton.focus();
+    fireEvent.click(railButton);
+    expect(panel.parentElement?.className).not.toContain("hidden");
+    fireEvent.keyDown(within(panel).getByRole("textbox"), { key: "Escape" });
+    expect(document.activeElement).toBe(railButton);
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
   });
 
   it("applies the ?t= deep link and hides/shows the player with the media toggle", async () => {
@@ -237,8 +248,10 @@ describe("NotepadView", () => {
 
     // Closing from the panel hands focus back to the rail button that opened it.
     const commentsButton = within(rail).getByRole("button", { name: "Comments (1)" });
+    // Browsers focus a clicked button; jsdom does not, so do it as they would.
+    commentsButton.focus();
     fireEvent.click(commentsButton);
-    fireEvent.click(within(comments).getByRole("button", { name: "Close comments" }));
+    fireEvent.click(within(comments).getByRole("button", { name: "Close Comments" }));
     expect(document.activeElement).toBe(commentsButton);
 
     fireEvent.click(within(rail).getByRole("button", { name: "Bookmarks" }));

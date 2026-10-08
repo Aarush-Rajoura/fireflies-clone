@@ -1,5 +1,5 @@
 export { AskPanel, type AskPanelProps, type AskSuggestion } from "./components/AskPanel";
-export { MeetingAskFlyout, type MeetingAskFlyoutProps } from "./components/MeetingAskFlyout";
+export { MeetingAskPanel, type MeetingAskPanelProps } from "./components/MeetingAskPanel";
 export {
   CitationChip,
   citationHref,

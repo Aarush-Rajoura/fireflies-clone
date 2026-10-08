@@ -13,6 +13,7 @@ export type NotepadRailProps = {
   onSearch: () => void;
   /** Where focus returns when a flyout closes. */
   triggerRef: (flyout: NotepadFlyout) => Ref<HTMLButtonElement>;
+  askPanelId?: string;
   commentCount: number;
   soundbiteCount: number;
 };
@@ -39,6 +40,7 @@ export function NotepadRail({
   onToggle,
   onSearch,
   triggerRef,
+  askPanelId,
   commentCount,
   soundbiteCount,
 }: NotepadRailProps) {
@@ -50,6 +52,7 @@ export function NotepadRail({
         icon={icon}
         active={open === id}
         aria-expanded={open === id}
+        aria-controls={id === "ai" ? askPanelId : undefined}
         onClick={() => onToggle(id)}
       />
     );
@@ -62,7 +65,7 @@ export function NotepadRail({
       className="flex w-rail-mini shrink-0 flex-col items-center gap-1 border-r border-subtle py-3"
     >
       <IconButton label="Search transcript" icon={<Search strokeWidth={1.75} />} onClick={onSearch} />
-      {flyout("ai", "Ask AI", <Sparkles strokeWidth={1.75} />)}
+      {flyout("ai", "Ask Fred", <Sparkles strokeWidth={1.75} />)}
       {flyout(
         "soundbites",
         `Soundbites (${soundbiteCount})`,

@@ -12,6 +12,7 @@ import { NotepadRail } from "./NotepadRail";
 
 export type NotepadSummarySideProps = {
   meetingId: number;
+  meetingTitle: string;
   segments: readonly Segment[];
   flyouts: NotepadFlyouts;
   onSearch: () => void;
@@ -22,6 +23,7 @@ export type NotepadSummarySideProps = {
 /** Left half of the meeting page: tool rail · optional flyout · summary. */
 export function NotepadSummarySide({
   meetingId,
+  meetingTitle,
   segments,
   flyouts,
   onSearch,
@@ -36,10 +38,16 @@ export function NotepadSummarySide({
         onToggle={flyouts.toggle}
         onSearch={onSearch}
         triggerRef={flyouts.triggerRef}
+        askPanelId={flyouts.askPanelId}
         commentCount={commentCount}
         soundbiteCount={soundbiteCount}
       />
-      <NotepadFlyoutHost meetingId={meetingId} segments={segments} flyouts={flyouts} />
+      <NotepadFlyoutHost
+        meetingId={meetingId}
+        meetingTitle={meetingTitle}
+        segments={segments}
+        flyouts={flyouts}
+      />
       {/* `relative`: absolutely positioned descendants (Radix's hidden <select>) scroll with it. */}
       <div className="relative min-w-0 flex-1 overflow-y-auto">{children}</div>
     </div>

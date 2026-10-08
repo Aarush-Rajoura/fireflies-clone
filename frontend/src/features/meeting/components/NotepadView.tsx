@@ -1,11 +1,10 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useId, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import { ResizablePanels } from "@/components/ui";
 import { ActionItemList } from "@/features/action-items";
-import { MeetingAskFlyout } from "@/features/ask";
 import {
   PlayerCard,
   PlayerProvider,
@@ -88,9 +87,6 @@ function LoadedNotepad({
   const [playerVisible, setPlayerVisible] = useState(true);
   const [editMode, setEditMode] = useState<EditMode | null>(edit ? "edit" : null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [askOpen, setAskOpen] = useState(false);
-  const askPanelId = useId();
-  const askToggleRef = useRef<HTMLButtonElement>(null);
   const flyouts = useNotepadFlyouts();
   const transcript = useRef<TranscriptPanelHandle>(null);
   const segments = useTranscript(meeting.id).data?.segments ?? NO_SEGMENTS;
@@ -122,10 +118,9 @@ function LoadedNotepad({
         meeting={meeting}
         playerVisible={playerVisible}
         onTogglePlayer={() => setPlayerVisible((v) => !v)}
-        askOpen={askOpen}
-        onToggleAsk={() => setAskOpen((v) => !v)}
-        askPanelId={askPanelId}
-        askToggleRef={askToggleRef}
+        askOpen={flyouts.open === "ai"}
+        onToggleAsk={() => flyouts.toggle("ai")}
+        askPanelId={flyouts.askPanelId}
         onEdit={() => setEditMode("edit")}
         onMove={() => setEditMode("move")}
         onDelete={() => setDeleteOpen(true)}
@@ -140,6 +135,7 @@ function LoadedNotepad({
           start={
             <NotepadSummarySide
               meetingId={meeting.id}
+              meetingTitle={meeting.title}
               segments={segments}
               flyouts={flyouts}
               onSearch={() => transcript.current?.focusFind()}
@@ -157,7 +153,7 @@ function LoadedNotepad({
             </NotepadSummarySide>
           }
           end={
-            <div className="relative flex h-full min-h-0 flex-col">
+            <div className="flex h-full min-h-0 flex-col">
               {/* Hidden, not unmounted: playback and keyboard shortcuts carry on. */}
               <div className={cn("shrink-0 px-4 pt-4", !playerVisible && "hidden")}>
                 <PlayerCard />
@@ -171,17 +167,6 @@ function LoadedNotepad({
                   onSoundbiteCreated={() => flyouts.show("soundbites")}
                 />
               </div>
-              <MeetingAskFlyout
-                meetingId={meeting.id}
-                meetingTitle={meeting.title}
-                id={askPanelId}
-                open={askOpen}
-                onClose={() => {
-                  setAskOpen(false);
-                  // Focus was inside the drawer, which is now hidden: hand it back to the toggle.
-                  askToggleRef.current?.focus();
-                }}
-              />
             </div>
           }
         />
