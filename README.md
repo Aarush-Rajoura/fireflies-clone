@@ -45,9 +45,9 @@ Legend: **Done (API)** means the backend and its tests are finished and the endp
 | Global search | Done (API): ranked FTS5 hits across all meetings | In progress |
 | Upcoming meetings | Done (API): `status=upcoming` with join link and platform (simulated calendar) | In progress |
 | Landing page | — | Done |
-| Tags, comments, highlights, soundbites | Tables and migrations exist; no endpoints yet | In progress |
-| Ask AI about a meeting | AI capability exists (`QuestionAnswerer`); no endpoint yet | In progress |
-| Export (PDF / Markdown / TXT) | Planned (`reportlab` is already a dependency) | Planned |
+| Tags, comments, highlights, soundbites | Done (API): tag CRUD + `PUT /meetings/{id}/tags`, suggested tags on the detail; comments and highlights on transcript lines; 3-180 s soundbites | In progress |
+| Ask AI about a meeting (and across meetings) | Done (API): `POST /meetings/{id}/ask` and `POST /search/ask`, cited transcript lines, rate limited | In progress |
+| Export (PDF / Markdown / TXT) | Done (API): `GET /meetings/{id}/export?format=&sections=` | Planned |
 | Dark mode | — | Planned (dark is the default theme) |
 | Live bot, real STT, integrations, team sharing, real auth | Out of scope (placeholders) | Placeholders planned |
 
@@ -159,7 +159,8 @@ notes are in [docs/schema.md](docs/schema.md).
 | `summaries`, `summary_sections`, `keywords` | Overview + provenance, outline/notes sections, keywords |
 | `action_items` | Text, assignee, due date, status, link to the moment in the transcript |
 | `channels` | Meeting folders |
-| `tags`, `meeting_tags`, `comments`, `highlights`, `soundbites` | Bonus features (schema ready) |
+| `tags`, `meeting_tags` | Case-insensitive tag names and their meeting links |
+| `comments`, `highlights`, `soundbites` | Notes on a meeting or a transcript line, character-range highlights, recording clips |
 
 Times are UTC; recording positions and durations are integer milliseconds. Owned content
 cascades on delete; optional references to people and channels are set to null.
@@ -168,9 +169,22 @@ cascades on delete; optional references to people and channels are set to null.
 
 REST under `/api/v1` (health at `/api/health`). Lists share one page shape
 (`{items, page, page_size, total, total_pages, has_next}`), every error uses the envelope
-above with a declared status, and every DELETE returns `204`. AI-backed requests (regenerate, and
-create with a transcript) share a per-client rate limit. Conventions, the endpoint table and
-worked examples are in [docs/api.md](docs/api.md); the machine-readable contract is
+above with a declared status, and every DELETE returns `204`. AI-backed requests (regenerate,
+ask, and create with a transcript) share a per-client rate limit.
+
+| Area | Endpoints |
+|---|---|
+| Meetings | `GET POST /meetings` · `GET PATCH DELETE /meetings/{id}` · `POST /meetings/{id}/restore` |
+| Transcript | `POST /transcript-previews` (+ `/files`) · `GET /meetings/{id}/transcript` · `PATCH /segments/{id}` · `PATCH /speakers/{id}` · `GET /meetings/{id}/media` |
+| Summary & AI | `GET /meetings/{id}/summary` · `POST /meetings/{id}/summary/regenerate` · `POST /meetings/{id}/ask` · `POST /search/ask` |
+| Action items | `GET POST /meetings/{id}/action-items` · `PATCH DELETE /action-items/{id}` |
+| Tags | `GET POST /tags` · `PATCH DELETE /tags/{id}` · `PUT /meetings/{id}/tags` |
+| Comments / highlights | `GET POST /meetings/{id}/comments` · `PATCH DELETE /comments/{id}` · same for `highlights` |
+| Soundbites | `GET POST /meetings/{id}/soundbites` · `DELETE /soundbites/{id}` |
+| Search & export | `GET /search?q=` · `GET /meetings/{id}/export?format=md\|txt\|pdf` |
+| Channels & identity | `GET POST /channels` · `PATCH DELETE /channels/{id}` · `GET /me` · `GET /users` |
+
+Conventions, the full endpoint table with declared errors, and worked examples are in [docs/api.md](docs/api.md); the machine-readable contract is
 [docs/openapi.json](docs/openapi.json) (`make types`; a test fails if it drifts).
 
 ## Setup
@@ -242,9 +256,10 @@ and reloads the web app).
 
 1. App screens on the existing API: meetings library and hub, meeting detail with player and
    transcript, create/upload flow, tasks.
-2. Endpoints and screens for tags, comments, highlights and soundbites (schema already exists).
-3. "Ask AI" about a meeting with cited transcript lines (the AI capability exists).
-4. Export to PDF, Markdown and TXT.
+2. Screens for tags, comments, highlights and soundbites (the endpoints exist).
+3. The "Ask AI" panels in a meeting and on the Meetings hub (the endpoints exist); use the
+   conversation `history` the ask endpoints already accept.
+4. The export modal (the endpoint exists).
 5. Dark/light theme toggle, home dashboard, AskFred page, analytics, and the simulated team and
    integrations pages.
 6. End-to-end tests (Playwright) and a demo GIF.

@@ -179,4 +179,10 @@ meeting's data. Services must check each of these on write:
 - `transcript_segments.speaker_id` refers to a speaker of the same `meeting_id`.
 - `speakers.participant_id` refers to a participant of the same `meeting_id`.
 - `action_items.assignee_participant_id` refers to a participant of the same `meeting_id`.
-- `comments` and `highlights`: `(meeting_id, segment_id)` must match the segment's meeting.
+- `comments` and `highlights`: `(meeting_id, segment_id)` must match the segment's meeting
+  (`422 SEGMENT_NOT_IN_MEETING`).
+- `highlights`: `end_offset <= len(segment.text)` when the highlight is written. Editing the
+  segment text later does not move or trim highlights, so a client clamps ranges to the text.
+- `highlights.color` is one of `yellow|green|blue|pink|purple` (checked by the request schema,
+  not the database).
+- `soundbites`: `3 s <= end_ms - start_ms <= 180 s` and `end_ms <= meetings.duration_ms`.

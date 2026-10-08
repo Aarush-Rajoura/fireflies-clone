@@ -73,3 +73,17 @@ Short records of choices that shape the codebase. Add a new ADR when a decision 
 - **Decision:** design tokens are CSS variables with the dark palette as the default and a light theme as the alternative, toggled from the profile menu.
 - **Why:** matching the real product's look is graded; building on tokens from day one makes the toggle a variable swap rather than a restyle.
 - **Consequences:** every component must use tokens, never raw colours. Status: the app shell that carries the toggle is still being built; the backend is unaffected.
+
+## ADR-010: Export through an exporter registry
+
+- **Context:** meetings export to Markdown, plain text and PDF today, and more formats (DOCX, SRT) are likely; a `match format:` in the service would have to change for each one.
+- **Decision:** `app/services/export/` loads one format-neutral `ExportBundle` (only the sections asked for) and hands it to an `Exporter` (`media_type`, `extension`, `render(bundle) -> bytes`) looked up by name in an `ExporterRegistry`. The composition root builds the registry with `md`, `txt` and `pdf`; an unknown name is `422 EXPORT_FORMAT_UNSUPPORTED`, listing the supported ones. Filenames are a whitelist slug of the title plus the meeting date.
+- **Why:** open for extension, closed for modification: a new format is one class and one `register` call, with no service or router change. Exporters never touch the database, so each is tested on a hand-built bundle.
+- **Consequences:** `format` is a free string in OpenAPI (its description lists the formats) rather than an enum. Files are rendered in memory, which is fine for meeting-sized documents. The PDF uses built-in fonts, so non-Latin-1 text does not render in it.
+
+## ADR-011: Cross-meeting Ask over FTS hits
+
+- **Context:** the Meetings hub's Ask panel answers questions across many meetings; sending every transcript to the model is too large and too slow.
+- **Decision:** `POST /search/ask` retrieves passages with FTS5: the question's content words (question glue dropped) are OR-ed into a safe quoted query, the best 40 segments by bm25 across live meetings (optionally only `meeting_ids`) become passages, followed by those meetings' summary overviews. The same `QuestionAnswerer` serves this and the single-meeting `POST /meetings/{id}/ask` (whose passages are the meeting's lines). In both, passages are read in a short transaction that is closed before the AI call, and only citations that point at a supplied segment survive, with `start_ms` taken from the database.
+- **Why:** reuses the existing index and capability interface with no new infrastructure; OR-ing content words finds relevant lines where the AND query used by `/search` would find none for a whole sentence.
+- **Consequences:** retrieval is lexical: a question phrased with words that never occur in the transcript finds nothing (the answer then says so). Conversation `history` is accepted but not used yet.

@@ -49,8 +49,8 @@ Interactive docs: `/docs` on a running server.
   into consecutive segments (at word boundaries, sharing its time span by text length) with a
   warning, never truncated.
 - **Rate limiting:** only requests that run the AI are limited: `POST
-  /meetings/{id}/summary/regenerate`, and `POST /meetings` **when it carries `segments`**. They
-  share one per-client budget, `AI_RATE_LIMIT` (default `10/minute`, read from the app's
+  /meetings/{id}/summary/regenerate`, `POST /meetings/{id}/ask`, `POST /search/ask`, and
+  `POST /meetings` **when it carries `segments`**. They share one per-client budget, `AI_RATE_LIMIT` (default `10/minute`, read from the app's
   settings). The check runs after the service's guards, so 404/409/410/422 responses never use
   up the budget. The 429 carries `Retry-After`. The client address is the first `X-Forwarded-For` hop when present,
   else the socket peer; that header is only trustworthy behind a proxy that sets it (Vercel does),
@@ -62,6 +62,38 @@ Interactive docs: `/docs` on a running server.
 - **Operation ids** are the handler names (`list_meetings`, `create_action_item`, ...), and tags
   are plural kebab-case (`action-items`, `summaries`).
 - **Media:** `GET /meetings/{id}/media` streams the file and honours `Range` (206).
+- **Tags:** names are unique ignoring case (`409 TAG_EXISTS`); `color_index` is 0-7.
+  `PUT /meetings/{id}/tags` takes the complete set `{tag_ids}` (duplicates collapse, an unknown
+  id is `422 TAG_NOT_FOUND`) and returns the updated meeting. Deleting a tag removes it from
+  every meeting. `MeetingDetail.suggested_tags` is the meeting's top keywords not already
+  applied as tags (no AI call on read).
+- **Ask AI:** `POST /meetings/{id}/ask` `{question (1-500 chars), history?}` answers from that
+  meeting's transcript (`422 TRANSCRIPT_EMPTY` when it has none); `history` is accepted and
+  validated but not used yet. `POST /search/ask` `{question, meeting_ids?}` answers from up to 40
+  best transcript matches (any content word of the question, bm25 order) across live meetings,
+  or only `meeting_ids`, plus those meetings' summary overviews. Both return
+  `{answer, citations[{meeting_id, meeting_title, segment_id, start_ms, quote}], provider,
+  model}`; a citation the provider makes up (a segment that was not among the passages) is
+  dropped, and `start_ms` always comes from the database. Passages are read, the transaction is
+  closed, and only then is the AI called.
+- **Comments:** listed oldest first; `body` 1-2000 chars; an optional `segment_id` must be a
+  line of the same meeting (`422 SEGMENT_NOT_IN_MEETING`); the author is the current (default)
+  user. `DELETE` hides the comment (`deleted_at`), after which it is `404`.
+- **Highlights:** `{segment_id, start_offset, end_offset, color}` with
+  `0 <= start_offset < end_offset <= len(segment.text)` (`422 HIGHLIGHT_OUT_OF_RANGE` when past
+  the text); `color` is `yellow|green|blue|pink|purple` (default `yellow`). Listed in transcript
+  order.
+- **Soundbites:** `{title?, start_ms, end_ms}`; length 3-180 s (`422 SOUNDBITE_LENGTH_INVALID`)
+  and `end_ms <= duration_ms` (`422 SOUNDBITE_OUT_OF_RANGE`). Without a title, the first line
+  spoken inside the clip is used. Listed in recording order.
+- **Export:** `GET /meetings/{id}/export?format=md|txt|pdf&sections=summary,action_items,transcript`
+  returns the file with `Content-Disposition: attachment; filename="<title-slug>-<date>.<ext>"`.
+  `format` defaults to `md`, `sections` to all (rendered in that fixed order). An unknown format
+  is `422 EXPORT_FORMAT_UNSUPPORTED`, an unknown or empty section list
+  `422 EXPORT_SECTION_UNKNOWN`. The PDF uses reportlab's built-in Helvetica, so characters
+  outside Latin-1 do not render there.
+- **Writes under a soft-deleted meeting** (comments, highlights, soundbites, tags, ask, export)
+  are `410 MEETING_DELETED`, like every other child route.
 
 ## Endpoints
 
@@ -85,7 +117,26 @@ Interactive docs: `/docs` on a running server.
 | POST | `/meetings/{id}/action-items` | 201 item | 404, 410, 422 |
 | PATCH | `/action-items/{id}` | 200 item | 404, 410, 422 |
 | DELETE | `/action-items/{id}` | 204 | 404, 410, 422 |
+| POST | `/meetings/{id}/ask` | 200 answer + citations | 404, 410, 422, 429, 503 |
+| GET | `/meetings/{id}/comments` | 200 Page of comments | 404, 410, 422 |
+| POST | `/meetings/{id}/comments` | 201 comment | 404, 410, 422, 503 |
+| PATCH | `/comments/{id}` | 200 comment | 404, 410, 422 |
+| DELETE | `/comments/{id}` | 204 | 404, 410, 422 |
+| GET | `/meetings/{id}/highlights` | 200 Page of highlights | 404, 410, 422 |
+| POST | `/meetings/{id}/highlights` | 201 highlight | 404, 410, 422, 503 |
+| PATCH | `/highlights/{id}` | 200 highlight | 404, 410, 422 |
+| DELETE | `/highlights/{id}` | 204 | 404, 410, 422 |
+| GET | `/meetings/{id}/soundbites` | 200 Page of soundbites | 404, 410, 422 |
+| POST | `/meetings/{id}/soundbites` | 201 soundbite | 404, 410, 422, 503 |
+| DELETE | `/soundbites/{id}` | 204 | 404, 410, 422 |
+| GET | `/meetings/{id}/export` | 200 file (md, txt or pdf) | 404, 410, 422 |
+| PUT | `/meetings/{id}/tags` | 200 meeting | 404, 410, 422 |
+| GET | `/tags` | 200 Page of tags | 422 |
+| POST | `/tags` | 201 tag | 409, 422 |
+| PATCH | `/tags/{id}` | 200 tag | 404, 409, 422 |
+| DELETE | `/tags/{id}` | 204 | 404, 422 |
 | GET | `/search?q=` | 200 Page of hits | 422 |
+| POST | `/search/ask` | 200 answer + citations | 422, 429, 503 |
 | GET | `/channels` | 200 Page of channels | 422 |
 | POST | `/channels` | 201 channel | 409, 422 |
 | PATCH | `/channels/{id}` | 200 channel | 404, 409, 422 |
