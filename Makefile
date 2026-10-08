@@ -39,5 +39,6 @@ lint: ## Lint backend and frontend
 		&& uv run python ../scripts/check_layering.py
 	cd frontend && npm run lint && npm run typecheck
 
-types: ## Export docs/openapi.json (client type generation follows)
+types: ## Export docs/openapi.json and regenerate frontend/src/types/api.d.ts
 	cd backend && uv run python -m scripts.export_openapi
+	cd frontend && npm run types
