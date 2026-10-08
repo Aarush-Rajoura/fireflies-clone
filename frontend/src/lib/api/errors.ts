@@ -48,7 +48,13 @@ export function toApiError(error: unknown, response: Response): ApiError {
     const { code, message, details } = error.error;
     return new ApiError(code, response.status, message, details ?? {});
   }
-  return new ApiError(UNKNOWN_ERROR, response.status, response.statusText || "Request failed");
+  // No envelope means the answer came from something other than our API (a proxy page, or a
+  // backend that is mid-deploy), so a bare "Not Found" or "Bad Gateway" would mean nothing to the user.
+  return new ApiError(
+    UNKNOWN_ERROR,
+    response.status,
+    `The server sent an unexpected answer (${response.status}). Please try again in a moment.`,
+  );
 }
 
 type FetchResult<T> = { data?: T; error?: unknown; response: Response };

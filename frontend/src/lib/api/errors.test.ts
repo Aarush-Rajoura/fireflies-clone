@@ -53,7 +53,11 @@ describe("unwrap", () => {
     const thrown = await unwrap(Promise.resolve({ error: "<html>", response })).catch(
       (e: unknown) => e,
     );
-    expect(thrown).toMatchObject({ status: 502, message: "Bad Gateway" });
+    expect(thrown).toMatchObject({
+      status: 502,
+      code: "UNKNOWN_ERROR",
+      message: "The server sent an unexpected answer (502). Please try again in a moment.",
+    });
     expect((thrown as ApiError).isRetryable).toBe(true);
   });
 
