@@ -113,6 +113,8 @@ def test_valid_inbound_request_id_is_kept(client: TestClient) -> None:
 def test_access_log_line_is_emitted_at_configured_level(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
+    # alembic's fileConfig (run by migration tests in this process) disables existing loggers.
+    logging.getLogger("app.request").disabled = False
     app = create_app(Settings(database_url=f"sqlite:///{tmp_path / 'l.db'}", log_level="info"))
     assert logging.getLogger("app").level == logging.INFO
     with caplog.at_level(logging.INFO, logger="app.request"), TestClient(app) as c:
