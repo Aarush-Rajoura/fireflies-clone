@@ -230,10 +230,25 @@ def test_fts_backfill_covers_rows_present_at_migration(
     engine = make_engine(url)
     try:
         command.upgrade(alembic_config(), "0001")  # schema without the FTS migration
-        with Session(engine) as s:
-            m = _meeting(s)
-            _segment(s, m)
-            s.commit()
+        # Raw SQL, not the ORM: today's models have columns that 0001 does not.
+        with engine.begin() as c:
+            c.execute(text("INSERT INTO users (id, name, email) VALUES (1, 'Host', 'h@x.io')"))
+            c.execute(
+                text(
+                    "INSERT INTO meetings (id, title, started_at, duration_ms, host_id, source,"
+                    " status, media_type, language, auto_join, created_at, updated_at)"
+                    " VALUES (1, 'Standup', '2026-01-01 09:00:00', 0, 1, 'manual', 'completed',"
+                    " 'none', 'en', 0, '2026-01-01 09:00:00', '2026-01-01 09:00:00')"
+                )
+            )
+            c.execute(text("INSERT INTO speakers (id, meeting_id, label) VALUES (1, 1, 'S1')"))
+            c.execute(
+                text(
+                    "INSERT INTO transcript_segments (meeting_id, speaker_id, sequence, start_ms,"
+                    " end_ms, text, original_text) VALUES (1, 1, 1, 0, 10,"
+                    " 'we shipped the roadmap', 'we shipped the roadmap')"
+                )
+            )
         command.upgrade(alembic_config(), "head")
         with Session(engine) as s:
             assert len(_fts(s, "roadmap")) == 1

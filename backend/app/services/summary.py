@@ -12,11 +12,12 @@ from app.ai.types import SummaryResult, TranscriptForAI
 from app.core.exceptions import ConflictError, ValidationFailedError
 from app.db.unit_of_work import UnitOfWork
 from app.models import Keyword, Meeting, Summary, SummarySection
-from app.models.enums import SectionKind
+from app.models.enums import NotificationKind, SectionKind
 from app.schemas.summary import NoteGroupRead, OutlineEntryRead, SummaryRead
 from app.services import timeline
 from app.services.guards import require_active_meeting
 from app.services.meeting_mapping import GENERATING_CLAIM_TTL
+from app.services.notifications import NotificationService
 from app.services.transcript_text import build_transcript_for_ai
 
 SECTION_TITLE_MAX = 300
@@ -54,6 +55,7 @@ class SummaryService:
     def __init__(self, uow: UnitOfWork, summarizer: Summarizer) -> None:
         self.uow = uow
         self.summarizer = summarizer
+        self._notifications = NotificationService(uow)
 
     def get(self, meeting_id: int) -> SummaryRead:
         require_active_meeting(self.uow, meeting_id)
@@ -107,6 +109,12 @@ class SummaryService:
             self.uow.rollback()
             self._release(claim)
             raise
+        self._notifications.record(
+            NotificationKind.SUMMARY_REGENERATED,
+            f"Summary updated for {meeting.title}",
+            "Fred regenerated the AI summary.",
+            f"/meetings/{meeting_id}",
+        )
         return self.get(meeting_id)
 
     def save_result(

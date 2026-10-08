@@ -7,6 +7,7 @@ from pydantic import (
     Field,
     StringConstraints,
     field_validator,
+    model_validator,
 )
 
 from app.models.enums import MediaType, MeetingSource, MeetingStatus, ParticipantRole, Platform
@@ -22,6 +23,16 @@ PersonName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=
 SummaryStatus = Literal["none", "ready", "stale", "generating"]
 # What a client may say it is creating; seed/capture/calendar are set only by the server.
 CreatableSource = Literal["upload", "paste", "manual"]
+CreatableStatus = Literal["scheduled", "live"]
+MeetingUrl = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True, min_length=1, max_length=500, pattern=r"^https?://[^\s/]+\S*$"
+    ),
+]
+Language = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=2, max_length=16, to_lower=True)
+]
 
 
 class ParticipantInput(InputModel):
@@ -46,6 +57,28 @@ class MeetingCreate(InputModel):
     segments: list[SegmentIn] | None = Field(default=None, min_length=1)
     source: CreatableSource = "manual"
     channel_id: int | None = None
+    # Omitted = a finished meeting (upload/paste/manual). "scheduled" needs a future
+    # started_at; "live" is a Capture that starts now. Neither carries a transcript.
+    status: CreatableStatus | None = None
+    meeting_url: MeetingUrl | None = None
+    # Detected from the meeting_url host when omitted.
+    platform: Platform | None = None
+    language: Language = "en"
+    auto_join: bool = False
+
+    @model_validator(mode="after")
+    def _status_rules(self) -> "MeetingCreate":
+        if self.status is None:
+            if self.meeting_url is not None or self.platform is not None or self.auto_join:
+                raise ValueError("meeting_url, platform and auto_join need status")
+            return self
+        if self.segments is not None:
+            raise ValueError(f"A {self.status} meeting cannot have a transcript yet")
+        if self.status == "scheduled" and self.started_at is None:
+            raise ValueError("A scheduled meeting needs started_at")
+        if self.status == "live" and self.meeting_url is None:
+            raise ValueError("Capturing a live meeting needs meeting_url")
+        return self
 
 
 class MeetingUpdate(InputModel):
@@ -118,6 +151,8 @@ class _MeetingBase(BaseModel):
     meeting_url: str | None
     platform: Platform | None
     language: str
+    # Whether the (demo) notetaker should join a scheduled meeting on its own.
+    auto_join: bool
 
 
 class MeetingListItem(_MeetingBase):

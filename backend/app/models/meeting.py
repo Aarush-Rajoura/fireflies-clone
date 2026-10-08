@@ -15,7 +15,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
 from app.db.types import UTCDateTime
-from app.models.enums import MediaType, MeetingSource, MeetingStatus, Platform
+from app.models.enums import CalendarProvider, MediaType, MeetingSource, MeetingStatus, Platform
 from app.models.types import enum_check, enum_column
 
 if TYPE_CHECKING:
@@ -60,6 +60,11 @@ class Meeting(TimestampMixin, Base):
     platform: Mapped[Platform | None] = mapped_column(enum_column(Platform))
     language: Mapped[str] = mapped_column(String(16), default="en", server_default="en")
     auto_join: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    # Which simulated calendar import created this row, so disconnecting removes only those.
+    # No CHECK: SQLite cannot DROP a column named in one, which would break the downgrade.
+    calendar_provider: Mapped[CalendarProvider | None] = mapped_column(
+        enum_column(CalendarProvider)
+    )
     deleted_at: Mapped[datetime | None] = mapped_column(UTCDateTime())
 
     # Read-side relationships for eager loading; writes go through repositories.

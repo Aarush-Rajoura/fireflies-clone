@@ -347,6 +347,50 @@
         "title": "Body_create_transcript_preview_from_file",
         "type": "object"
       },
+      "CalendarConnectionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "provider": {
+            "$ref": "#/components/schemas/CalendarProvider"
+          }
+        },
+        "required": [
+          "provider"
+        ],
+        "title": "CalendarConnectionCreate",
+        "type": "object"
+      },
+      "CalendarConnectionRead": {
+        "properties": {
+          "connected_at": {
+            "format": "date-time",
+            "title": "Connected At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/CalendarProvider"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "connected_at"
+        ],
+        "title": "CalendarConnectionRead",
+        "type": "object"
+      },
+      "CalendarProvider": {
+        "enum": [
+          "google",
+          "outlook"
+        ],
+        "title": "CalendarProvider",
+        "type": "string"
+      },
       "ChannelCreate": {
         "additionalProperties": false,
         "properties": {
@@ -602,6 +646,53 @@
         "title": "ErrorResponse",
         "type": "object"
       },
+      "FeedItem": {
+        "description": "Derived from stored data on read; no AI call and no row of its own.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "summary",
+              "action_item",
+              "trending"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "meeting_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "body",
+          "meeting_id",
+          "created_at"
+        ],
+        "title": "FeedItem",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "ai_provider": {
@@ -782,16 +873,6 @@
         "title": "HighlightUpdate",
         "type": "object"
       },
-      "JoinPreference": {
-        "enum": [
-          "owned",
-          "all",
-          "team",
-          "invited"
-        ],
-        "title": "JoinPreference",
-        "type": "string"
-      },
       "MatchRange": {
         "description": "Half-open character offsets into the snippet; the client wraps them, never raw HTML.",
         "properties": {
@@ -811,103 +892,6 @@
         "title": "MatchRange",
         "type": "object"
       },
-      "MeRead": {
-        "description": "The current user, with their onboarding answers.",
-        "properties": {
-          "avatar_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Avatar Url"
-          },
-          "email": {
-            "title": "Email",
-            "type": "string"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "job_title": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Job Title"
-          },
-          "join_preference": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JoinPreference"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "onboarded_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Onboarded At"
-          },
-          "recap_preference": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/RecapPreference"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "role": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Role"
-          },
-          "tools": {
-            "default": [],
-            "items": {
-              "type": "string"
-            },
-            "title": "Tools",
-            "type": "array"
-          }
-        },
-        "required": [
-          "id",
-          "name",
-          "email"
-        ],
-        "title": "MeRead",
-        "type": "object"
-      },
       "MediaType": {
         "enum": [
           "audio",
@@ -920,6 +904,11 @@
       "MeetingCreate": {
         "additionalProperties": false,
         "properties": {
+          "auto_join": {
+            "default": false,
+            "title": "Auto Join",
+            "type": "boolean"
+          },
           "channel_id": {
             "anyOf": [
               {
@@ -942,6 +931,27 @@
             ],
             "title": "Description"
           },
+          "language": {
+            "default": "en",
+            "maxLength": 16,
+            "minLength": 2,
+            "title": "Language",
+            "type": "string"
+          },
+          "meeting_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "pattern": "^https?://[^\\s/]+\\S*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting Url"
+          },
           "participants": {
             "items": {
               "maxLength": 200,
@@ -950,6 +960,16 @@
             },
             "title": "Participants",
             "type": "array"
+          },
+          "platform": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Platform"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "segments": {
             "anyOf": [
@@ -988,6 +1008,21 @@
             ],
             "title": "Started At"
           },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "scheduled",
+                  "live"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
           "title": {
             "maxLength": 300,
             "minLength": 1,
@@ -1005,6 +1040,10 @@
         "properties": {
           "action_item_counts": {
             "$ref": "#/components/schemas/ActionItemCountsRead"
+          },
+          "auto_join": {
+            "title": "Auto Join",
+            "type": "boolean"
           },
           "channel": {
             "anyOf": [
@@ -1163,6 +1202,7 @@
           "meeting_url",
           "platform",
           "language",
+          "auto_join",
           "description",
           "participants",
           "speakers",
@@ -1179,6 +1219,10 @@
         "properties": {
           "action_item_counts": {
             "$ref": "#/components/schemas/ActionItemCountsRead"
+          },
+          "auto_join": {
+            "title": "Auto Join",
+            "type": "boolean"
           },
           "channel": {
             "anyOf": [
@@ -1308,6 +1352,7 @@
           "meeting_url",
           "platform",
           "language",
+          "auto_join",
           "participants",
           "overview_preview"
         ],
@@ -1455,80 +1500,34 @@
         "title": "NoteGroupRead",
         "type": "object"
       },
-      "OnboardingInput": {
-        "additionalProperties": false,
-        "properties": {
-          "invite_emails": {
-            "items": {
-              "type": "string"
-            },
-            "maxItems": 20,
-            "title": "Invite Emails",
-            "type": "array"
-          },
-          "job_title": {
-            "default": "",
-            "maxLength": 150,
-            "title": "Job Title",
-            "type": "string"
-          },
-          "join_preference": {
-            "$ref": "#/components/schemas/JoinPreference"
-          },
-          "recap_preference": {
-            "$ref": "#/components/schemas/RecapPreference"
-          },
-          "role": {
-            "maxLength": 100,
-            "minLength": 1,
-            "title": "Role",
-            "type": "string"
-          },
-          "tools": {
-            "items": {
-              "maxLength": 50,
-              "minLength": 1,
-              "type": "string"
-            },
-            "maxItems": 20,
-            "title": "Tools",
-            "type": "array"
-          }
-        },
-        "required": [
-          "join_preference",
-          "recap_preference",
-          "role"
+      "NotificationKind": {
+        "enum": [
+          "meeting_created",
+          "calendar_connected",
+          "summary_regenerated"
         ],
-        "title": "OnboardingInput",
-        "type": "object"
+        "title": "NotificationKind",
+        "type": "string"
       },
-      "OnboardingResult": {
+      "NotificationRead": {
         "properties": {
-          "avatar_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Avatar Url"
+          "body": {
+            "title": "Body",
+            "type": "string"
           },
-          "email": {
-            "title": "Email",
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
             "type": "string"
           },
           "id": {
             "title": "Id",
             "type": "integer"
           },
-          "invites_sent": {
-            "title": "Invites Sent",
-            "type": "integer"
+          "kind": {
+            "$ref": "#/components/schemas/NotificationKind"
           },
-          "job_title": {
+          "link": {
             "anyOf": [
               {
                 "type": "string"
@@ -1537,23 +1536,9 @@
                 "type": "null"
               }
             ],
-            "title": "Job Title"
+            "title": "Link"
           },
-          "join_preference": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/JoinPreference"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "onboarded_at": {
+          "read_at": {
             "anyOf": [
               {
                 "format": "date-time",
@@ -1563,45 +1548,37 @@
                 "type": "null"
               }
             ],
-            "title": "Onboarded At"
+            "title": "Read At"
           },
-          "recap_preference": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/RecapPreference"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "role": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Role"
-          },
-          "tools": {
-            "default": [],
-            "items": {
-              "type": "string"
-            },
-            "title": "Tools",
-            "type": "array"
+          "title": {
+            "title": "Title",
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "name",
-          "email",
-          "invites_sent"
+          "kind",
+          "title",
+          "body",
+          "link",
+          "read_at",
+          "created_at"
         ],
-        "title": "OnboardingResult",
+        "title": "NotificationRead",
+        "type": "object"
+      },
+      "NotificationUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "read": {
+            "title": "Read",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "read"
+        ],
+        "title": "NotificationUpdate",
         "type": "object"
       },
       "OutlineEntryRead": {
@@ -1670,6 +1647,49 @@
           "has_next"
         ],
         "title": "Page[ActionItemRead]",
+        "type": "object"
+      },
+      "Page_CalendarConnectionRead_": {
+        "properties": {
+          "has_next": {
+            "readOnly": true,
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CalendarConnectionRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "readOnly": true,
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "has_next"
+        ],
+        "title": "Page[CalendarConnectionRead]",
         "type": "object"
       },
       "Page_ChannelRead_": {
@@ -1758,6 +1778,49 @@
         "title": "Page[CommentRead]",
         "type": "object"
       },
+      "Page_FeedItem_": {
+        "properties": {
+          "has_next": {
+            "readOnly": true,
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FeedItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "readOnly": true,
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "has_next"
+        ],
+        "title": "Page[FeedItem]",
+        "type": "object"
+      },
       "Page_HighlightRead_": {
         "properties": {
           "has_next": {
@@ -1842,6 +1905,49 @@
           "has_next"
         ],
         "title": "Page[MeetingListItem]",
+        "type": "object"
+      },
+      "Page_NotificationRead_": {
+        "properties": {
+          "has_next": {
+            "readOnly": true,
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationRead"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_pages": {
+            "readOnly": true,
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "page_size",
+          "total",
+          "total_pages",
+          "has_next"
+        ],
+        "title": "Page[NotificationRead]",
         "type": "object"
       },
       "Page_SearchHit_": {
@@ -2129,47 +2235,6 @@
           "other"
         ],
         "title": "Platform",
-        "type": "string"
-      },
-      "ProfileUpdate": {
-        "additionalProperties": false,
-        "properties": {
-          "job_title": {
-            "anyOf": [
-              {
-                "maxLength": 150,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Job Title"
-          },
-          "name": {
-            "anyOf": [
-              {
-                "maxLength": 200,
-                "minLength": 1,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Name"
-          }
-        },
-        "title": "ProfileUpdate",
-        "type": "object"
-      },
-      "RecapPreference": {
-        "enum": [
-          "me",
-          "everyone",
-          "team"
-        ],
-        "title": "RecapPreference",
         "type": "string"
       },
       "SearchHit": {
@@ -2719,34 +2784,6 @@
         "title": "TranscriptTextIn",
         "type": "object"
       },
-      "UsageRead": {
-        "properties": {
-          "free_meetings_left": {
-            "title": "Free Meetings Left",
-            "type": "integer"
-          },
-          "free_meetings_total": {
-            "title": "Free Meetings Total",
-            "type": "integer"
-          },
-          "storage_minutes_total": {
-            "title": "Storage Minutes Total",
-            "type": "integer"
-          },
-          "storage_minutes_used": {
-            "title": "Storage Minutes Used",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "free_meetings_left",
-          "free_meetings_total",
-          "storage_minutes_used",
-          "storage_minutes_total"
-        ],
-        "title": "UsageRead",
-        "type": "object"
-      },
       "UserRead": {
         "properties": {
           "avatar_url": {
@@ -2972,6 +3009,187 @@
         "summary": "Update an action item",
         "tags": [
           "action-items"
+        ]
+      }
+    },
+    "/api/v1/calendar-connections": {
+      "get": {
+        "operationId": "list_calendar_connections",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Clamped to 100.",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Clamped to 100.",
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CalendarConnectionRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "List calendar connections",
+        "tags": [
+          "calendar"
+        ]
+      },
+      "post": {
+        "description": "Idempotent: connecting an already connected provider returns it with 200 and imports nothing.",
+        "operationId": "connect_calendar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalendarConnectionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarConnectionRead"
+                }
+              }
+            },
+            "description": "Already connected."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarConnectionRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Connect a calendar (simulated; imports 3 sample meetings)",
+        "tags": [
+          "calendar"
+        ]
+      }
+    },
+    "/api/v1/calendar-connections/{provider}": {
+      "delete": {
+        "operationId": "disconnect_calendar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/CalendarProvider"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Disconnect a calendar and remove only the meetings it imported",
+        "tags": [
+          "calendar"
         ]
       }
     },
@@ -3321,6 +3539,74 @@
         ]
       }
     },
+    "/api/v1/feed": {
+      "get": {
+        "description": "Read-only and derived from stored data: no AI call is made.",
+        "operationId": "get_feed",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Clamped to 100.",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Clamped to 100.",
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_FeedItem_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "AI feed derived from summaries, action items and keywords",
+        "tags": [
+          "feed"
+        ]
+      }
+    },
     "/api/v1/highlights/{highlight_id}": {
       "delete": {
         "operationId": "delete_highlight",
@@ -3454,7 +3740,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MeRead"
+                  "$ref": "#/components/schemas/UserRead"
                 }
               }
             },
@@ -3472,160 +3758,6 @@
           }
         },
         "summary": "The current user",
-        "tags": [
-          "users"
-        ]
-      },
-      "patch": {
-        "operationId": "update_me",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProfileUpdate"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/MeRead"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid input; `details.errors[].loc` is the field path."
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "A dependency is unavailable, e.g. the database is unseeded."
-          }
-        },
-        "summary": "Update the current user's name or job title",
-        "tags": [
-          "users"
-        ]
-      }
-    },
-    "/api/v1/me/onboarding": {
-      "delete": {
-        "operationId": "restart_onboarding",
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "A dependency is unavailable, e.g. the database is unseeded."
-          }
-        },
-        "summary": "Restart onboarding (clears onboarded_at; answers are kept)",
-        "tags": [
-          "users"
-        ]
-      },
-      "put": {
-        "description": "`tools` is the complete set (deduplicated, at most 20). `invite_emails` are validated and counted in `invites_sent`; they are not stored yet.",
-        "operationId": "complete_onboarding",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OnboardingInput"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OnboardingResult"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Invalid input; `details.errors[].loc` is the field path."
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "A dependency is unavailable, e.g. the database is unseeded."
-          }
-        },
-        "summary": "Save onboarding answers and mark onboarding complete",
-        "tags": [
-          "users"
-        ]
-      }
-    },
-    "/api/v1/me/usage": {
-      "get": {
-        "operationId": "get_usage",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/UsageRead"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "503": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "A dependency is unavailable, e.g. the database is unseeded."
-          }
-        },
-        "summary": "Free-plan usage: meetings left and storage minutes",
         "tags": [
           "users"
         ]
@@ -5380,6 +5512,179 @@
         "summary": "Get a meeting's transcript",
         "tags": [
           "transcripts"
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "list_notifications",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Clamped to 100.",
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "description": "Clamped to 100.",
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_NotificationRead_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "List notifications, unread first",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/read-all": {
+      "post": {
+        "operationId": "mark_all_notifications_read",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Mark every notification read",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/notifications/{notification_id}": {
+      "patch": {
+        "operationId": "update_notification",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notification_id",
+            "required": true,
+            "schema": {
+              "title": "Notification Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationRead"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "The resource does not exist."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid input; `details.errors[].loc` is the field path."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "A dependency is unavailable, e.g. the database is unseeded."
+          }
+        },
+        "summary": "Mark a notification read or unread",
+        "tags": [
+          "notifications"
         ]
       }
     },

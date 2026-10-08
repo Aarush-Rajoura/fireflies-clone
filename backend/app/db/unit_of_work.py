@@ -5,10 +5,13 @@ from types import TracebackType
 from sqlalchemy.orm import Session
 
 from app.repositories.action_items import ActionItemRepository
+from app.repositories.calendar import CalendarConnectionRepository
 from app.repositories.channels import ChannelRepository
 from app.repositories.comments import CommentRepository
+from app.repositories.feed import FeedRepository
 from app.repositories.highlights import HighlightRepository
 from app.repositories.meetings import MeetingRepository
+from app.repositories.notifications import NotificationRepository
 from app.repositories.participants import ParticipantRepository
 from app.repositories.soundbites import SoundbiteRepository
 from app.repositories.summaries import SummaryRepository
@@ -31,6 +34,9 @@ class UnitOfWork:
         self.comments = CommentRepository(session)
         self.highlights = HighlightRepository(session)
         self.soundbites = SoundbiteRepository(session)
+        self.calendar_connections = CalendarConnectionRepository(session)
+        self.notifications = NotificationRepository(session)
+        self.feed = FeedRepository(session)
 
     def __enter__(self) -> "UnitOfWork":
         return self

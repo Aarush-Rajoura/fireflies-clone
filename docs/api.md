@@ -154,8 +154,43 @@ Interactive docs: `/docs` on a running server.
 | DELETE | `/channels/{id}` | 204 | 404, 422 |
 | GET | `/me` | 200 user | 503 |
 | GET | `/users` | 200 Page of users | 422 |
+| GET | `/calendar-connections` | 200 Page of connections | 422, 503 |
+| POST | `/calendar-connections` | 201 connection (200 if already connected) | 422, 503 |
+| DELETE | `/calendar-connections/{provider}` | 204 | 404, 422, 503 |
+| GET | `/feed` | 200 Page of feed items | 422, 503 |
+| GET | `/notifications` | 200 Page of notifications, unread first | 422, 503 |
+| PATCH | `/notifications/{id}` | 200 notification | 404, 422, 503 |
+| POST | `/notifications/read-all` | 204 | 422, 503 |
 
 `GET /me` declares no 4xx: there is no authentication yet, the current user is the seeded default.
+
+### Scheduling and Capture
+
+`POST /meetings` also takes `status`:
+
+- omitted: a finished meeting (upload, paste or manual), exactly as before.
+- `"scheduled"`: needs `started_at` in the future (`422 SCHEDULED_IN_PAST` otherwise) and no
+  `segments`. Takes `meeting_url`, `auto_join` and `language`.
+- `"live"` (Capture): needs `meeting_url`, no `segments`; `started_at` is set to now and
+  `source` to `capture`.
+
+`platform` is detected from the `meeting_url` host when omitted (`zoom.us` → zoom,
+`meet.google.com` → meet, `teams.microsoft.com` → teams, anything else → other).
+`meeting_url`, `platform` and `auto_join` without a `status` are a 422.
+
+### Calendar connections (simulated)
+
+There is no OAuth. Connecting a provider records it and imports three sample upcoming
+meetings (`source: calendar`, description starts with "(demo import)"). Connecting again
+returns the existing connection with 200 and imports nothing. Disconnecting soft-deletes only
+the meetings that provider imported.
+
+### Feed and notifications
+
+`GET /feed` is derived on read (no AI call): the first sentence of the newest summaries, open
+action items assigned to the current user, and keywords raised by two or more meetings in the
+last 7 days. Notifications are written after a meeting is created (upload, paste or manual), a
+calendar is connected, or a summary is regenerated; writing one never fails the action itself.
 
 ## Worked examples
 

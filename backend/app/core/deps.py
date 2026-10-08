@@ -13,14 +13,17 @@ from app.db.unit_of_work import UnitOfWork
 from app.parsers import default_registry
 from app.services.action_items import ActionItemService
 from app.services.ask import AskService
+from app.services.calendar import CalendarService
 from app.services.channels import ChannelService
 from app.services.comments import CommentService
 from app.services.export import ExportService, default_exporters
+from app.services.feed import FeedService
 from app.services.health import HealthService
 from app.services.highlights import HighlightService
 from app.services.media import MediaService
 from app.services.meeting_creation import MeetingCreationService
 from app.services.meetings import MeetingService
+from app.services.notifications import NotificationService
 from app.services.search import SearchService
 from app.services.soundbites import SoundbiteService
 from app.services.summary import SummaryService
@@ -122,3 +125,15 @@ def get_ask_service(
 
 def get_health_service(uow: Uow) -> HealthService:
     return HealthService(uow)
+
+
+def get_notification_service(uow: Uow) -> NotificationService:
+    return NotificationService(uow)
+
+
+def get_calendar_service(uow: Uow) -> CalendarService:
+    return CalendarService(uow, NotificationService(uow))
+
+
+def get_feed_service(uow: Uow) -> FeedService:
+    return FeedService(uow)

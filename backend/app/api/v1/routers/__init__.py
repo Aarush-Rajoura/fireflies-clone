@@ -10,6 +10,7 @@ from app.api.v1.routers import (
     exports,
     health,
     highlights,
+    home,
     meetings,
     search,
     soundbites,
@@ -33,6 +34,7 @@ ROUTERS = (
     channels,
     tags,
     users,
+    home,
 )
 
 v1_router = APIRouter(prefix="/v1")

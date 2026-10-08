@@ -60,6 +60,7 @@ def _common(meeting: Meeting) -> dict[str, Any]:
         "meeting_url": meeting.meeting_url,
         "platform": meeting.platform,
         "language": meeting.language,
+        "auto_join": meeting.auto_join,
     }
 
 

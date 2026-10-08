@@ -11,6 +11,8 @@ erDiagram
     users ||--o{ comments : author
     users ||--o{ highlights : created_by
     users ||--o{ soundbites : created_by
+    users ||--o{ calendar_connections : connects
+    users ||--o{ notifications : receives
     channels ||--o{ meetings : groups
     meetings ||--o{ participants : has
     meetings ||--o{ speakers : has
@@ -47,6 +49,7 @@ erDiagram
         string status
         string source
         string platform
+        string calendar_provider
         datetime deleted_at
     }
     participants {
@@ -126,6 +129,20 @@ erDiagram
         int meeting_id FK
         string term
     }
+    calendar_connections {
+        int id PK
+        int user_id FK
+        string provider
+        datetime connected_at
+    }
+    notifications {
+        int id PK
+        int user_id FK
+        string kind
+        string link
+        datetime read_at
+        datetime created_at
+    }
 ```
 
 `transcript_fts` is an FTS5 virtual table (external content over `transcript_segments`, rowid =
@@ -170,6 +187,14 @@ segment id), so it is not drawn as an ordinary table.
   `transcript_segments` and then to `meetings`, where `deleted_at` and other filters apply.
   Insert/update/delete triggers keep it in sync. A future migration that recreates
   `transcript_segments` must re-create those triggers.
+
+- **Simulated calendar imports.** `calendar_connections` is unique per `(user_id, provider)`.
+  Meetings a connection imports carry `meetings.calendar_provider`, so disconnecting
+  soft-deletes exactly those. That column has no CHECK constraint (the ORM validates it):
+  SQLite cannot drop a column named in one, and rebuilding `meetings` would lose its other
+  CHECKs, so the migration adds and drops it in place.
+- **Notifications.** `(user_id, read_at)` is indexed for the unread-first list and the bell's
+  unread dot. Rows are written after the action they report has committed.
 
 ## Invariants enforced in the service layer
 

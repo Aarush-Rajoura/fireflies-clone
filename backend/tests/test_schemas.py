@@ -70,6 +70,7 @@ def test_list_item_serialises_without_transcript() -> None:
         meeting_url=None,
         platform=None,
         language="en",
+        auto_join=False,
     )
     assert "segments" not in item.model_dump()
     assert "segments" not in Meeting.__mapper__.relationships.keys()
