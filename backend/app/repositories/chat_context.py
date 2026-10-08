@@ -72,6 +72,7 @@ class ChatContextRepository:
         stmt = (
             select(
                 ActionItem,
+                Meeting.id,
                 Meeting.title,
                 Meeting.started_at,
                 Participant.display_name,
@@ -97,14 +98,14 @@ class ChatContextRepository:
                 id=item.id,
                 text=item.text,
                 due_date=item.due_date,
-                meeting_id=item.meeting_id,
+                meeting_id=meeting_id,
                 meeting_title=title,
                 meeting_started_at=started_at,
                 start_ms=item.start_ms,
                 assignee=name,
                 assignee_user_id=user_id,
             )
-            for item, title, started_at, name, user_id in self.session.execute(stmt)
+            for item, meeting_id, title, started_at, name, user_id in self.session.execute(stmt)
         ]
 
     def recent_completed(
