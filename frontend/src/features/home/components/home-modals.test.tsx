@@ -7,7 +7,7 @@ import { AppProviders } from "@/components/ui";
 import { getToasts, resetToasts } from "@/components/ui/toast-store";
 import { ApiError } from "@/lib/api";
 
-import { connectCalendar, createMeeting, fetchCalendarConnections } from "../api";
+import { connectCalendar, fetchCalendarConnections } from "../api";
 import { detail, page, stubResizeObserver } from "../testing/fixtures";
 
 import { CaptureModal } from "./CaptureModal";
@@ -15,9 +15,10 @@ import { ScheduleModal } from "./ScheduleModal";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace: vi.fn() }) }));
+const createMeeting = vi.hoisted(() => vi.fn());
+vi.mock("@/features/create/api", () => ({ createMeeting }));
 vi.mock("../api", () => ({
   connectCalendar: vi.fn(),
-  createMeeting: vi.fn(),
   fetchCalendarConnections: vi.fn(),
   fetchMeetingList: vi.fn(),
   fetchFeed: vi.fn(),

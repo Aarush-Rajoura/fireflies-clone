@@ -7,7 +7,7 @@ import { Button, DatePicker, Field, Input, Modal, Switch, toast } from "@/compon
 import { ApiError, type CalendarProvider } from "@/lib/api";
 
 import { PROVIDER_LABEL, useConnectCalendar, useConnectedProviders } from "../hooks/useCalendar";
-import { useCreateMeeting } from "../hooks/useCreateMeeting";
+import { useCreateMeeting } from "@/features/create";
 import {
   defaultSchedule,
   scheduleBody,

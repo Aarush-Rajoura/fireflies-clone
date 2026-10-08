@@ -1,10 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useIsMutating } from "@tanstack/react-query";
 
-import { Modal } from "@/components/ui";
+import { Modal, toast } from "@/components/ui";
 import type { TranscriptPreview } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -34,7 +35,14 @@ type Upload = { preview: TranscriptPreview; fileName: string };
 /** The one create-meeting dialog; mount it once (the app shell does) and open it via the store. */
 export function CreateMeetingModal() {
   const { isOpen, tab, close, setTab } = useCreateMeetingModal();
-  const create = useCreateMeeting();
+  const router = useRouter();
+  const create = useCreateMeeting({
+    onSuccess: (meeting) => {
+      toast.success("Meeting created");
+      close();
+      router.push(`/meetings/${meeting.id}`);
+    },
+  });
   const pending = create.isPending;
 
   const dismiss = () => {

@@ -24,7 +24,10 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/features/user", () => ({
   useMe: () => ({ data: { id: 1, name: "Ada Lovelace", email: "a@x.io" }, isLoading: false }),
 }));
-vi.mock("@/features/create", () => ({ openCreateMeeting: vi.fn() }));
+vi.mock("@/features/create", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/features/create")>()),
+  openCreateMeeting: vi.fn(),
+}));
 vi.mock("../api", () => ({
   fetchMeetingList: vi.fn(),
   fetchFeed: vi.fn(),

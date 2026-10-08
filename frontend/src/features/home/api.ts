@@ -3,8 +3,6 @@ import {
   type CalendarConnection,
   type CalendarProvider,
   type FeedItem,
-  type MeetingCreate,
-  type MeetingDetail,
   type MeetingListItem,
   type MeetingListParams,
   type Page,
@@ -16,11 +14,6 @@ export function fetchMeetingList(
   signal?: AbortSignal,
 ): Promise<Page<MeetingListItem>> {
   return unwrap(api.GET("/api/v1/meetings", { params: { query }, signal }));
-}
-
-/** Scheduling and Capture are both `POST /meetings` with a `status`. */
-export function createMeeting(body: MeetingCreate): Promise<MeetingDetail> {
-  return unwrap(api.POST("/api/v1/meetings", { body }));
 }
 
 export function fetchCalendarConnections(signal?: AbortSignal): Promise<Page<CalendarConnection>> {

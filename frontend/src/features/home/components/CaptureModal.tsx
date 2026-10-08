@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 import { Button, Field, Input, Modal, Select, toast } from "@/components/ui";
 import { ApiError } from "@/lib/api";
 
-import { useCreateMeeting } from "../hooks/useCreateMeeting";
+import { useCreateMeeting } from "@/features/create";
 import {
   LANGUAGES,
   captureBody,
