@@ -89,6 +89,19 @@ def test_rename_speaker_links_existing_participant(db_session: Session) -> None:
     assert out.participant_id == bob.id and out.name == "Bob"
 
 
+def test_repointing_a_speaker_moves_talk_time(db_session: Session) -> None:
+    uow, m, a, b, _, _ = _with_segments(db_session)  # each segment lasts 900 ms
+    svc = TranscriptService(uow)
+    ann = svc.rename_speaker(a.id, "Ann").participant_id
+    bob = svc.rename_speaker(b.id, "Bob").participant_id
+    talk = {p.display_name: p.talk_ms for p in uow.participants.list_for_meeting(m.id)}
+    assert talk == {"Ann": 900, "Bob": 900}
+    # Speaker 2 turns out to be Ann too: Bob loses the time, Ann gains it.
+    assert svc.rename_speaker(b.id, "ann").participant_id == ann != bob
+    talk = {p.display_name: p.talk_ms for p in uow.participants.list_for_meeting(m.id)}
+    assert talk == {"Ann": 1800, "Bob": 0}
+
+
 def test_rename_unknown_speaker(db_session: Session) -> None:
     uow, *_ = _with_segments(db_session)
     with pytest.raises(NotFoundError) as err:

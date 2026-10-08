@@ -62,23 +62,71 @@ def talk_ms_by_name(segments: Sequence[SegmentIn], names: dict[str, str]) -> dic
     return totals
 
 
+def split_long_text(text: str, limit: int = LINE_MAX) -> list[str]:
+    """Chunks of at most `limit` characters, broken between words where possible."""
+    chunks: list[str] = []
+    current = ""
+    for word in text.split():
+        while len(word) > limit:  # one unbroken "word" longer than a line: hard cut
+            if current:
+                chunks.append(current)
+                current = ""
+            chunks.append(word[:limit])
+            word = word[limit:]
+        if not word:
+            continue
+        if current and len(current) + 1 + len(word) > limit:
+            chunks.append(current)
+            current = word
+        else:
+            current = f"{current} {word}" if current else word
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def _split_segment(speaker: str, start: int, end: int, text: str) -> list[SegmentIn]:
+    """One segment, or several consecutive ones sharing its time span by text length.
+
+    Nothing is truncated: a line over LINE_MAX becomes several lines, and their timings
+    are the original span divided in proportion to the text each one keeps.
+    """
+    chunks = split_long_text(text)
+    total = sum(len(c) for c in chunks)
+    out: list[SegmentIn] = []
+    cursor, consumed = start, 0
+    for i, chunk in enumerate(chunks):
+        consumed += len(chunk)
+        chunk_end = end if i == len(chunks) - 1 else start + (end - start) * consumed // total
+        out.append(SegmentIn(speaker=speaker, start_ms=cursor, end_ms=chunk_end, text=chunk))
+        cursor = chunk_end
+    return out
+
+
 def preview(parsed: ParsedTranscript) -> TranscriptPreview:
-    segments = [
-        SegmentIn(
-            speaker=p.speaker.strip()[:SPEAKER_MAX] or "Speaker",
-            start_ms=max(p.start_ms, 0),
-            end_ms=max(p.end_ms, p.start_ms, 0),
-            text=p.text.strip()[:LINE_MAX],
+    segments: list[SegmentIn] = []
+    split = 0
+    for p in parsed.segments:
+        text = p.text.strip()
+        if not text:
+            continue
+        start = max(p.start_ms, 0)
+        parts = _split_segment(
+            p.speaker.strip()[:SPEAKER_MAX] or "Speaker", start, max(p.end_ms, start), text
         )
-        for p in parsed.segments
-        if p.text.strip()
-    ]
+        split += len(parts) > 1
+        segments.extend(parts)
+    warnings = list(parsed.warnings)
+    if split:
+        warnings.append(
+            f"{split} {'line' if split == 1 else 'lines'} over {LINE_MAX} characters split"
+        )
     return TranscriptPreview(
         format=parsed.format,
         timings_estimated=parsed.timings_estimated,
         speakers=list(dict.fromkeys(s.speaker for s in segments)),
         segment_count=len(segments),
         duration_ms=max((s.end_ms for s in segments), default=0),
-        warnings=parsed.warnings,
+        warnings=warnings,
         segments=segments,
     )

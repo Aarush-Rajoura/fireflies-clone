@@ -11,9 +11,11 @@ from app.db.unit_of_work import UnitOfWork
 from app.models import ActionItem, Meeting, Participant, Speaker, Summary, TranscriptSegment
 from app.models.enums import ActionItemSource, MeetingSource, MeetingStatus, ParticipantRole
 from app.parsers import default_registry
+from app.parsers.normalise import estimate_duration_ms
 from app.schemas.meeting import MeetingCreate
 from app.schemas.transcript import SegmentIn
 from app.services.meeting_creation import MeetingCreationService
+from app.services.meeting_creation_mapping import LINE_MAX, split_long_text
 from app.services.summary import SummaryService
 from tests.ai_stubs import StubExtractor, StubSummarizer, summary_result
 from tests.service_helpers import seeded
@@ -264,3 +266,24 @@ def test_unsorted_segments_snap_correctly(db_session: Session) -> None:
     drafts = [ActionItemDraft(text="Do it", assignee=None, start_ms=4000)]
     _service(uow, extractor=StubExtractor(drafts)).create(_data(segments=segments))
     assert db_session.query(ActionItem).one().start_ms == 3000
+
+
+def test_preview_splits_an_overlong_line_instead_of_truncating(db_session: Session) -> None:
+    uow, _, _ = seeded(db_session)
+    words = [f"word{i}" for i in range(2000)]  # ~15 600 characters, one line
+    out = _service(uow).preview("Ann: " + " ".join(words) + "\nBob: short reply\n", "t.txt")
+    ann = [s for s in out.segments if s.speaker == "Ann"]
+    assert len(ann) == 4 and all(len(s.text) <= LINE_MAX for s in ann)
+    assert " ".join(s.text for s in ann).split() == words  # nothing dropped
+    # Contiguous timings covering the estimate for the whole (kept) text.
+    assert ann[0].start_ms == 0
+    assert all(a.end_ms == b.start_ms for a, b in zip(ann, ann[1:], strict=False))
+    assert ann[-1].end_ms == estimate_duration_ms(" ".join(words))
+    assert out.segments[-1].speaker == "Bob" and out.segments[-1].start_ms == ann[-1].end_ms
+    assert out.segment_count == 5 and any("split" in w for w in out.warnings)
+
+
+def test_split_long_text_hard_cuts_unbroken_runs() -> None:
+    chunks = split_long_text("a" * 12_000 + " tail", 5000)
+    assert [len(c) for c in chunks] == [5000, 5000, 2005]
+    assert chunks[-1].endswith("a tail")

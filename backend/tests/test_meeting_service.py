@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from app.core.exceptions import GoneError, NotFoundError, ValidationFailedError
+from app.core.exceptions import ConflictError, GoneError, NotFoundError, ValidationFailedError
 from app.models import ActionItem, Channel
 from app.schemas.common import PageParams
 from app.schemas.meeting import MeetingUpdate
@@ -172,6 +172,22 @@ def test_participant_swap_and_name_collision(db_session: Session) -> None:
         ),
     )
     assert {p.id: p.display_name for p in out.participants} == {ann.id: "Bob", bob.id: "Ann"}
+
+
+def test_unique_index_race_on_participants_is_name_taken(
+    db_session: Session, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    uow, _, m = seeded(db_session)
+    f.make_participant(db_session, m, "Bob")
+    db_session.commit()
+    # A concurrent edit added "Bob" after our read: the unique constraint is the guard.
+    monkeypatch.setattr(uow.participants, "list_for_meeting", lambda meeting_id: [])
+    with pytest.raises(ConflictError) as err:
+        MeetingService(uow).update(m.id, MeetingUpdate(participants=["Bob"]))  # type: ignore[list-item]
+    assert err.value.code == "PARTICIPANT_NAME_TAKEN"
+    monkeypatch.undo()
+    names = [p.display_name for p in uow.participants.list_for_meeting(m.id)]
+    assert names.count("Bob") == 1
 
 
 def test_list_without_users_is_503(db_session: Session) -> None:

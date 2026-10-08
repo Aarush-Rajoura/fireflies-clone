@@ -11,8 +11,6 @@ from app.db.unit_of_work import UnitOfWork
 from app.models import Channel
 from app.schemas.channel import ChannelCreate, ChannelRead, ChannelUpdate
 from app.schemas.common import Page, PageParams
-from app.schemas.meeting import MeetingUpdate
-from app.services.meetings import MeetingService
 
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
 
@@ -55,10 +53,6 @@ class ChannelService:
     def delete(self, channel_id: int) -> None:
         self.uow.channels.delete(self._get(channel_id))
         self.uow.commit()
-
-    def move_meeting(self, meeting_id: int, channel_id: int | None) -> None:
-        """Same rules as MeetingUpdate.channel_id, for callers that only move."""
-        MeetingService(self.uow).update(meeting_id, MeetingUpdate(channel_id=channel_id))
 
     @contextmanager
     def _slug_guard(self) -> Iterator[None]:

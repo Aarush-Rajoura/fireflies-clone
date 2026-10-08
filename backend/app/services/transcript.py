@@ -51,6 +51,7 @@ class TranscriptService:
         require_active_meeting(self.uow, speaker.meeting_id)
         name = _clean(name, "Name")
         repo = self.uow.participants
+        previous = speaker.participant_id
         match = repo.find_by_name(speaker.meeting_id, name)
         if match is not None and match.id == speaker.participant_id:
             if match.display_name != name:  # case-only rename of its own participant
@@ -71,6 +72,17 @@ class TranscriptService:
             )
             speaker.participant_id = created.id
         self.uow.transcript.flush()
+        if speaker.participant_id != previous:
+            self._recount_talk_time([p for p in (previous, speaker.participant_id) if p])
         self.uow.commit()
         participants = {p.id: p for p in repo.list_for_meeting(speaker.meeting_id)}
         return speaker_read(speaker, participants)
+
+    def _recount_talk_time(self, participant_ids: list[int]) -> None:
+        """A speaker moved between participants: their talk time moves with it."""
+        totals = self.uow.transcript.talk_ms(participant_ids)
+        for pid in participant_ids:
+            participant = self.uow.participants.get(pid)
+            if participant is not None:
+                participant.talk_ms = totals.get(pid, 0)
+        self.uow.participants.flush()
