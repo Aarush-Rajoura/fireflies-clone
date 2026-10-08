@@ -5,6 +5,7 @@ import { FAQ } from "./content";
 import { Icon } from "./icons";
 import { Reveal } from "./Reveal";
 import { AccentHeading, Container } from "./ui";
+import { Pressable } from "@/components/ui";
 
 export function FaqSection() {
   const [open, setOpen] = useState<number | null>(0);
@@ -29,7 +30,8 @@ export function FaqSection() {
             return (
               <li key={item.q}>
                 <h3>
-                  <button
+                  <Pressable
+                    bare
                     type="button"
                     id={`faq-q-${i}`}
                     aria-expanded={isOpen}
@@ -45,7 +47,7 @@ export function FaqSection() {
                     >
                       <Icon name="plus" size={16} />
                     </span>
-                  </button>
+                  </Pressable>
                 </h3>
                 <div
                   id={`faq-a-${i}`}

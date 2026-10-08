@@ -5,6 +5,7 @@ import { scriptedReply } from "./chatScript";
 import { CHAT_GREETING, CHAT_QUICK_REPLIES } from "./content";
 import { Icon } from "./icons";
 import { BrandMark, FredAvatar } from "./marks";
+import { Input, Pressable } from "@/components/ui";
 
 interface Message {
   id: number;
@@ -62,14 +63,15 @@ export function SupportChat() {
           className="mk-pop fixed inset-x-3 bottom-24 z-[65] flex max-h-[calc(100dvh-8rem)] flex-col overflow-hidden rounded-2xl bg-[var(--mk-white)] shadow-[0_24px_70px_var(--mk-shadow-strong)] sm:inset-x-auto sm:right-6 sm:w-[400px]"
         >
           <header className="flex items-center gap-3 border-b border-[var(--mk-line)] px-4 py-3.5">
-            <button
+            <Pressable
+              bare
               type="button"
               onClick={close}
               aria-label="Close chat"
               className="rounded-md p-1.5 text-[var(--mk-body)] hover:bg-[var(--mk-surface)]"
             >
               <Icon name="arrow-left" size={20} />
-            </button>
+            </Pressable>
             <FredAvatar size={40} />
             <div className="min-w-0 flex-1">
               <p className="text-[16px] font-semibold text-[var(--mk-ink)]">Fireflies AI</p>
@@ -77,14 +79,15 @@ export function SupportChat() {
                 <span className="h-2 w-2 rounded-full bg-[var(--mk-green)]" /> Always active
               </p>
             </div>
-            <button
+            <Pressable
+              bare
               type="button"
               onClick={() => setMessages(greeting())}
               aria-label="Restart conversation"
               className="rounded-md p-1.5 text-[var(--mk-body)] hover:bg-[var(--mk-surface)]"
             >
               <Icon name="refresh" size={18} />
-            </button>
+            </Pressable>
           </header>
 
           <div
@@ -113,14 +116,15 @@ export function SupportChat() {
 
           <div className="flex flex-wrap gap-2 px-4 pb-3">
             {CHAT_QUICK_REPLIES.map((qr) => (
-              <button
+              <Pressable
+                bare
                 key={qr.id}
                 type="button"
                 onClick={() => ask(qr.label, qr.answer)}
                 className="rounded-full border border-[var(--mk-violet)] px-3 py-1.5 text-[13px] text-[var(--mk-link)] hover:bg-[var(--mk-violet-tint)]"
               >
                 {qr.label}
-              </button>
+              </Pressable>
             ))}
           </div>
 
@@ -131,7 +135,8 @@ export function SupportChat() {
             <label htmlFor="mk-chat-input" className="sr-only">
               Write a message
             </label>
-            <input
+            <Input
+              bare
               ref={inputRef}
               id="mk-chat-input"
               value={draft}
@@ -140,14 +145,15 @@ export function SupportChat() {
               autoComplete="off"
               className="min-w-0 flex-1 bg-transparent py-1.5 text-[14px] text-[var(--mk-ink)] placeholder:text-[var(--mk-muted)] focus:outline-none"
             />
-            <button
+            <Pressable
+              bare
               type="submit"
               aria-label="Send message"
               disabled={!draft.trim()}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--mk-violet)] text-[var(--mk-white)] disabled:opacity-50"
             >
               <Icon name="send" size={16} />
-            </button>
+            </Pressable>
           </form>
 
           <div className="border-t border-[var(--mk-line)] px-4 py-3">
@@ -160,21 +166,23 @@ export function SupportChat() {
                 <Icon name="bulb" size={16} className="mt-0.5 shrink-0" />
                 This is a demo assistant with scripted answers. Nothing you type leaves your
                 browser.
-                <button
+                <Pressable
+                  bare
                   type="button"
                   onClick={() => setShowNotice(false)}
                   aria-label="Dismiss notice"
                   className="absolute right-1.5 top-1.5 rounded p-1 text-[var(--mk-muted)] hover:text-[var(--mk-ink)]"
                 >
                   <Icon name="x" size={14} />
-                </button>
+                </Pressable>
               </div>
             )}
           </div>
         </div>
       )}
 
-      <button
+      <Pressable
+        bare
         ref={bubbleRef}
         type="button"
         onClick={() => (open ? close() : setOpen(true))}
@@ -183,7 +191,7 @@ export function SupportChat() {
         className="fixed bottom-5 right-5 z-[65] flex h-14 w-14 items-center justify-center rounded-full bg-[var(--mk-violet)] text-[var(--mk-white)] shadow-[0_12px_32px_var(--mk-glow)] transition-transform hover:scale-105 sm:bottom-6 sm:right-6"
       >
         <Icon name={open ? "x" : "message"} size={26} />
-      </button>
+      </Pressable>
     </>
   );
 }

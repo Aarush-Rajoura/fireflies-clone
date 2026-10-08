@@ -13,6 +13,7 @@ import {
 import { DemoForm } from "./DemoForm";
 import { Icon } from "./icons";
 import { buttonClass, type ButtonSize, type ButtonVariant } from "./ui";
+import { Pressable } from "@/components/ui";
 
 interface DemoContextValue {
   open: () => void;
@@ -101,14 +102,15 @@ function DemoDialog({ onClose }: { onClose: () => void }) {
         aria-labelledby="demo-dialog-title"
         className="mk-pop relative w-full max-w-md rounded-2xl bg-[var(--mk-white)] p-6 shadow-[0_24px_64px_var(--mk-shadow-strong)] sm:p-8"
       >
-        <button
+        <Pressable
+          bare
           type="button"
           onClick={onClose}
           aria-label="Close dialog"
           className="absolute right-4 top-4 rounded-md p-1.5 text-[var(--mk-muted)] hover:bg-[var(--mk-surface-2)] hover:text-[var(--mk-ink)]"
         >
           <Icon name="x" size={20} />
-        </button>
+        </Pressable>
         <h2 id="demo-dialog-title" className="mk-display text-2xl font-medium text-[var(--mk-ink)]">
           Request a demo
         </h2>
@@ -137,7 +139,8 @@ export function DemoButton({
 }) {
   const { open } = useDemoModal();
   return (
-    <button
+    <Pressable
+      bare
       type="button"
       aria-haspopup="dialog"
       onClick={() => {
@@ -147,6 +150,6 @@ export function DemoButton({
       className={buttonClass(variant, size, className)}
     >
       {children}
-    </button>
+    </Pressable>
   );
 }

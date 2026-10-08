@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { ANNOUNCEMENT } from "./content";
 import { Icon } from "./icons";
+import { Pressable } from "@/components/ui";
 
 export function AnnouncementBar() {
   const [dismissed, setDismissed] = useState(false);
@@ -25,14 +26,15 @@ export function AnnouncementBar() {
       >
         {ANNOUNCEMENT.cta}
       </Link>
-      <button
+      <Pressable
+        bare
         type="button"
         onClick={() => setDismissed(true)}
         aria-label="Dismiss announcement"
         className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--mk-white)] opacity-80 hover:opacity-100 sm:right-4"
       >
         <Icon name="x" size={18} />
-      </button>
+      </Pressable>
     </div>
   );
 }

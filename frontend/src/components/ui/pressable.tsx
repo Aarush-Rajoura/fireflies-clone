@@ -2,7 +2,10 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 import { cn } from "@/lib/utils/cn";
 
-export type PressableProps = ButtonHTMLAttributes<HTMLButtonElement>;
+export type PressableProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  /** Adds nothing but the native button: callers own every class (marketing pages, custom triggers). */
+  bare?: boolean;
+};
 
 /**
  * An unstyled button for custom clickable surfaces (cards, thumbnails, list
@@ -10,17 +13,21 @@ export type PressableProps = ButtonHTMLAttributes<HTMLButtonElement>;
  * and the app-wide focus ring; callers supply every visual.
  */
 export const Pressable = forwardRef<HTMLButtonElement, PressableProps>(function Pressable(
-  { className, type = "button", ...rest },
+  { className, type = "button", bare = false, ...rest },
   ref,
 ) {
   return (
     <button
       ref={ref}
       type={type}
-      className={cn(
-        "text-left transition-colors duration-fast disabled:pointer-events-none disabled:opacity-50",
-        className,
-      )}
+      className={
+        bare
+          ? className
+          : cn(
+              "text-left transition-colors duration-fast disabled:pointer-events-none disabled:opacity-50",
+              className,
+            )
+      }
       {...rest}
     />
   );

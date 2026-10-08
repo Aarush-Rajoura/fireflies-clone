@@ -15,17 +15,23 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   invalid?: boolean;
   leadingIcon?: ReactNode;
   trailing?: ReactNode;
+  /** No field chrome: the caller's className is the whole look (marketing forms, inline chat). */
+  bare?: boolean;
 };
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { className, invalid, leadingIcon, trailing, ...rest },
+  { className, invalid, leadingIcon, trailing, bare, ...rest },
   ref,
 ) {
   const input = (
     <input
       ref={ref}
       aria-invalid={invalid || undefined}
-      className={cn(fieldClasses, "h-input", leadingIcon && "pl-9", trailing && "pr-16", className)}
+      className={
+        bare
+          ? className
+          : cn(fieldClasses, "h-input", leadingIcon && "pl-9", trailing && "pr-16", className)
+      }
       {...rest}
     />
   );

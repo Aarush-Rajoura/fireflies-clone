@@ -3,7 +3,7 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
-import { Avatar, Popover } from "@/components/ui";
+import { Avatar, Popover, Pressable } from "@/components/ui";
 import { useMe } from "@/features/user";
 import { cn } from "@/lib/utils/cn";
 
@@ -27,7 +27,8 @@ export function ProfileMenu({ expanded = false }: { expanded?: boolean }) {
       label="Account menu"
       className="flex w-auto items-start gap-2 p-2"
       trigger={
-        <button
+        <Pressable
+          bare
           type="button"
           aria-label="Open profile menu"
           className={cn(
@@ -47,7 +48,7 @@ export function ProfileMenu({ expanded = false }: { expanded?: boolean }) {
               <Chevron className="size-4 shrink-0 text-muted" strokeWidth={1.75} aria-hidden />
             </>
           )}
-        </button>
+        </Pressable>
       }
     >
       <AccountPanel name={name} email={me?.email ?? ""} onNavigate={() => setOpen(false)} />

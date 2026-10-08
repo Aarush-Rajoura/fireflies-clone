@@ -2,7 +2,7 @@
 
 import { ChevronDown, Pencil } from "lucide-react";
 
-import { Menu, TimestampButton } from "@/components/ui";
+import { Menu, Pressable, TimestampButton } from "@/components/ui";
 import type { Speaker } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 import { initials } from "@/lib/utils/identity";
@@ -66,13 +66,14 @@ export function SpeakerHeader({ speaker, startMs, onSeek, onRename }: SpeakerHea
           },
         ]}
         trigger={
-          <button
+          <Pressable
+            bare
             type="button"
             className="inline-flex items-center gap-1 rounded-tag text-body-strong text-strong hover:text-primary [&_svg]:size-3.5 [&_svg]:text-muted"
           >
             {name}
             <ChevronDown aria-hidden strokeWidth={1.75} />
-          </button>
+          </Pressable>
         }
       />
       <span aria-hidden className="text-muted">

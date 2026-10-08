@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { toast, Tooltip } from "@/components/ui";
+import { Pressable, Tooltip, toast } from "@/components/ui";
 import { cn } from "@/lib/utils/cn";
 
 import type { NavItem } from "../nav";
@@ -54,14 +54,15 @@ export function RailItem({
       {content}
     </Link>
   ) : (
-    <button
+    <Pressable
+      bare
       type="button"
       aria-label={name}
       className={className}
       onClick={() => toast.info(`${label} is coming soon.`)}
     >
       {content}
-    </button>
+    </Pressable>
   );
   // With the rail expanded the label is on screen, so a tooltip would only repeat it.
   return expanded ? (

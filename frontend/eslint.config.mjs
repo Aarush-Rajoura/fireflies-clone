@@ -91,11 +91,36 @@ const tailwindEnforcement = {
   },
 };
 
+/*
+ * Raw <button>/<input> live only in the design system, so focus rings, disabled
+ * styling and accessible names stay in one place. Tests may render raw markup.
+ */
+const noRawControls = [
+  {
+    files: ["src/**/*.tsx"],
+    ignores: ["src/components/ui/**", "src/**/*.test.tsx"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector: "JSXOpeningElement[name.name='button']",
+          message: "Use Button, IconButton, TextButton or Pressable from components/ui.",
+        },
+        {
+          selector: "JSXOpeningElement[name.name='input']",
+          message: "Use Input, Checkbox, Switch or Slider from components/ui.",
+        },
+      ],
+    },
+  },
+];
+
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
   ...importBoundaries,
   tailwindEnforcement,
+  ...noRawControls,
   {
     rules: {
       "no-console": ["error", { allow: ["warn", "error"] }],

@@ -6,6 +6,7 @@ import { MockTopBar, MockWindow } from "./mockParts";
 import { Reveal } from "./Reveal";
 import { nextTabIndex } from "./tabsState";
 import { AccentHeading, ButtonLink, Container } from "./ui";
+import { Pressable } from "@/components/ui";
 
 export function SummariesSection() {
   const [active, setActive] = useState(0);
@@ -53,7 +54,8 @@ export function SummariesSection() {
           {SUMMARY_TABS.map((t, i) => {
             const selected = i === active;
             return (
-              <button
+              <Pressable
+                bare
                 key={t.id}
                 ref={(el) => {
                   tabRefs.current[i] = el;
@@ -73,7 +75,7 @@ export function SummariesSection() {
                 }`}
               >
                 {t.label}
-              </button>
+              </Pressable>
             );
           })}
         </div>

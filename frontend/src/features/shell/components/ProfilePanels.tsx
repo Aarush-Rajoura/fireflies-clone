@@ -4,7 +4,7 @@ import { ArrowRight, Globe, Smartphone, Zap } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Badge, Button, toast } from "@/components/ui";
+import { Badge, Button, Pressable, toast } from "@/components/ui";
 import { nextPreference, useTheme } from "@/features/theme";
 import { useUsage } from "@/features/user";
 import { cn } from "@/lib/utils/cn";
@@ -79,28 +79,29 @@ export function AccountPanel({
         </p>
       </Section>
       <div className="border-b border-subtle py-1">
-        <button type="button" className={rowClass} onClick={soon("Refer and Earn")}>
+        <Pressable bare type="button" className={rowClass} onClick={soon("Refer and Earn")}>
           Refer and Earn $5
-        </button>
+        </Pressable>
       </div>
       <nav aria-label="Account" className="py-1">
-        <button type="button" className={rowClass} onClick={soon("Playlists")}>
+        <Pressable bare type="button" className={rowClass} onClick={soon("Playlists")}>
           Playlist
-        </button>
+        </Pressable>
         <Link href="/settings" className={rowClass} onClick={onNavigate}>
           Settings
         </Link>
         <Link href="/team" className={rowClass} onClick={onNavigate}>
           My Team
         </Link>
-        <button type="button" className={rowClass} onClick={soon("Managing web logins")}>
+        <Pressable bare type="button" className={rowClass} onClick={soon("Managing web logins")}>
           Manage Web Logins
-        </button>
-        <button type="button" className={rowClass} onClick={soon("Platform rules")}>
+        </Pressable>
+        <Pressable bare type="button" className={rowClass} onClick={soon("Platform rules")}>
           Platform Rules
-        </button>
+        </Pressable>
         {/* Cycles Dark → Light → System; Settings → Appearance has the explicit choice. */}
-        <button
+        <Pressable
+          bare
           type="button"
           aria-label={`Theme: ${preference}. Switch to ${nextPreference(preference)}`}
           className={rowClass}
@@ -109,7 +110,7 @@ export function AccountPanel({
           <span>Theme</span>
           <Badge tone="accent">Beta</Badge>
           <span className="ml-auto capitalize text-muted">{preference}</span>
-        </button>
+        </Pressable>
         <Link href="/" className={rowClass} onClick={onNavigate}>
           Logout
         </Link>
@@ -162,14 +163,15 @@ export function AppCards() {
           Install
         </Button>
       </AppCard>
-      <button
+      <Pressable
+        bare
         type="button"
         onClick={soon("The desktop app")}
         className="flex items-center gap-3 rounded-panel border border-accent-border bg-accent-faint px-4 py-3 text-left text-body-strong text-primary hover:bg-accent-subtle"
       >
         <span className="flex-1">Download Fireflies Desktop App</span>
         <ArrowRight className="size-4" strokeWidth={1.75} aria-hidden />
-      </button>
+      </Pressable>
     </div>
   );
 }

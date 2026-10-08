@@ -2,7 +2,7 @@
 
 import { Volume1, Volume2, VolumeX } from "lucide-react";
 
-import { IconButton } from "@/components/ui";
+import { IconButton, Slider } from "@/components/ui";
 
 import { usePlayerClockSelector } from "../hooks/usePlayerClock";
 import { usePlayerControls } from "../hooks/usePlayerControls";
@@ -23,8 +23,7 @@ export function VolumeControl() {
         icon={<Icon strokeWidth={1.75} />}
         onClick={toggleMute}
       />
-      <input
-        type="range"
+      <Slider
         min={0}
         max={1}
         step={0.05}
@@ -37,7 +36,7 @@ export function VolumeControl() {
           // Dragging the slider up is an obvious "I want sound" gesture.
           if (muted && v > 0) setMuted(false);
         }}
-        className="h-1 w-20 cursor-pointer accent-accent"
+        className="h-1 w-20"
       />
     </div>
   );

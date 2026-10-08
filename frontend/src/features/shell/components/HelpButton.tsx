@@ -2,7 +2,7 @@
 
 import { CircleHelp } from "lucide-react";
 
-import { Kbd, Popover } from "@/components/ui";
+import { Kbd, Popover, Pressable } from "@/components/ui";
 
 const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["Ctrl", "K"], label: "Search meetings" },
@@ -18,13 +18,14 @@ export function HelpButton() {
       align="end"
       label="Help and shortcuts"
       trigger={
-        <button
+        <Pressable
+          bare
           type="button"
           aria-label="Help and shortcuts"
           className="fixed bottom-6 right-6 z-topbar flex size-12 items-center justify-center rounded-full border-2 border-fab-border bg-fab text-fab-text shadow-popover transition-transform duration-fast hover:scale-105"
         >
           <CircleHelp className="size-6" strokeWidth={1.75} />
-        </button>
+        </Pressable>
       }
     >
       <p className="mb-2 text-body-strong text-strong">Help &amp; shortcuts</p>

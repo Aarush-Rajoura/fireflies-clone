@@ -7,6 +7,7 @@ import { DemoButton } from "./DemoModal";
 import { Icon } from "./icons";
 import { Wordmark } from "./marks";
 import { ButtonLink } from "./ui";
+import { Pressable } from "@/components/ui";
 
 /** Full-screen menu for small screens; each mega-menu becomes an accordion section. */
 export function MobileMenu({ onClose }: { onClose: () => void }) {
@@ -39,7 +40,8 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
         <Link href={ROUTES.home} onClick={onClose} aria-label="fireflies.ai home">
           <Wordmark />
         </Link>
-        <button
+        <Pressable
+          bare
           ref={closeBtn}
           type="button"
           onClick={onClose}
@@ -47,7 +49,7 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
           className="rounded-md p-2 text-[var(--mk-white)]"
         >
           <Icon name="x" size={26} />
-        </button>
+        </Pressable>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-8 sm:px-6">
@@ -56,7 +58,8 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
             const isOpen = expanded === menu.id;
             return (
               <li key={menu.id}>
-                <button
+                <Pressable
+                  bare
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={`mk-mobile-${menu.id}`}
@@ -69,7 +72,7 @@ export function MobileMenu({ onClose }: { onClose: () => void }) {
                     size={20}
                     className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
                   />
-                </button>
+                </Pressable>
                 <ul id={`mk-mobile-${menu.id}`} hidden={!isOpen} className="space-y-1 pb-4">
                   {menu.columns.map((link) => (
                     <li key={link.title}>

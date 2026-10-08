@@ -10,6 +10,7 @@ import { MegaMenu, megaItemCount } from "./MegaMenu";
 import { initialMenuState, menuKeyAction, menuReducer, triggerClickAction } from "./menuState";
 import { MobileMenu } from "./MobileMenu";
 import { ButtonLink } from "./ui";
+import { Pressable } from "@/components/ui";
 
 const HOVER_CLOSE_DELAY = 140;
 
@@ -109,7 +110,8 @@ export function MarketingNav() {
                 onMouseEnter={(e) => hoverOpen(menu.id, e.timeStamp)}
                 onMouseLeave={hoverClose}
               >
-                <button
+                <Pressable
+                  bare
                   type="button"
                   id={`mk-trigger-${menu.id}`}
                   ref={(el) => {
@@ -138,7 +140,7 @@ export function MarketingNav() {
                     size={16}
                     className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
                   />
-                </button>
+                </Pressable>
                 {isOpen && (
                   <MegaMenu
                     menu={menu}
@@ -182,7 +184,8 @@ export function MarketingNav() {
           </ButtonLink>
         </div>
 
-        <button
+        <Pressable
+          bare
           ref={hamburger}
           type="button"
           onClick={() => setMobileOpen(true)}
@@ -192,7 +195,7 @@ export function MarketingNav() {
           className="ml-auto self-center rounded-md p-2 text-[var(--mk-white)] lg:hidden"
         >
           <Icon name="menu" size={26} />
-        </button>
+        </Pressable>
       </nav>
       {mobileOpen && <MobileMenu onClose={closeMobile} />}
     </header>

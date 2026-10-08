@@ -4,6 +4,7 @@ import { useState } from "react";
 import { PRICING_TIERS, type BillingCycle, type PricingTier } from "./content";
 import { Icon } from "./icons";
 import { ButtonLink } from "./ui";
+import { Pressable } from "@/components/ui";
 
 function priceFor(tier: PricingTier, cycle: BillingCycle) {
   const value = cycle === "annual" ? tier.annual : tier.monthly;
@@ -32,7 +33,8 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
           className="inline-flex rounded-full border border-[var(--mk-line)] bg-[var(--mk-white)] p-1"
         >
           {(["monthly", "annual"] as const).map((c) => (
-            <button
+            <Pressable
+              bare
               key={c}
               type="button"
               aria-pressed={cycle === c}
@@ -49,7 +51,7 @@ export function PricingCards({ compact = false }: { compact?: boolean }) {
                   Save up to 40%
                 </span>
               )}
-            </button>
+            </Pressable>
           ))}
         </div>
       </div>
