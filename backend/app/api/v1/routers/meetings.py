@@ -2,11 +2,20 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 
 from app.api.params import MeetingFilterParams, Paging, SortParam
-from app.api.responses import CONFLICT, GONE, NOT_FOUND, SERVICE_UNAVAILABLE, VALIDATION
+from app.api.responses import (
+    CONFLICT,
+    GONE,
+    NOT_FOUND,
+    RATE_LIMITED,
+    SEED_OR_AI_UNAVAILABLE,
+    SERVICE_UNAVAILABLE,
+    VALIDATION,
+)
 from app.core.deps import get_meeting_creation_service, get_meeting_service
+from app.core.rate_limit import enforce_ai_rate_limit
 from app.schemas.common import Page
 from app.schemas.meeting import MeetingCreate, MeetingDetail, MeetingListItem, MeetingUpdate
 from app.schemas.meeting_filters import MeetingSort
@@ -38,13 +47,16 @@ def list_meetings(
     status_code=201,
     response_model=MeetingDetail,
     summary="Create a meeting",
-    responses={**VALIDATION, **SERVICE_UNAVAILABLE},
+    description="With `segments`, the transcript is summarised by the AI and the request "
+    "counts towards the AI rate limit; without them it does not.",
+    responses={**VALIDATION, **RATE_LIMITED, **SEED_OR_AI_UNAVAILABLE},
 )
 def create_meeting(
     body: MeetingCreate,
+    request: Request,
     service: Annotated[MeetingCreationService, Depends(get_meeting_creation_service)],
 ) -> MeetingDetail:
-    return service.create(body)
+    return service.create(body, before_ai=lambda: enforce_ai_rate_limit(request))
 
 
 @router.get(

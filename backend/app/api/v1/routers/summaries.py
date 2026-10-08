@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from app.api.responses import AI_UNAVAILABLE, CONFLICT, GONE, NOT_FOUND, RATE_LIMITED, VALIDATION
 from app.core.deps import get_summary_service
@@ -30,7 +30,7 @@ def get_summary(meeting_id: int, service: Summaries) -> SummaryRead:
     response_model=SummaryRead,
     summary="Regenerate the summary with AI",
     responses={**NOT_FOUND, **GONE, **VALIDATION, **CONFLICT, **RATE_LIMITED, **AI_UNAVAILABLE},
-    dependencies=[Depends(enforce_ai_rate_limit)],
 )
-def regenerate_summary(meeting_id: int, service: Summaries) -> SummaryRead:
-    return service.regenerate(meeting_id)
+def regenerate_summary(meeting_id: int, request: Request, service: Summaries) -> SummaryRead:
+    # Counted only once the meeting exists, has a transcript and is not already generating.
+    return service.regenerate(meeting_id, before_ai=lambda: enforce_ai_rate_limit(request))

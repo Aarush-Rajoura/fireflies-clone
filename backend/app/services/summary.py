@@ -1,6 +1,7 @@
 """Summary reads and regeneration. The AI call always runs with no transaction open."""
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -80,8 +81,12 @@ class SummaryService:
             is_stale=summary.is_stale,
         )
 
-    def regenerate(self, meeting_id: int) -> SummaryRead:
-        claim = self._claim(meeting_id)
+    def regenerate(
+        self, meeting_id: int, *, before_ai: Callable[[], None] | None = None
+    ) -> SummaryRead:
+        """`before_ai` runs once every guard has passed, just before the AI is called (the
+        API's rate limiter), so rejected requests (404/410/422/409) are never counted."""
+        claim = self._claim(meeting_id, before_ai)
         try:
             result = self.summarizer.summarize(claim.transcript)
         except BaseException:
@@ -121,7 +126,7 @@ class SummaryService:
         repo.replace_sections(summary.id, _sections(summary.id, result))
         repo.replace_keywords(meeting.id, _keywords(meeting.id, result))
 
-    def _claim(self, meeting_id: int) -> _Claim:
+    def _claim(self, meeting_id: int, before_ai: Callable[[], None] | None = None) -> _Claim:
         """Transaction 1: mark the summary as generating and snapshot the AI input."""
         try:
             meeting = require_active_meeting(self.uow, meeting_id)
@@ -134,6 +139,8 @@ class SummaryService:
                 summary = repo.add(Summary(meeting_id=meeting_id, generating_since=token))
             elif not repo.claim(summary, token, token - GENERATING_CLAIM_TTL):
                 raise _generating()
+            if before_ai is not None:
+                before_ai()  # may raise (rate limited): the rollback below undoes the claim
             self.uow.commit()
         except IntegrityError as exc:
             # Another request inserted the first summary row between our read and insert.

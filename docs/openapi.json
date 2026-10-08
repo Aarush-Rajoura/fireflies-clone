@@ -2407,6 +2407,7 @@
         ]
       },
       "post": {
+        "description": "With `segments`, the transcript is summarised by the AI and the request counts towards the AI rate limit; without them it does not.",
         "operationId": "create_meeting",
         "requestBody": {
           "content": {
@@ -2439,6 +2440,16 @@
             },
             "description": "Invalid input; `details.errors[].loc` is the field path."
           },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "AI rate limit exceeded; retry later."
+          },
           "503": {
             "content": {
               "application/json": {
@@ -2447,7 +2458,7 @@
                 }
               }
             },
-            "description": "A dependency is unavailable, e.g. the database is unseeded."
+            "description": "The database is unseeded (NOT_SEEDED) or the AI provider failed (AI_UNAVAILABLE)."
           }
         },
         "summary": "Create a meeting",

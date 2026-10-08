@@ -131,9 +131,9 @@ def test_oversized_upload_is_rejected_while_reading(app: FastAPI, api: TestClien
 
 
 def test_ai_route_is_rate_limited_with_envelope(api: TestClient) -> None:
-    mid = _meeting_id(api)
+    mid = _meeting_id(api)  # creating with segments spends one of the 10 AI calls
     codes = [api.post(f"/api/v1/meetings/{mid}/summary/regenerate").status_code for _ in range(12)]
-    assert codes[:10] == [200] * 10
+    assert codes[:9] == [200] * 9
     assert 429 in codes
     r = api.post(f"/api/v1/meetings/{mid}/summary/regenerate")
     assert r.json()["error"]["code"] == "RATE_LIMITED"
@@ -142,8 +142,9 @@ def test_ai_route_is_rate_limited_with_envelope(api: TestClient) -> None:
 
 
 def test_ai_limit_sets_retry_after_and_follows_forwarded_ip(api: TestClient, app: FastAPI) -> None:
-    app.state.settings.ai_rate_limit = "2/minute"
     mid = _meeting_id(api)
+    app.state.settings.ai_rate_limit = "2/minute"
+    app.state.limiter.reset()
     url = f"/api/v1/meetings/{mid}/summary/regenerate"
     assert [api.post(url).status_code for _ in range(2)] == [200, 200]
     limited = api.post(url)
@@ -151,6 +152,45 @@ def test_ai_limit_sets_retry_after_and_follows_forwarded_ip(api: TestClient, app
     assert int(limited.headers["retry-after"]) >= 1
     other = api.post(url, headers={"X-Forwarded-For": "203.0.113.9, 10.0.0.1"})
     assert other.status_code == 200
+
+
+SEGMENTS = [{"speaker": "Ann", "start_ms": 0, "end_ms": 900, "text": "Hello"}]
+
+
+def test_create_with_segments_is_rate_limited_but_form_create_is_not(
+    api: TestClient, app: FastAPI
+) -> None:
+    app.state.settings.ai_rate_limit = "2/minute"
+    body = {"title": "t", "segments": SEGMENTS}
+    codes = [api.post("/api/v1/meetings", json=body).status_code for _ in range(3)]
+    assert codes == [201, 201, 429]
+    limited = api.post("/api/v1/meetings", json=body)
+    assert limited.json()["error"]["code"] == "RATE_LIMITED"
+    assert int(limited.headers["retry-after"]) >= 1
+    # Without segments no AI runs, so no limit applies.
+    assert all(
+        api.post("/api/v1/meetings", json={"title": "form"}).status_code == 201 for _ in range(5)
+    )
+
+
+def test_rejected_ai_requests_are_not_counted(api: TestClient, app: FastAPI) -> None:
+    app.state.settings.ai_rate_limit = "1/minute"
+    # 422 before any AI work: unknown channel.
+    bad = api.post("/api/v1/meetings", json={"title": "t", "segments": SEGMENTS, "channel_id": 999})
+    assert bad.status_code == 422
+    # 404 and 410 on regenerate.
+    assert api.post("/api/v1/meetings/999/summary/regenerate").status_code == 404
+    mid = api.post("/api/v1/meetings", json={"title": "t", "segments": SEGMENTS}).json()["id"]
+    app.state.limiter.reset()
+    assert api.delete(f"/api/v1/meetings/{mid}").status_code == 204
+    assert api.post(f"/api/v1/meetings/{mid}/summary/regenerate").status_code == 410
+    assert api.post(f"/api/v1/meetings/{mid}/restore").status_code == 200
+    # The single allowed call is still available.
+    assert api.post(f"/api/v1/meetings/{mid}/summary/regenerate").status_code == 200
+    assert api.post(f"/api/v1/meetings/{mid}/summary/regenerate").status_code == 429
+    # The 429 rolled back its generation claim, so the next window is not a 409.
+    app.state.limiter.reset()
+    assert api.post(f"/api/v1/meetings/{mid}/summary/regenerate").status_code == 200
 
 
 def test_declared_conflict_on_patch_meeting(api: TestClient) -> None:

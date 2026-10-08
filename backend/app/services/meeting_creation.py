@@ -5,6 +5,7 @@ provider must not hold the write lock); then everything is written in one short
 transaction, so a failure part-way leaves no half-built meeting.
 """
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
@@ -62,8 +63,14 @@ class MeetingCreationService:
             )
         return mapping.preview(self.parsers.parse(content, filename))
 
-    def create(self, data: MeetingCreate) -> MeetingDetail:
+    def create(
+        self, data: MeetingCreate, *, before_ai: Callable[[], None] | None = None
+    ) -> MeetingDetail:
+        """`before_ai` (the API's rate limiter) runs only when segments will be sent to the
+        AI, after the cheap pre-checks, so form-only and rejected requests are not counted."""
         host = self._precheck(data)
+        if data.segments is not None and before_ai is not None:
+            before_ai()
         ai = self._run_ai(data, host)
         try:
             meeting_id = self._write(data, ai, host)

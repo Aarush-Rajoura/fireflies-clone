@@ -23,3 +23,6 @@ CONFLICT = _declare(409, "The request conflicts with current state, e.g. a dupli
 SERVICE_UNAVAILABLE = _declare(503, "A dependency is unavailable, e.g. the database is unseeded.")
 AI_UNAVAILABLE = _declare(503, "The AI provider failed; `code` is AI_UNAVAILABLE.")
 RATE_LIMITED = _declare(429, "AI rate limit exceeded; retry later.")
+SEED_OR_AI_UNAVAILABLE = _declare(
+    503, "The database is unseeded (NOT_SEEDED) or the AI provider failed (AI_UNAVAILABLE)."
+)
