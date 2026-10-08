@@ -24,6 +24,9 @@ export const qk = {
   channels: () => ["channels"] as const,
   tags: () => ["tags"] as const,
   users: () => ["users"] as const,
+  feed: () => ["feed"] as const,
+  calendarConnections: () => ["calendar-connections"] as const,
+  notifications: () => ["notifications"] as const,
   // Not under ['meetings']: search spans every meeting, so instead of being
   // invalidated by meeting edits its queries use staleTime 0 (see useSearch).
   search: {

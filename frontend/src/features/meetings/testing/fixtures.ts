@@ -25,6 +25,7 @@ export function meetingFixture(overrides: Partial<MeetingListItem> = {}): Meetin
     channel: { id: 9, name: "product", slug: "product" },
     channel_id: 9,
     language: "en",
+    auto_join: false,
     meeting_url: null,
     platform: null,
     ...overrides,

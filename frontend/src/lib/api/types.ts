@@ -57,6 +57,12 @@ export type Soundbite = Schemas["SoundbiteRead"];
 export type SoundbiteCreate = Schemas["SoundbiteCreate"];
 
 export type Channel = Schemas["ChannelRead"];
+export type Platform = Schemas["Platform"];
+
+export type CalendarProvider = Schemas["CalendarProvider"];
+export type CalendarConnection = Schemas["CalendarConnectionRead"];
+export type FeedItem = Schemas["FeedItem"];
+export type Notification = Schemas["NotificationRead"];
 export type SearchHit = Schemas["SearchHit"];
 /** Query parameters of GET /api/v1/search. */
 export type SearchParams = operations["search"]["parameters"]["query"];
