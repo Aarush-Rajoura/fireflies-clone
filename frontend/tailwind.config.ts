@@ -67,6 +67,7 @@ const colors = {
   avatar: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`avatar-${i}`)])),
   tag: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`tag-${i}`)])),
   "tag-subtle": Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`tag-${i}-subtle`)])),
+  heat: Object.fromEntries(Array.from({ length: 5 }, (_, i) => [i, v(`heat-${i}`)])),
   brand: { mark: v("brand-mark") },
   scrim: v("scrim"),
   "on-accent": v("text-on-accent"),

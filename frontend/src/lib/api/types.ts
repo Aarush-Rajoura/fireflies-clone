@@ -94,6 +94,13 @@ export type ChatSkillId = Schemas["ChatSkillId"];
 export type ExportFormat = NonNullable<
   NonNullable<operations["export_meeting"]["parameters"]["query"]>["format"]
 >;
+export type AnalyticsOverview = Schemas["AnalyticsOverview"];
+export type AnalyticsRange = Schemas["AnalyticsRange"];
+export type TalkTimeShare = Schemas["TalkTimeShare"];
+export type KeywordStat = Schemas["KeywordStat"];
+export type MeetingSource = Schemas["MeetingSource"];
+/** Query parameters of GET /api/v1/analytics/overview. */
+export type AnalyticsParams = NonNullable<operations["analytics_overview"]["parameters"]["query"]>;
 
 /** The list envelope every collection endpoint returns. */
 export type Page<T> = {

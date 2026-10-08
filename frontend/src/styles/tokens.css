@@ -144,6 +144,19 @@
   --ff-speaker-light-6: #1d4ed8;
   --ff-speaker-light-7: #57534e;
 
+  /* Sequential violet ramp for intensity (analytics heatmap): one hue, step 0
+     is "none" and blends with the card, step 4 is the busiest. [D] */
+  --ff-heat-dark-0: #292929;
+  --ff-heat-dark-1: #2d2654;
+  --ff-heat-dark-2: #42368a;
+  --ff-heat-dark-3: #6048c6;
+  --ff-heat-dark-4: #8c78f2;
+  --ff-heat-light-0: #f1f2f5;
+  --ff-heat-light-1: #e6e0fd;
+  --ff-heat-light-2: #c6b8f9;
+  --ff-heat-light-3: #9b7ff2;
+  --ff-heat-light-4: #6a39ef;
+
   /* Avatar fills sit under white initials, so on dark they stay mid-tone
      rather than reusing the lifted speaker text hues. [D] */
   --ff-avatar-dark-0: #6a4fd8;
@@ -294,6 +307,12 @@
   --ff-tag-6: var(--ff-speaker-dark-6);
   --ff-tag-7: var(--ff-speaker-dark-7);
 
+  --ff-heat-0: var(--ff-heat-dark-0);
+  --ff-heat-1: var(--ff-heat-dark-1);
+  --ff-heat-2: var(--ff-heat-dark-2);
+  --ff-heat-3: var(--ff-heat-dark-3);
+  --ff-heat-4: var(--ff-heat-dark-4);
+
   --ff-scrim: rgba(0, 0, 0, 0.6);
   --ff-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
   --ff-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.32);
@@ -411,6 +430,12 @@
   --ff-tag-5: var(--ff-speaker-light-5);
   --ff-tag-6: var(--ff-speaker-light-6);
   --ff-tag-7: var(--ff-speaker-light-7);
+
+  --ff-heat-0: var(--ff-heat-light-0);
+  --ff-heat-1: var(--ff-heat-light-1);
+  --ff-heat-2: var(--ff-heat-light-2);
+  --ff-heat-3: var(--ff-heat-light-3);
+  --ff-heat-4: var(--ff-heat-light-4);
 
   --ff-scrim: rgba(11, 20, 36, 0.4);
   --ff-shadow-xs: 0 1px 2px rgba(11, 20, 36, 0.05);

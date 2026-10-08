@@ -1,4 +1,5 @@
 import type {
+  AnalyticsParams,
   IntegrationListParams,
   MeetingListParams,
   SearchParams,
@@ -56,4 +57,6 @@ export const qk = {
     query: (q: string) => ["search", q] as const,
     page: ({ q, ...paging }: SearchParams) => ["search", q, paging] as const,
   },
+  // Aggregates over every meeting: like search, kept fresh by staleTime 0, not invalidation.
+  analytics: (params: AnalyticsParams) => ["analytics", params] as const,
 };
