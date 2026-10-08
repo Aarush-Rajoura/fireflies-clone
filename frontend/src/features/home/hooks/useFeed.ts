@@ -12,5 +12,7 @@ export function useFeed(enabled = true) {
     queryKey: qk.feed(),
     queryFn: ({ signal }) => fetchFeed(signal),
     enabled,
+    // Meetings, summaries and tasks change it from many places; always refetch on mount.
+    staleTime: 0,
   });
 }
