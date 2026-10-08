@@ -3,8 +3,7 @@
 import { Files, Hash, Plus, Upload } from "lucide-react";
 import { useState } from "react";
 
-import { Badge, Button, SearchInput, Skeleton } from "@/components/ui";
-import { NavItem } from "@/components/ui/nav-item";
+import { Badge, Button, NavItem, SearchInput, Skeleton } from "@/components/ui";
 import type { Channel } from "@/lib/api";
 
 import { useChannels } from "../hooks/useChannels";

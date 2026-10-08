@@ -15,6 +15,7 @@ export * from "./input";
 export * from "./kbd";
 export * from "./menu";
 export * from "./modal";
+export * from "./nav-item";
 export * from "./popover";
 export * from "./resizable-panels";
 export * from "./search-input";
