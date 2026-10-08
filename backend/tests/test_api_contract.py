@@ -104,7 +104,10 @@ def test_declared_errors_match_real_statuses(api: TestClient) -> None:
 def test_me_returns_the_default_user(api: TestClient) -> None:
     r = api.get("/api/v1/me")
     assert r.status_code == 200
-    assert set(r.json()) == {"id", "name", "avatar_url", "email"}
+    assert set(r.json()) == {
+        "id", "name", "avatar_url", "email", "role", "job_title", "join_preference",
+        "recap_preference", "onboarded_at", "tools",
+    }  # fmt: skip
 
 
 def test_unseeded_database_is_503_envelope(api_app: FastAPI) -> None:

@@ -9,9 +9,10 @@ from app.models.summary import Keyword, Summary, SummarySection
 from app.models.tag import MeetingTag, Tag
 from app.models.transcript import Speaker, TranscriptSegment
 from app.models.user import User
+from app.models.user_tool import UserTool
 
 __all__ = [
     "ActionItem", "Channel", "Comment", "Highlight", "Keyword", "Meeting", "MeetingTag",
     "Participant", "Soundbite", "Speaker", "Summary", "SummarySection", "Tag",
-    "TranscriptSegment", "User",
+    "TranscriptSegment", "User", "UserTool",
 ]  # fmt: skip

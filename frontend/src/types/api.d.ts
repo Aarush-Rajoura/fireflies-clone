@@ -125,6 +125,45 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
+        /** Update the current user's name or job title */
+        patch: operations["update_me"];
+        trace?: never;
+    };
+    "/api/v1/me/onboarding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save onboarding answers and mark onboarding complete
+         * @description `tools` is the complete set (deduplicated, at most 20). `invite_emails` are validated and counted in `invites_sent`; they are not stored yet.
+         */
+        put: operations["complete_onboarding"];
+        post?: never;
+        /** Restart onboarding (clears onboarded_at; answers are kept) */
+        delete: operations["restart_onboarding"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Free-plan usage: meetings left and storage minutes */
+        get: operations["get_usage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -845,6 +884,11 @@ export interface components {
             start_offset?: number | null;
         };
         /**
+         * JoinPreference
+         * @enum {string}
+         */
+        JoinPreference: "owned" | "all" | "team" | "invited";
+        /**
          * MatchRange
          * @description Half-open character offsets into the snippet; the client wraps them, never raw HTML.
          */
@@ -853,6 +897,33 @@ export interface components {
             end: number;
             /** Start */
             start: number;
+        };
+        /**
+         * MeRead
+         * @description The current user, with their onboarding answers.
+         */
+        MeRead: {
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Email */
+            email: string;
+            /** Id */
+            id: number;
+            /** Job Title */
+            job_title?: string | null;
+            join_preference?: components["schemas"]["JoinPreference"] | null;
+            /** Name */
+            name: string;
+            /** Onboarded At */
+            onboarded_at?: string | null;
+            recap_preference?: components["schemas"]["RecapPreference"] | null;
+            /** Role */
+            role?: string | null;
+            /**
+             * Tools
+             * @default []
+             */
+            tools: string[];
         };
         /**
          * MediaType
@@ -1013,6 +1084,48 @@ export interface components {
             bullets: string[];
             /** Title */
             title: string;
+        };
+        /** OnboardingInput */
+        OnboardingInput: {
+            /** Invite Emails */
+            invite_emails?: string[];
+            /**
+             * Job Title
+             * @default
+             */
+            job_title: string;
+            join_preference: components["schemas"]["JoinPreference"];
+            recap_preference: components["schemas"]["RecapPreference"];
+            /** Role */
+            role: string;
+            /** Tools */
+            tools?: string[];
+        };
+        /** OnboardingResult */
+        OnboardingResult: {
+            /** Avatar Url */
+            avatar_url?: string | null;
+            /** Email */
+            email: string;
+            /** Id */
+            id: number;
+            /** Invites Sent */
+            invites_sent: number;
+            /** Job Title */
+            job_title?: string | null;
+            join_preference?: components["schemas"]["JoinPreference"] | null;
+            /** Name */
+            name: string;
+            /** Onboarded At */
+            onboarded_at?: string | null;
+            recap_preference?: components["schemas"]["RecapPreference"] | null;
+            /** Role */
+            role?: string | null;
+            /**
+             * Tools
+             * @default []
+             */
+            tools: string[];
         };
         /** OutlineEntryRead */
         OutlineEntryRead: {
@@ -1197,6 +1310,18 @@ export interface components {
          * @enum {string}
          */
         Platform: "zoom" | "meet" | "teams" | "other";
+        /** ProfileUpdate */
+        ProfileUpdate: {
+            /** Job Title */
+            job_title?: string | null;
+            /** Name */
+            name?: string | null;
+        };
+        /**
+         * RecapPreference
+         * @enum {string}
+         */
+        RecapPreference: "me" | "everyone" | "team";
         /** SearchHit */
         SearchHit: {
             /** Meeting Id */
@@ -1374,6 +1499,17 @@ export interface components {
             filename?: string | null;
             /** Text */
             text: string;
+        };
+        /** UsageRead */
+        UsageRead: {
+            /** Free Meetings Left */
+            free_meetings_left: number;
+            /** Free Meetings Total */
+            free_meetings_total: number;
+            /** Storage Minutes Total */
+            storage_minutes_total: number;
+            /** Storage Minutes Used */
+            storage_minutes_used: number;
         };
         /** UserRead */
         UserRead: {
@@ -1917,7 +2053,147 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserRead"];
+                    "application/json": components["schemas"]["MeRead"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeRead"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    complete_onboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OnboardingInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OnboardingResult"];
+                };
+            };
+            /** @description Invalid input; `details.errors[].loc` is the field path. */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    restart_onboarding: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A dependency is unavailable, e.g. the database is unseeded. */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UsageRead"];
                 };
             };
             /** @description A dependency is unavailable, e.g. the database is unseeded. */

@@ -1,6 +1,8 @@
-from sqlalchemy import func, select
+from collections.abc import Sequence
 
-from app.models import User
+from sqlalchemy import delete, func, select
+
+from app.models import Meeting, User, UserTool
 from app.repositories.base import Repository
 
 
@@ -18,3 +20,19 @@ class UserRepository(Repository[User]):
         total = self.session.scalar(select(func.count()).select_from(User)) or 0
         stmt = select(User).order_by(User.name, User.id).limit(limit).offset(offset)
         return list(self.session.scalars(stmt)), total
+
+    def tools(self, user_id: int) -> Sequence[str]:
+        stmt = select(UserTool.tool).where(UserTool.user_id == user_id).order_by(UserTool.id)
+        return list(self.session.scalars(stmt))
+
+    def replace_tools(self, user_id: int, tools: Sequence[str]) -> None:
+        self.session.execute(delete(UserTool).where(UserTool.user_id == user_id))
+        self.session.add_all(UserTool(user_id=user_id, tool=t) for t in tools)
+        self.session.flush()
+
+    def hosted_duration_ms(self, user_id: int) -> int:
+        """Total recorded length of the user's hosted meetings, trash excluded."""
+        stmt = select(func.coalesce(func.sum(Meeting.duration_ms), 0)).where(
+            Meeting.host_id == user_id, Meeting.not_deleted()
+        )
+        return int(self.session.scalar(stmt) or 0)
