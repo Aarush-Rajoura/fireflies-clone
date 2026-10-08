@@ -1,18 +1,18 @@
-import { PagePlaceholder } from "@/features/shell";
+import { SearchResultsPage } from "@/features/search";
 
 export const metadata = { title: "Search · Fireflies.ai Clone" };
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
 export default async function SearchPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string | string[] }>;
+  searchParams: Promise<SearchParams>;
 }) {
-  const { q } = await searchParams;
-  const query = (Array.isArray(q) ? q[0] : q)?.trim() ?? "";
-  return (
-    <PagePlaceholder
-      title={query ? `Results for “${query}”` : "Search"}
-      message="Full-text search across titles and transcripts is coming with the search module."
-    />
-  );
+  const query = await searchParams;
+  const q = first(query.q)?.trim() ?? "";
+  const page = Number(first(query.page));
+  return <SearchResultsPage q={q} page={Number.isSafeInteger(page) && page > 0 ? page : 1} />;
 }

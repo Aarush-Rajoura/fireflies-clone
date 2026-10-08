@@ -11,7 +11,8 @@ describe("query keys", () => {
     expect(qk.transcript(7)).toEqual(["meetings", 7, "transcript"]);
     expect(qk.summary(7)).toEqual(["meetings", 7, "summary"]);
     expect(qk.actionItems(7)).toEqual(["meetings", 7, "action-items"]);
-    expect(qk.search("q")).toEqual(["search", "q"]);
+    expect(qk.search.query("q")).toEqual(["search", "q"]);
+    expect(qk.search.page({ q: "q", page: 2 })).toEqual(["search", "q", { page: 2 }]);
     expect(qk.me()).toEqual(["me"]);
   });
 

@@ -33,6 +33,8 @@ export type ActionItemStatus = Schemas["ActionItemStatus"];
 
 export type Channel = Schemas["ChannelRead"];
 export type SearchHit = Schemas["SearchHit"];
+/** Query parameters of GET /api/v1/search. */
+export type SearchParams = operations["search"]["parameters"]["query"];
 
 /** The list envelope every collection endpoint returns. */
 export type Page<T> = {

@@ -1,4 +1,4 @@
-import type { MeetingListParams } from "./types";
+import type { MeetingListParams, SearchParams } from "./types";
 
 /*
  * Every TanStack Query key in the app comes from here, so invalidation can
@@ -20,5 +20,9 @@ export const qk = {
   users: () => ["users"] as const,
   // Not under ['meetings'], so meeting edits do not invalidate it yet; the search
   // feature owns refreshing its results when meetings change.
-  search: (q: string) => ["search", q] as const,
+  search: {
+    all: ["search"] as const,
+    query: (q: string) => ["search", q] as const,
+    page: ({ q, ...paging }: SearchParams) => ["search", q, paging] as const,
+  },
 };

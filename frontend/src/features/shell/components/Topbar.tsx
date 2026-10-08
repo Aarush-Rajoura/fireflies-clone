@@ -3,13 +3,13 @@
 import { usePathname } from "next/navigation";
 
 import { Badge, Button } from "@/components/ui";
+import { SearchDropdown } from "@/features/search";
 
 import { titleForPath } from "../nav";
 import { FREE_MEETINGS } from "../plan";
 
 import { CaptureMenu } from "./CaptureMenu";
 import { useComingSoon } from "./ComingSoonDialog";
-import { GlobalSearch } from "./GlobalSearch";
 import { NotificationsButton } from "./NotificationsButton";
 
 /**
@@ -25,7 +25,7 @@ export function Topbar() {
   return (
     <header className="z-topbar grid h-topbar shrink-0 grid-cols-[minmax(96px,1fr)_minmax(160px,400px)_minmax(max-content,1fr)] items-center gap-4 border-b border-subtle bg-surface-1 px-4">
       <h1 className="truncate text-body-strong text-primary">{title}</h1>
-      <GlobalSearch />
+      <SearchDropdown />
       <div className="flex shrink-0 items-center justify-end gap-3 whitespace-nowrap">
         <span className="hidden shrink-0 items-center gap-2 whitespace-nowrap text-meta text-secondary lg:flex">
           <Badge tone="count">{FREE_MEETINGS.left}</Badge>
