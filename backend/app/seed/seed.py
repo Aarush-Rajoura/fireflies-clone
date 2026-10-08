@@ -1,4 +1,7 @@
-"""Populates a database with demo meetings: `python -m app.seed.seed [--reset] [--if-empty]`."""
+"""Populates a database with demo meetings.
+
+python -m app.seed.seed [--reset --yes] [--if-empty] [--refresh-upcoming]
+"""
 
 import argparse
 import sys
@@ -15,13 +18,15 @@ from app.db.base import Base
 from app.db.session import make_engine, make_session_factory
 from app.db.unit_of_work import UnitOfWork
 from app.models import Channel, Meeting, User
-from app.models.enums import MeetingSource
+from app.models.enums import MeetingSource, MeetingStatus
+from app.seed import timing
 from app.seed.content import Person, load_cast, load_past_meetings, load_upcoming
-from app.seed.writer import write_meeting
+from app.seed.sample_audio import SAMPLE_FILENAME, ensure_sample
+from app.seed.writer import start_time, write_meeting
 
 CHANNELS = ("hiring", "product", "customers")
-MEDIA_STEM = "sample-meeting"
-MEDIA_SUFFIXES = (".mp3", ".wav")  # first one present wins
+# MediaService serves media_url relative to MEDIA_DIR, so this is the generated file's name.
+SAMPLE_MEDIA_URL = f"media/{SAMPLE_FILENAME}"
 DEFAULT_USER_KEY = "me"
 
 
@@ -45,6 +50,8 @@ def reset(session: Session) -> None:
 def seed(
     session: Session, settings: Settings, *, do_reset: bool = False, if_empty: bool = False
 ) -> SeedResult:
+    # Before the --if-empty check: an already-seeded deployment still gets its audio file.
+    media_url = ensure_media(Path(settings.media_dir))
     if if_empty and has_users(session):
         return SeedResult(0, skipped=True)
     if do_reset:
@@ -52,7 +59,6 @@ def seed(
     anchor = settings.seed_anchor_date or datetime.now(UTC)
     if anchor.tzinfo is None:
         anchor = anchor.replace(tzinfo=UTC)
-    media_url = _media_url(Path(settings.media_dir))
     cast = {p.key: p for p in load_cast()}
     with UnitOfWork(session) as uow:
         users = _ensure_users(uow, cast, anchor)
@@ -70,11 +76,36 @@ def seed(
     return SeedResult(added)
 
 
-def _media_url(media_dir: Path) -> str | None:
-    for suffix in MEDIA_SUFFIXES:
-        if (media_dir / f"{MEDIA_STEM}{suffix}").is_file():
-            return f"media/{MEDIA_STEM}{suffix}"
-    return None
+def longest_media_meeting_ms() -> int:
+    return max(
+        (timing.duration_ms(m.lines) for m in load_past_meetings() if m.has_media), default=0
+    )
+
+
+def ensure_media(media_dir: Path) -> str:
+    """Generate the sample recording if missing or shorter than the longest media meeting."""
+    ensure_sample(media_dir, longest_media_meeting_ms())
+    return SAMPLE_MEDIA_URL
+
+
+def refresh_upcoming(session: Session, now: datetime | None = None) -> int:
+    """Move seeded scheduled meetings whose time has passed back to their configured
+    offset from today. Idempotent: meetings still in the future are left alone."""
+    now = now or datetime.now(UTC)
+    configured = {m.title: m for m in load_upcoming()}
+    stmt = select(Meeting).where(
+        Meeting.source == MeetingSource.SEED,
+        Meeting.status == MeetingStatus.SCHEDULED,
+        Meeting.started_at <= now,
+        Meeting.title.in_(configured),
+        Meeting.not_deleted(),
+    )
+    moved = 0
+    for meeting in session.scalars(stmt):
+        meeting.started_at = start_time(now, configured[meeting.title])
+        moved += 1
+    session.commit()
+    return moved
 
 
 def _exists(session: Session, title: str) -> bool:
@@ -113,6 +144,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--reset", action="store_true", help="delete all data first")
     parser.add_argument("--yes", action="store_true", help="confirm --reset")
     parser.add_argument("--if-empty", action="store_true", help="do nothing if any user exists")
+    parser.add_argument(
+        "--refresh-upcoming",
+        action="store_true",
+        help="only move past seeded scheduled meetings back to their future offset",
+    )
     args = parser.parse_args(argv)
     settings = get_settings()
     if args.reset and not args.yes:
@@ -125,6 +161,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"resetting {settings.database_url}")
     engine: Engine = make_engine(settings.database_url)
     factory: sessionmaker[Session] = make_session_factory(engine)
+    if args.refresh_upcoming:
+        with factory() as session:
+            moved = refresh_upcoming(session)
+        engine.dispose()
+        print(f"moved {moved} upcoming meetings back into the future")
+        return 0
     with factory() as session:
         result = seed(session, settings, do_reset=args.reset, if_empty=args.if_empty)
     engine.dispose()
