@@ -76,7 +76,7 @@ class UserService:
 
     def usage(self) -> UsageRead:
         user = self._default()
-        used_ms = self.uow.users.hosted_duration_ms(user.id)
+        used_ms = self.uow.meetings.hosted_duration_ms(user.id)
         return UsageRead(
             free_meetings_left=FREE_MEETINGS_TOTAL,
             free_meetings_total=FREE_MEETINGS_TOTAL,

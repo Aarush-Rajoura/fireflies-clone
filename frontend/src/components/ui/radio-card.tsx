@@ -110,7 +110,7 @@ export function RadioCardGroup<V extends string>({
                 checked ? "border-accent bg-accent text-on-accent" : "border-control",
               )}
             >
-              {checked && <Check strokeWidth={2.5} />}
+              {checked && <Check strokeWidth={1.75} />}
             </span>
           </button>
         );

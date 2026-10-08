@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from sqlalchemy import delete, func, select
 
-from app.models import Meeting, User, UserTool
+from app.models import User, UserTool
 from app.repositories.base import Repository
 
 
@@ -29,10 +29,3 @@ class UserRepository(Repository[User]):
         self.session.execute(delete(UserTool).where(UserTool.user_id == user_id))
         self.session.add_all(UserTool(user_id=user_id, tool=t) for t in tools)
         self.session.flush()
-
-    def hosted_duration_ms(self, user_id: int) -> int:
-        """Total recorded length of the user's hosted meetings, trash excluded."""
-        stmt = select(func.coalesce(func.sum(Meeting.duration_ms), 0)).where(
-            Meeting.host_id == user_id, Meeting.not_deleted()
-        )
-        return int(self.session.scalar(stmt) or 0)

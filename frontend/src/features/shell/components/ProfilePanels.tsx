@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 
 import { Badge, Button, toast } from "@/components/ui";
 import { nextPreference, useTheme } from "@/features/theme";
-import type { Usage } from "@/lib/api";
+import { useUsage } from "@/features/user";
 import { cn } from "@/lib/utils/cn";
 
 const soon = (what: string) => () => toast.info(`${what} is coming soon.`);
@@ -38,16 +38,15 @@ const ratio = (part: number, whole: number) => (whole > 0 ? Math.min(part / whol
 export function AccountPanel({
   name,
   email,
-  usage,
   onNavigate,
 }: {
   name: string;
   email: string;
-  /** Undefined while loading: the meters render empty rather than guessing. */
-  usage: Usage | undefined;
   onNavigate: () => void;
 }) {
   const { preference, setPreference } = useTheme();
+  // Read here, not in the trigger: the panel mounts on open, so each open refetches.
+  const { data: usage } = useUsage();
   const left = usage?.free_meetings_left ?? 0;
   const total = usage?.free_meetings_total ?? 0;
   const used = usage?.storage_minutes_used ?? 0;

@@ -90,6 +90,13 @@ class MeetingRepository(Repository[Meeting]):
         meeting.deleted_at = None
         self.session.flush()
 
+    def hosted_duration_ms(self, host_id: int) -> int:
+        """Total recorded length of the meetings a user hosts, trash excluded."""
+        stmt = select(func.coalesce(func.sum(Meeting.duration_ms), 0)).where(
+            Meeting.host_id == host_id, Meeting.not_deleted()
+        )
+        return int(self.session.scalar(stmt) or 0)
+
 
 _LOAD_OPTIONS = (
     selectinload(Meeting.host),

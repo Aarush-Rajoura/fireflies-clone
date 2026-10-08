@@ -35,7 +35,8 @@ describe("OnboardingWizard", () => {
   });
 
   it("walks every step and saves the answers, then opens Home", async () => {
-    renderWithClient(<OnboardingWizard />);
+    const { client } = renderWithClient(<OnboardingWizard />);
+    const invalidate = vi.spyOn(client, "invalidateQueries");
     expect(heading()).toBe("Which meetings should Fred join?");
     expect(screen.getByRole("button", { name: /^Next/ }).hasAttribute("disabled")).toBe(true);
 
@@ -73,6 +74,7 @@ describe("OnboardingWizard", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Send invites & finish" }));
     await waitFor(() => expect(push).toHaveBeenCalledWith("/home"));
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["me"] });
     expect(save).toHaveBeenCalledWith({
       join_preference: "all",
       recap_preference: "me",

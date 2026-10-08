@@ -7,5 +7,5 @@ export function updateProfile(body: ProfileUpdate): Promise<Me> {
 
 /** Clears `onboarded_at`; earlier answers are kept as the wizard's starting point. */
 export function restartOnboarding(): Promise<void> {
-  return unwrap(api.DELETE("/api/v1/me/onboarding")) as Promise<void>;
+  return unwrap(api.DELETE("/api/v1/me/onboarding")).then(() => undefined);
 }

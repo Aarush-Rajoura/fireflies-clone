@@ -4,7 +4,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
 
 import { Avatar, Popover } from "@/components/ui";
-import { useMe, useUsage } from "@/features/user";
+import { useMe } from "@/features/user";
 import { cn } from "@/lib/utils/cn";
 
 import { AppCards, AccountPanel } from "./ProfilePanels";
@@ -12,7 +12,6 @@ import { AppCards, AccountPanel } from "./ProfilePanels";
 /** Avatar button at the top of the rail and the two-column account menu it opens. */
 export function ProfileMenu({ expanded = false }: { expanded?: boolean }) {
   const { data: me } = useMe();
-  const { data: usage } = useUsage();
   const [open, setOpen] = useState(false);
   const name = me?.name ?? "";
   const Chevron = open ? ChevronUp : ChevronDown;
@@ -51,12 +50,7 @@ export function ProfileMenu({ expanded = false }: { expanded?: boolean }) {
         </button>
       }
     >
-      <AccountPanel
-        name={name}
-        email={me?.email ?? ""}
-        usage={usage}
-        onNavigate={() => setOpen(false)}
-      />
+      <AccountPanel name={name} email={me?.email ?? ""} onNavigate={() => setOpen(false)} />
       <AppCards />
     </Popover>
   );
