@@ -44,7 +44,7 @@ from app.ai.types import (
 )
 
 GEMINI_LABEL = "gemini"
-DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+DEFAULT_GEMINI_MODEL = "gemini-3.5-flash"
 CHUNK_WORDS = 12_000
 EMPTY_OVERVIEW = "This meeting has no transcript to summarise yet."
 NO_ANSWER = "I couldn't find anything in the meeting that answers that question."

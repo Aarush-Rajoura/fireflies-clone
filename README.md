@@ -56,7 +56,7 @@ Legend: **Done (API)** means the backend and its tests are finished and the endp
 **Backend**
 - Python 3.12/3.13, FastAPI, Pydantic v2, pydantic-settings
 - SQLAlchemy 2.0 and Alembic on SQLite (WAL, foreign keys on, FTS5 full-text search)
-- AI: a deterministic offline mock provider, and Google Gemini (`gemini-2.5-flash` by default)
+- AI: a deterministic offline mock provider, and Google Gemini (`gemini-3.5-flash` by default)
   with automatic fallback to the mock
 - `slowapi`/`limits` for the AI rate limit
 - `uv` for dependencies; `pytest`, `ruff` (lint + format), `mypy --strict`
