@@ -13,7 +13,9 @@ from app.db.unit_of_work import UnitOfWork
 from app.parsers import default_registry
 from app.services.action_items import ActionItemService
 from app.services.channels import ChannelService
+from app.services.comments import CommentService
 from app.services.health import HealthService
+from app.services.highlights import HighlightService
 from app.services.media import MediaService
 from app.services.meeting_creation import MeetingCreationService
 from app.services.meetings import MeetingService
@@ -91,6 +93,14 @@ def get_meeting_creation_service(
 
 def get_tag_service(uow: Uow) -> TagService:
     return TagService(uow)
+
+
+def get_comment_service(uow: Uow) -> CommentService:
+    return CommentService(uow)
+
+
+def get_highlight_service(uow: Uow) -> HighlightService:
+    return HighlightService(uow)
 
 
 def get_health_service(uow: Uow) -> HealthService:

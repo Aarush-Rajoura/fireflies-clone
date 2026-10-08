@@ -5,7 +5,9 @@ from fastapi import APIRouter, FastAPI
 from app.api.v1.routers import (
     action_items,
     channels,
+    comments,
     health,
+    highlights,
     meetings,
     search,
     summaries,
@@ -14,8 +16,21 @@ from app.api.v1.routers import (
     users,
 )
 
+ROUTERS = (
+    meetings,
+    transcripts,
+    summaries,
+    action_items,
+    comments,
+    highlights,
+    search,
+    channels,
+    tags,
+    users,
+)
+
 v1_router = APIRouter(prefix="/v1")
-for module in (meetings, transcripts, summaries, action_items, search, channels, tags, users):
+for module in ROUTERS:
     v1_router.include_router(module.router)
 
 
