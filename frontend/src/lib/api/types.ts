@@ -27,6 +27,8 @@ export type MeetingStatus = Schemas["MeetingStatus"];
 export type MeetingSort = Schemas["MeetingSort"];
 export type Participant = Schemas["ParticipantRead"];
 export type Tag = Schemas["TagRead"];
+export type TagCreate = Schemas["TagCreate"];
+export type TagUpdate = Schemas["TagUpdate"];
 
 export type Transcript = Schemas["TranscriptRead"];
 export type Segment = Schemas["SegmentRead"];
@@ -45,6 +47,14 @@ export type Channel = Schemas["ChannelRead"];
 export type SearchHit = Schemas["SearchHit"];
 /** Query parameters of GET /api/v1/search. */
 export type SearchParams = operations["search"]["parameters"]["query"];
+
+export type AskResponse = Schemas["AskResponse"];
+export type AskCitation = Schemas["AskCitation"];
+
+/** Export file formats the backend advertises. */
+export type ExportFormat = NonNullable<
+  NonNullable<operations["export_meeting"]["parameters"]["query"]>["format"]
+>;
 
 /** The list envelope every collection endpoint returns. */
 export type Page<T> = {

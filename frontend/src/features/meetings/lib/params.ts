@@ -9,6 +9,8 @@ export type MeetingsParams = {
   date_from?: string;
   date_to?: string;
   channel?: number;
+  /** Tag ids; a meeting matches any of them. */
+  tag?: number[];
   scope: MeetingScope;
   sort: MeetingSort;
   page: number;
@@ -43,12 +45,16 @@ export function parseMeetingsParams(search: URLSearchParams): MeetingsParams {
     const value = search.get(key);
     return value && ISO_DAY.test(value) ? value : undefined;
   };
+  const tags = [...new Set(search.getAll("tag").map(positiveInt))]
+    .filter((n): n is number => n !== undefined)
+    .sort((a, b) => a - b);
   return {
     q: text(search.get("q")),
     participant: text(search.get("participant")),
     date_from: day("date_from"),
     date_to: day("date_to"),
     channel: positiveInt(search.get("channel")),
+    tag: tags.length ? tags : undefined,
     // Deliberately "all": a bare /meetings lights "All Meetings"; "My Meetings" is the explicit scope=hosted.
     scope: SCOPES.includes(scope as MeetingScope) ? (scope as MeetingScope) : "all",
     sort: SORTS.includes(sort as MeetingSort) ? (sort as MeetingSort) : DEFAULT_SORT,
@@ -70,6 +76,9 @@ export function serializeMeetingsParams(params: MeetingsParams): string {
   set("q", params.q);
   set("scope", params.scope === "all" ? undefined : params.scope);
   set("sort", params.sort === DEFAULT_SORT ? undefined : params.sort);
+  for (const id of [...new Set(params.tag ?? [])].sort((a, b) => a - b)) {
+    out.append("tag", String(id));
+  }
   return out.toString();
 }
 
@@ -81,6 +90,7 @@ export function toListQuery(params: MeetingsParams): MeetingListParams {
     date_from: params.date_from,
     date_to: params.date_to,
     channel: params.channel,
+    tag: params.tag?.length ? params.tag : undefined,
     scope: params.scope,
     sort: params.sort,
     page: params.page,
@@ -90,10 +100,14 @@ export function toListQuery(params: MeetingsParams): MeetingListParams {
 
 /** Filters that narrow the list (the Filters badge); scope/channel/sort/page are views, not filters. */
 export function activeFilterCount(params: MeetingsParams): number {
-  return [params.participant, params.date_from ?? params.date_to].filter(Boolean).length;
+  return [params.participant, params.date_from ?? params.date_to, params.tag?.length].filter(
+    Boolean,
+  ).length;
 }
 
 /** A search or filter (what "Clear filters" undoes) could explain an empty result. */
 export function isNarrowed(params: MeetingsParams): boolean {
-  return Boolean(params.q || params.participant || params.date_from || params.date_to);
+  return Boolean(
+    params.q || params.participant || params.date_from || params.date_to || params.tag?.length,
+  );
 }

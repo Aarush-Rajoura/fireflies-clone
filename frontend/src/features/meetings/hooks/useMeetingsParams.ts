@@ -70,6 +70,7 @@ export function useMeetingsParams() {
       update({
         q: undefined,
         participant: undefined,
+        tag: undefined,
         date_from: undefined,
         date_to: undefined,
       }),

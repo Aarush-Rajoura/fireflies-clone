@@ -19,6 +19,7 @@ export const qk = {
   summary: (id: number) => ["meetings", id, "summary"] as const,
   actionItems: (id: number) => ["meetings", id, "action-items"] as const,
   channels: () => ["channels"] as const,
+  tags: () => ["tags"] as const,
   users: () => ["users"] as const,
   // Not under ['meetings']: search spans every meeting, so instead of being
   // invalidated by meeting edits its queries use staleTime 0 (see useSearch).

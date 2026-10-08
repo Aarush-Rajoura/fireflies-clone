@@ -4,12 +4,13 @@ import { ListFilter } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Badge, Button, Chip, DatePicker, Input, Popover } from "@/components/ui";
+import { TagFilter } from "@/features/tags";
 import { cn } from "@/lib/utils/cn";
 
 import { DATE_PRESETS, presetRange, recognizePreset, type DatePreset } from "../lib/date-presets";
 import type { MeetingsParams } from "../lib/params";
 
-export type FilterValues = Pick<MeetingsParams, "participant" | "date_from" | "date_to">;
+export type FilterValues = Pick<MeetingsParams, "participant" | "date_from" | "date_to" | "tag">;
 
 export type FiltersPopoverProps = {
   value: FilterValues;
@@ -63,6 +64,7 @@ function FiltersForm({
   const [preset, setPreset] = useState<DatePreset>(() => recognizePreset(initial));
   const [from, setFrom] = useState(initial.date_from ?? "");
   const [to, setTo] = useState(initial.date_to ?? "");
+  const [tags, setTags] = useState<number[]>(initial.tag ?? []);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -70,7 +72,11 @@ function FiltersForm({
       preset === "custom"
         ? { date_from: from || undefined, date_to: to || undefined }
         : presetRange(preset);
-    onApply({ participant: participant.trim() || undefined, ...range });
+    onApply({
+      participant: participant.trim() || undefined,
+      ...range,
+      tag: tags.length ? tags : undefined,
+    });
   };
 
   return (
@@ -122,12 +128,19 @@ function FiltersForm({
         )}
       </fieldset>
 
+      <TagFilter value={tags} onChange={setTags} />
+
       <div className="flex justify-between gap-2 border-t border-subtle pt-3">
         <Button
           variant="ghost"
           size="sm"
           onClick={() =>
-            onApply({ participant: undefined, date_from: undefined, date_to: undefined })
+            onApply({
+              participant: undefined,
+              date_from: undefined,
+              date_to: undefined,
+              tag: undefined,
+            })
           }
         >
           Clear all

@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 
 import { AvatarGroup, Badge, IconButton, Menu, type MenuItem } from "@/components/ui";
+import { TagChip } from "@/features/tags";
 import type { MeetingListItem } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 import { initials, speakerIndex } from "@/lib/utils/identity";
@@ -46,6 +47,7 @@ const tileFills = [
 ] as const;
 
 const MAX_KEYWORDS = 3;
+const MAX_TAGS = 2;
 const SHOWN_AVATARS = 3;
 
 function rowMenu(
@@ -128,16 +130,42 @@ export function MeetingRow({ meeting, channels, timeZone, ...actions }: MeetingR
 
       {/* The title column takes every spare pixel; everything to its right is fixed-size. */}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h3 className="flex min-w-0 items-center gap-1 text-title-row text-primary">
-          {/* Stretched link: the whole row opens the meeting, while the kebab stays its own control. */}
-          <Link
-            href={`/meetings/${meeting.id}`}
-            className="truncate outline-none after:absolute after:inset-0 after:rounded-panel focus-visible:after:shadow-focus"
-          >
-            {meeting.title}
-          </Link>
-          <ChevronRight aria-hidden strokeWidth={1.75} className="size-4 shrink-0 text-muted" />
-        </h3>
+        <div className="flex min-w-0 items-center gap-2">
+          <h3 className="flex min-w-0 items-center gap-1 text-title-row text-primary">
+            {/* Stretched link: the whole row opens the meeting, while the kebab stays its own control. */}
+            <Link
+              href={`/meetings/${meeting.id}`}
+              className="truncate outline-none after:absolute after:inset-0 after:rounded-panel focus-visible:after:shadow-focus"
+            >
+              {meeting.title}
+            </Link>
+            <ChevronRight aria-hidden strokeWidth={1.75} className="size-4 shrink-0 text-muted" />
+          </h3>
+          {/* Gives way long before the title does; chips that don't fit drop out whole. */}
+          {meeting.tags.length > 0 && (
+            <ul
+              aria-label="Tags"
+              className="flex h-[18px] min-w-0 shrink-[1000] flex-wrap items-center gap-1 overflow-hidden"
+            >
+              {meeting.tags.slice(0, MAX_TAGS).map((tag) => (
+                <li key={tag.id} className="flex">
+                  <TagChip tag={tag} size="sm" className="max-w-[110px]" />
+                </li>
+              ))}
+              {meeting.tags.length > MAX_TAGS && (
+                <li
+                  className="tnum text-caption text-muted"
+                  title={meeting.tags
+                    .slice(MAX_TAGS)
+                    .map((t) => t.name)
+                    .join(", ")}
+                >
+                  +{meeting.tags.length - MAX_TAGS}
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
         <p className="tnum flex min-w-0 items-center gap-1 text-meta text-muted">
           <span className="truncate">{formatMeetingMeta(meeting, timeZone)}</span>
           {/* Below 2xl the channel joins the meta line instead of taking a column; the meta truncates first. */}

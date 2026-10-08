@@ -64,6 +64,7 @@ export function MeetingsToolbar({
           participant: params.participant,
           date_from: params.date_from,
           date_to: params.date_to,
+          tag: params.tag,
         }}
         activeCount={activeFilterCount}
         onApply={onFiltersChange}

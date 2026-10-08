@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 
 import { ResizablePanels } from "@/components/ui";
 import { ActionItemList } from "@/features/action-items";
+import { MeetingAskFlyout } from "@/features/ask";
 import {
   PlayerCard,
   PlayerProvider,
@@ -82,6 +83,7 @@ function LoadedNotepad({
   const [playerVisible, setPlayerVisible] = useState(true);
   const [editMode, setEditMode] = useState<EditMode | null>(edit ? "edit" : null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
 
   const participants = useMemo(
     () => meeting.participants.map((p) => ({ id: p.id, display_name: p.display_name })),
@@ -110,6 +112,8 @@ function LoadedNotepad({
         meeting={meeting}
         playerVisible={playerVisible}
         onTogglePlayer={() => setPlayerVisible((v) => !v)}
+        askOpen={askOpen}
+        onToggleAsk={() => setAskOpen((v) => !v)}
         onEdit={() => setEditMode("edit")}
         onMove={() => setEditMode("move")}
         onDelete={() => setDeleteOpen(true)}
@@ -134,7 +138,7 @@ function LoadedNotepad({
             </div>
           }
           end={
-            <div className="flex h-full min-h-0 flex-col">
+            <div className="relative flex h-full min-h-0 flex-col">
               {/* Hidden, not unmounted: playback and keyboard shortcuts carry on. */}
               <div className={cn("shrink-0 px-4 pt-4", !playerVisible && "hidden")}>
                 <PlayerCard />
@@ -142,6 +146,12 @@ function LoadedNotepad({
               <div className="min-h-0 flex-1">
                 <TranscriptPanel meetingId={meeting.id} />
               </div>
+              <MeetingAskFlyout
+                meetingId={meeting.id}
+                meetingTitle={meeting.title}
+                open={askOpen}
+                onClose={() => setAskOpen(false)}
+              />
             </div>
           }
         />

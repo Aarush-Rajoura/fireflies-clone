@@ -123,6 +123,16 @@
   --ff-avatar-dark-6: #4a5fd0;
   --ff-avatar-dark-7: #6f6862;
 
+  /* Tag pills: the theme's tag hue over a faint wash of itself. */
+  --ff-tag-0-subtle: color-mix(in srgb, var(--ff-tag-0) 16%, transparent);
+  --ff-tag-1-subtle: color-mix(in srgb, var(--ff-tag-1) 16%, transparent);
+  --ff-tag-2-subtle: color-mix(in srgb, var(--ff-tag-2) 16%, transparent);
+  --ff-tag-3-subtle: color-mix(in srgb, var(--ff-tag-3) 16%, transparent);
+  --ff-tag-4-subtle: color-mix(in srgb, var(--ff-tag-4) 16%, transparent);
+  --ff-tag-5-subtle: color-mix(in srgb, var(--ff-tag-5) 16%, transparent);
+  --ff-tag-6-subtle: color-mix(in srgb, var(--ff-tag-6) 16%, transparent);
+  --ff-tag-7-subtle: color-mix(in srgb, var(--ff-tag-7) 16%, transparent);
+
   /* Type, shape, motion */
   --ff-font-sans: var(--font-inter), Inter, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --ff-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -219,6 +229,15 @@
   --ff-avatar-5: var(--ff-avatar-dark-5);
   --ff-avatar-6: var(--ff-avatar-dark-6);
   --ff-avatar-7: var(--ff-avatar-dark-7);
+  /* Tags reuse the legible speaker hues. */
+  --ff-tag-0: var(--ff-speaker-dark-0);
+  --ff-tag-1: var(--ff-speaker-dark-1);
+  --ff-tag-2: var(--ff-speaker-dark-2);
+  --ff-tag-3: var(--ff-speaker-dark-3);
+  --ff-tag-4: var(--ff-speaker-dark-4);
+  --ff-tag-5: var(--ff-speaker-dark-5);
+  --ff-tag-6: var(--ff-speaker-dark-6);
+  --ff-tag-7: var(--ff-speaker-dark-7);
 
   --ff-scrim: rgba(0, 0, 0, 0.6);
   --ff-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
@@ -307,6 +326,14 @@
   --ff-avatar-5: var(--ff-speaker-light-5);
   --ff-avatar-6: var(--ff-speaker-light-6);
   --ff-avatar-7: var(--ff-speaker-light-7);
+  --ff-tag-0: var(--ff-speaker-light-0);
+  --ff-tag-1: var(--ff-speaker-light-1);
+  --ff-tag-2: var(--ff-speaker-light-2);
+  --ff-tag-3: var(--ff-speaker-light-3);
+  --ff-tag-4: var(--ff-speaker-light-4);
+  --ff-tag-5: var(--ff-speaker-light-5);
+  --ff-tag-6: var(--ff-speaker-light-6);
+  --ff-tag-7: var(--ff-speaker-light-7);
 
   --ff-scrim: rgba(11, 20, 36, 0.4);
   --ff-shadow-xs: 0 1px 2px rgba(11, 20, 36, 0.05);

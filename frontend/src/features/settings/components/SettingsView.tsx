@@ -3,15 +3,17 @@
 import { useState } from "react";
 
 import { SegmentedControl } from "@/components/ui";
+import { TagManager } from "@/features/tags";
 import { useTheme } from "@/features/theme";
 
 import { ProfileTab } from "./ProfileTab";
 
-type Tab = "profile" | "appearance";
+type Tab = "profile" | "appearance" | "tags";
 
 const TABS = [
   { value: "profile", label: "Profile" },
   { value: "appearance", label: "Appearance" },
+  { value: "tags", label: "Tags" },
 ] as const;
 
 const THEME_OPTIONS = [
@@ -52,7 +54,13 @@ export function SettingsView() {
         className="self-start"
       />
       <div role="tabpanel" aria-labelledby={`settings-${tab}`}>
-        {tab === "profile" ? <ProfileTab /> : <AppearanceTab />}
+        {tab === "profile" ? (
+          <ProfileTab />
+        ) : tab === "appearance" ? (
+          <AppearanceTab />
+        ) : (
+          <TagManager />
+        )}
       </div>
     </section>
   );

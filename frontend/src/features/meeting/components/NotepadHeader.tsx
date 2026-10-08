@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Bot,
+  Download,
   FolderInput,
   Globe,
   Headphones,
@@ -13,9 +15,12 @@ import {
   Video,
 } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
 
 import { AvatarGroup, Badge, Button, IconButton, Menu, toast } from "@/components/ui";
+import { ExportModal } from "@/features/export";
 import { useComingSoon } from "@/features/shell";
+import { MeetingTags } from "@/features/tags";
 import type { MeetingDetail } from "@/lib/api";
 import { cn } from "@/lib/utils/cn";
 
@@ -31,6 +36,8 @@ export type NotepadHeaderProps = {
   meeting: MeetingDetail;
   playerVisible: boolean;
   onTogglePlayer: () => void;
+  askOpen: boolean;
+  onToggleAsk: () => void;
   onEdit: () => void;
   onMove: () => void;
   onDelete: () => void;
@@ -45,11 +52,14 @@ export function NotepadHeader({
   meeting,
   playerVisible,
   onTogglePlayer,
+  askOpen,
+  onToggleAsk,
   onEdit,
   onMove,
   onDelete,
 }: NotepadHeaderProps) {
   const soon = useComingSoon();
+  const [exportOpen, setExportOpen] = useState(false);
   const status = STATUS_BADGE[meeting.status];
   const names = attendeeNames(meeting);
   const { date, time } = formatMeetingDate(meeting.started_at);
@@ -84,6 +94,15 @@ export function NotepadHeader({
           </Badge>
         </nav>
         <div className="flex shrink-0 items-center gap-1">
+          <Button
+            size="sm"
+            aria-pressed={askOpen}
+            leadingIcon={<Bot strokeWidth={1.75} />}
+            onClick={onToggleAsk}
+            className={cn("mr-1", askOpen && "border-accent-border text-accent")}
+          >
+            Ask Fred
+          </Button>
           {/* Share and copy-link read as one joined control, as in the product mock. */}
           <div role="group" aria-label="Share meeting" className="flex items-center">
             <Button
@@ -129,6 +148,11 @@ export function NotepadHeader({
                 icon: <FolderInput strokeWidth={1.75} />,
                 onSelect: onMove,
               },
+              {
+                label: "Export",
+                icon: <Download strokeWidth={1.75} />,
+                onSelect: () => setExportOpen(true),
+              },
               { type: "separator" },
               {
                 label: "Delete",
@@ -173,6 +197,7 @@ export function NotepadHeader({
               {formatDuration(meeting.duration_ms)}
             </span>
           </div>
+          <MeetingTags meeting={meeting} />
         </div>
         <MediaToggle
           mediaType={meeting.media_type}
@@ -181,6 +206,7 @@ export function NotepadHeader({
         />
       </div>
       {soon.dialog}
+      <ExportModal meetingId={meeting.id} open={exportOpen} onOpenChange={setExportOpen} />
     </header>
   );
 }

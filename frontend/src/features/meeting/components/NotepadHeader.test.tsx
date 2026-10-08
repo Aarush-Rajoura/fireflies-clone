@@ -1,9 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { AppProviders } from "@/components/ui";
-
 import { meeting } from "../testing/fixtures";
+import { renderWithClient } from "../testing/render";
 import { NotepadHeader } from "./NotepadHeader";
 
 vi.mock("next/navigation", () => ({
@@ -13,18 +12,18 @@ vi.mock("next/navigation", () => ({
 
 const noop = () => undefined;
 
-function renderHeader(overrides: Partial<typeof meeting> = {}) {
-  return render(
-    <AppProviders>
-      <NotepadHeader
-        meeting={{ ...meeting, ...overrides }}
-        playerVisible
-        onTogglePlayer={noop}
-        onEdit={noop}
-        onMove={noop}
-        onDelete={noop}
-      />
-    </AppProviders>,
+function renderHeader(overrides: Partial<typeof meeting> = {}, onToggleAsk = noop) {
+  return renderWithClient(
+    <NotepadHeader
+      meeting={{ ...meeting, ...overrides }}
+      playerVisible
+      onTogglePlayer={noop}
+      askOpen={false}
+      onToggleAsk={onToggleAsk}
+      onEdit={noop}
+      onMove={noop}
+      onDelete={noop}
+    />,
   );
 }
 
@@ -66,5 +65,15 @@ describe("NotepadHeader", () => {
     expect(screen.getByRole("group", { name: "Share meeting" }).parentElement?.className).toContain(
       "shrink-0",
     );
+  });
+
+  it("shows the meeting's tags with a + Tag control, and an Ask Fred toggle", () => {
+    const onToggleAsk = vi.fn();
+    renderHeader({ tags: [{ id: 1, name: "Launch", color_index: 0 }] }, onToggleAsk);
+    const tags = screen.getByRole("list", { name: "Tags" });
+    expect(tags.textContent).toContain("Launch");
+    expect(screen.getByRole("button", { name: "Tag" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Ask Fred" }));
+    expect(onToggleAsk).toHaveBeenCalledTimes(1);
   });
 });

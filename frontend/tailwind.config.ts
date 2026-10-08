@@ -53,6 +53,8 @@ const colors = {
   tint: { rose: v("tint-rose"), teal: v("tint-teal"), violet: v("tint-violet") },
   speaker: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`speaker-${i}`)])),
   avatar: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`avatar-${i}`)])),
+  tag: Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`tag-${i}`)])),
+  "tag-subtle": Object.fromEntries(Array.from({ length: 8 }, (_, i) => [i, v(`tag-${i}-subtle`)])),
   brand: { mark: v("brand-mark") },
   scrim: v("scrim"),
   "on-accent": v("text-on-accent"),

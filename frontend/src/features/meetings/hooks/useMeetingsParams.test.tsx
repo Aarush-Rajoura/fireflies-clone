@@ -41,6 +41,14 @@ describe("parse/serialize", () => {
     expect(serializeMeetingsParams(params)).toBe(url);
   });
 
+  it("reads repeated tag ids as an any-of filter, deduped and sorted", () => {
+    const params = parseMeetingsParams(new URLSearchParams("tag=5&tag=2&tag=x&tag=5"));
+    expect(params.tag).toEqual([2, 5]);
+    expect(serializeMeetingsParams(params)).toBe("tag=2&tag=5");
+    expect(toListQuery(params).tag).toEqual([2, 5]);
+    expect(toListQuery(parseMeetingsParams(new URLSearchParams(""))).tag).toBeUndefined();
+  });
+
   it("leaves defaults out of the URL and ignores junk", () => {
     const params = parseMeetingsParams(
       new URLSearchParams("scope=bogus&sort=nope&page=-2&channel=x&date_from=yesterday&q=%20%20"),
