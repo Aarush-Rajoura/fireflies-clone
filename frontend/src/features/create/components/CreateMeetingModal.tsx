@@ -102,9 +102,11 @@ export function CreateMeetingModal() {
           pending={pending}
           withNotes={Boolean(create.variables?.segments)}
           error={create.isError ? createErrorMessage(create.error) : null}
-          onSubmit={(details, preview) =>
-            create.mutate(buildMeetingCreate(details, sourceForTab(tab), preview))
-          }
+          onSubmit={(details, preview) => {
+            // A double click must not create the meeting twice.
+            if (pending) return;
+            create.mutate(buildMeetingCreate(details, sourceForTab(tab), preview));
+          }}
           onCancel={dismiss}
         />
       )}
