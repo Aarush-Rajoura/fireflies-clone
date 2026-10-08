@@ -86,7 +86,7 @@ export function TranscriptList({
         ref={scrollRef}
         tabIndex={0}
         aria-label="Transcript lines"
-        className="h-full overflow-y-auto pb-16 outline-none focus-visible:shadow-focus"
+        className="h-full overflow-y-auto pb-24 outline-none focus-visible:shadow-focus"
       >
         {segments.map((segment, i) => {
           const hit = matches.get(i);

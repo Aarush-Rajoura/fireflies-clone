@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, MoreHorizontal, Plus, RefreshCw } from "lucide-react";
+import { Check, ChevronDown, Copy, MoreHorizontal, Plus, RefreshCw, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 import {
@@ -9,7 +9,6 @@ import {
   ConfirmDialog,
   IconButton,
   Menu,
-  Select,
   SoonBadge,
   Spinner,
   Tooltip,
@@ -32,8 +31,6 @@ export type SummaryHeaderProps = {
   isRegenerating: boolean;
 };
 
-const templateOptions = NOTE_TEMPLATES.map((t) => ({ value: t.id, label: t.label }));
-
 export function SummaryHeader({
   templateId,
   onTemplateChange,
@@ -47,17 +44,33 @@ export function SummaryHeader({
   isRegenerating,
 }: SummaryHeaderProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const currentLabel = NOTE_TEMPLATES.find((t) => t.id === templateId)?.label ?? "General";
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-2">
-        <Select
-          label="Note template"
-          size="sm"
-          className="w-36"
-          options={templateOptions}
-          value={templateId}
-          onValueChange={onTemplateChange}
+        <Menu
+          align="start"
+          items={NOTE_TEMPLATES.map((t) => ({
+            label: `${t.label} Notes`,
+            onSelect: () => onTemplateChange(t.id),
+            trailing:
+              t.id === templateId ? (
+                <Check className="text-accent" strokeWidth={1.75} />
+              ) : undefined,
+          }))}
+          trigger={
+            <Button
+              size="sm"
+              variant="ghost"
+              aria-label={`Note template: ${currentLabel} Notes`}
+              leadingIcon={<Sparkles strokeWidth={1.75} />}
+              trailingIcon={<ChevronDown strokeWidth={1.75} />}
+              className="px-2 text-accent hover:text-accent"
+            >
+              {currentLabel} Notes
+            </Button>
+          }
         />
         <IconButton
           label="Copy summary as Markdown"

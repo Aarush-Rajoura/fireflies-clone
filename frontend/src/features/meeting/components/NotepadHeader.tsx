@@ -7,6 +7,7 @@ import {
   Link2,
   MoreHorizontal,
   Pencil,
+  Plus,
   Timer,
   Trash2,
   Video,
@@ -83,24 +84,42 @@ export function NotepadHeader({
           </Badge>
         </nav>
         <div className="flex shrink-0 items-center gap-1">
-          <Button
-            variant="primary"
-            size="sm"
-            leadingIcon={<Globe strokeWidth={1.75} />}
-            onClick={() =>
-              soon.show({
-                title: "Share",
-                message: "Sharing meetings with teammates and guests is coming soon.",
-              })
-            }
-          >
-            Share
-          </Button>
+          {/* Share and copy-link read as one joined control, as in the product mock. */}
+          <div role="group" aria-label="Share meeting" className="flex items-center">
+            <Button
+              variant="primary"
+              size="sm"
+              leadingIcon={<Globe strokeWidth={1.75} />}
+              className="rounded-r-none"
+              onClick={() =>
+                soon.show({
+                  title: "Share",
+                  message: "Sharing meetings with teammates and guests is coming soon.",
+                })
+              }
+            >
+              Share
+            </Button>
+            <span aria-hidden className="h-btn-sm w-px bg-accent-hover" />
+            <IconButton
+              size="sm"
+              variant="primary"
+              label="Copy link"
+              icon={<Link2 strokeWidth={1.75} />}
+              className="rounded-l-none"
+              onClick={() => void copyLink()}
+            />
+          </div>
           <IconButton
             size="sm"
-            label="Copy link"
-            icon={<Link2 strokeWidth={1.75} />}
-            onClick={() => void copyLink()}
+            label="Add to meeting"
+            icon={<Plus strokeWidth={1.75} />}
+            onClick={() =>
+              soon.show({
+                title: "Add to meeting",
+                message: "Adding notes, files and teammates to a meeting is coming soon.",
+              })
+            }
           />
           <Menu
             items={[
@@ -185,7 +204,7 @@ function MediaToggle({
       title={pressed ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
       leadingIcon={<Icon strokeWidth={1.75} />}
       onClick={onClick}
-      className={cn("mt-0.5", pressed && "border-accent-border text-accent")}
+      className={cn("mt-0.5", pressed && "bg-surface-3 text-primary")}
     >
       {label}
     </Button>

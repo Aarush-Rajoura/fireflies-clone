@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { ResizablePanels } from "@/components/ui";
@@ -78,6 +78,7 @@ function LoadedNotepad({
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [playerVisible, setPlayerVisible] = useState(true);
   const [editMode, setEditMode] = useState<EditMode | null>(edit ? "edit" : null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -89,8 +90,13 @@ function LoadedNotepad({
 
   const closeEdit = () => {
     setEditMode(null);
-    // Drop `?edit=1` so a reload or a shared link does not reopen the modal.
-    if (edit) router.replace(pathname ?? `/meetings/${meeting.id}`, { scroll: false });
+    // Drop only `edit`, so a reload does not reopen the modal; `t` and the rest stay.
+    if (!searchParams?.has("edit")) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("edit");
+    const qs = params.toString();
+    const base = pathname ?? `/meetings/${meeting.id}`;
+    router.replace(qs ? `${base}?${qs}` : base, { scroll: false });
   };
 
   return (
@@ -116,9 +122,7 @@ function LoadedNotepad({
           storageKey="notepad.split"
           label="Resize summary and transcript"
           start={
-            // `relative` keeps absolutely positioned bits (Radix's hidden native
-            // <select>) inside this scroller instead of stretching the document.
-            <div className="relative px-8 pb-10 pt-5">
+            <div className="px-8 pb-10 pt-5">
               <SummaryPanel
                 meetingId={meeting.id}
                 durationMs={meeting.duration_ms}
@@ -130,7 +134,7 @@ function LoadedNotepad({
             </div>
           }
           end={
-            <div className="relative flex h-full min-h-0 flex-col">
+            <div className="flex h-full min-h-0 flex-col">
               {/* Hidden, not unmounted: playback and keyboard shortcuts carry on. */}
               <div className={cn("shrink-0 px-4 pt-4", !playerVisible && "hidden")}>
                 <PlayerCard />

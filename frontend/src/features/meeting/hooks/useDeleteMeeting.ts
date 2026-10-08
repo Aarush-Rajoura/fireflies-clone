@@ -28,13 +28,21 @@ export function useDeleteMeeting(id: number) {
       void client.invalidateQueries({ queryKey: ["meetings", id], refetchType: "none" });
       void client.invalidateQueries({ queryKey: qk.meetings.lists() });
       void client.invalidateQueries({ queryKey: qk.channels() });
+      // The toast dismisses on click, but a fast double click can land twice.
+      let restoring = false;
       toast.undo("Meeting deleted", () => {
+        if (restoring) return;
+        restoring = true;
         restoreMeeting(id)
           .then((meeting) => {
             applyRestored(client, meeting);
-            toast.success("Meeting restored");
+            toast.success("Meeting restored", {
+              label: "View",
+              onClick: () => router.push(`/meetings/${id}`),
+            });
           })
           .catch((error: unknown) => {
+            restoring = false;
             toast.error(error instanceof ApiError ? error.message : "Couldn't restore the meeting");
           });
       });

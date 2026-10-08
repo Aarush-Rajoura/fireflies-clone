@@ -10,6 +10,7 @@ import {
   addParticipant,
   hasParticipant,
   removeParticipant,
+  MAX_NAME_LENGTH,
   type ParticipantDraft,
 } from "../lib/participants";
 
@@ -91,6 +92,7 @@ export function ParticipantsEditor({
           invalid={invalid}
           placeholder="Add a participant and press Enter"
           autoComplete="off"
+          maxLength={MAX_NAME_LENGTH}
           role="combobox"
           aria-expanded={open}
           aria-controls={listId}

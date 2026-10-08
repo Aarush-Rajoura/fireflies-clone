@@ -58,7 +58,10 @@ export function pause(id: number): void {
   const t = timers.get(id);
   if (!t?.handle) return;
   clearTimeout(t.handle);
-  timers.set(id, { startedAt: 0, remaining: Math.max(0, t.remaining - (Date.now() - t.startedAt)) });
+  timers.set(id, {
+    startedAt: 0,
+    remaining: Math.max(0, t.remaining - (Date.now() - t.startedAt)),
+  });
 }
 
 export function resume(id: number): void {
@@ -92,11 +95,12 @@ function push(kind: ToastKind, message: string, action?: ToastAction): number {
 }
 
 export const toast = {
-  success: (message: string) => push("success", message),
+  success: (message: string, action?: ToastAction) => push("success", message, action),
   error: (message: string, opts?: { retry?: () => void }) =>
     push("error", message, opts?.retry ? { label: "Retry", onClick: opts.retry } : undefined),
   info: (message: string) => push("info", message),
-  undo: (message: string, onUndo: () => void) => push("info", message, { label: "Undo", onClick: onUndo }),
+  undo: (message: string, onUndo: () => void) =>
+    push("info", message, { label: "Undo", onClick: onUndo }),
   dismiss,
 };
 

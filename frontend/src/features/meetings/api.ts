@@ -14,12 +14,6 @@ export function fetchMeetings(
   return unwrap(api.GET("/api/v1/meetings", { params: { query }, signal }));
 }
 
-export function fetchMeeting(id: number, signal?: AbortSignal): Promise<MeetingDetail> {
-  return unwrap(
-    api.GET("/api/v1/meetings/{meeting_id}", { params: { path: { meeting_id: id } }, signal }),
-  );
-}
-
 /** Soft delete: the backend keeps the row, so restore is lossless. */
 export function deleteMeeting(id: number): Promise<void> {
   return unwrap(

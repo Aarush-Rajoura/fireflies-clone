@@ -15,13 +15,16 @@ export function useUpdateMeeting(id: number) {
   return useMutation({
     mutationFn: (body: MeetingUpdate) => patchMeeting(id, body),
     meta: { errorToast: false },
-    onSuccess: (meeting: MeetingDetail) => {
+    onSuccess: (meeting: MeetingDetail, body) => {
       client.setQueryData(qk.meetings.detail(id), meeting);
       void client.invalidateQueries({ queryKey: qk.meetings.lists() });
-      // Participant renames flow into speaker names and assignee options.
-      void client.invalidateQueries({ queryKey: qk.transcript(id) });
-      void client.invalidateQueries({ queryKey: qk.actionItems(id) });
-      void client.invalidateQueries({ queryKey: qk.channels() });
+      // Participant changes flow into speaker names and assignee options.
+      if (body.participants) {
+        void client.invalidateQueries({ queryKey: qk.transcript(id) });
+        void client.invalidateQueries({ queryKey: qk.actionItems(id) });
+      }
+      // Channel meeting counts.
+      if ("channel_id" in body) void client.invalidateQueries({ queryKey: qk.channels() });
     },
   });
 }

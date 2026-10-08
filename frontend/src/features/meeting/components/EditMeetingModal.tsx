@@ -100,7 +100,7 @@ function EditForm({
             <Input
               id="meeting-title"
               value={title}
-              maxLength={MAX_TITLE_LENGTH + 50}
+              maxLength={MAX_TITLE_LENGTH}
               invalid={Boolean(errors.title)}
               onChange={(e) => {
                 setTitle(e.target.value);

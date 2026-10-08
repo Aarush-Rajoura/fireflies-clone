@@ -107,8 +107,17 @@ export function ResizablePanels({
   };
 
   return (
-    <div ref={containerRef} className={cn("flex h-full min-h-0 w-full", dragging && "select-none", className)}>
-      <div className="min-w-0 overflow-auto" style={{ flexBasis: `${size}%`, flexShrink: 0 }}>
+    <div
+      ref={containerRef}
+      className={cn("flex h-full min-h-0 w-full", dragging && "select-none", className)}
+    >
+      {/* `relative` makes each pane the containing block of absolutely positioned
+          descendants (e.g. Radix's hidden native <select>), so they scroll with the
+          pane instead of stretching the document. */}
+      <div
+        className="relative min-h-0 min-w-0 overflow-auto"
+        style={{ flexBasis: `${size}%`, flexShrink: 0 }}
+      >
         {start}
       </div>
       <div
@@ -146,7 +155,7 @@ export function ResizablePanels({
         {/* Wider invisible hit area; the visible line stays 1px. */}
         <span aria-hidden className="absolute inset-y-0 -left-1.5 -right-1.5" />
       </div>
-      <div className="min-w-0 flex-1 overflow-auto">{end}</div>
+      <div className="relative min-h-0 min-w-0 flex-1 overflow-auto">{end}</div>
     </div>
   );
 }

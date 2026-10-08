@@ -16,8 +16,20 @@ describe("clampSize", () => {
 
 describe("ResizablePanels", () => {
   const setup = (props: Partial<Parameters<typeof ResizablePanels>[0]> = {}) =>
-    render(<ResizablePanels start="A" end="B" minSize={20} maxSize={80} defaultSize={50} {...props} />);
+    render(
+      <ResizablePanels start="A" end="B" minSize={20} maxSize={80} defaultSize={50} {...props} />,
+    );
   const sep = () => screen.getByRole("separator");
+
+  test("each pane is a bounded, positioned scroller so absolute children cannot stretch the page", () => {
+    setup();
+    for (const text of ["A", "B"]) {
+      const pane = screen.getByText(text);
+      expect(pane.className).toContain("relative");
+      expect(pane.className).toContain("min-h-0");
+      expect(pane.className).toContain("overflow-auto");
+    }
+  });
 
   test("keyboard resizes in steps and stops at the limits", () => {
     setup({ step: 10 });
@@ -50,7 +62,10 @@ describe("ResizablePanels", () => {
   test("dragging resizes live but persists only on release or cancel", () => {
     setup({ storageKey: "split" });
     const container = sep().parentElement as HTMLElement;
-    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({ left: 0, width: 1000 } as DOMRect);
+    vi.spyOn(container, "getBoundingClientRect").mockReturnValue({
+      left: 0,
+      width: 1000,
+    } as DOMRect);
     const setItem = vi.spyOn(Storage.prototype, "setItem");
 
     fireEvent.pointerDown(sep(), { pointerId: 1, clientX: 500 });

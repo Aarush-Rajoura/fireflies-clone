@@ -63,7 +63,7 @@ describe("NotepadHeader", () => {
       .getByRole("navigation", { name: "Breadcrumb" })
       .querySelector("[aria-current=page]");
     expect(crumbTitle?.className).toContain("truncate");
-    expect(screen.getByRole("button", { name: "Share" }).parentElement?.className).toContain(
+    expect(screen.getByRole("group", { name: "Share meeting" }).parentElement?.className).toContain(
       "shrink-0",
     );
   });

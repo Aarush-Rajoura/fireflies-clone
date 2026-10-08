@@ -12,6 +12,7 @@ const replace = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace }),
   usePathname: () => "/meetings/7",
+  useSearchParams: () => new URLSearchParams("t=12&edit=1&ref=mail"),
 }));
 
 const transcript: Transcript = {
@@ -134,7 +135,7 @@ describe("NotepadView", () => {
     ).toContain("hidden");
   });
 
-  it("opens the edit modal for ?edit=1 and drops the param on close", async () => {
+  it("opens the edit modal for ?edit=1 and drops only that param on close", async () => {
     renderView(
       meetingRoutes(() => json(meeting)),
       { edit: true },
@@ -142,6 +143,6 @@ describe("NotepadView", () => {
     const dialog = await screen.findByRole("dialog", { name: "Edit meeting" });
     fireEvent.click(within(dialog).getByRole("button", { name: "Cancel" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
-    expect(replace).toHaveBeenCalledWith("/meetings/7", { scroll: false });
+    expect(replace).toHaveBeenCalledWith("/meetings/7?t=12&ref=mail", { scroll: false });
   });
 });
